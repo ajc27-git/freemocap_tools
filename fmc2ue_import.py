@@ -163,7 +163,9 @@ def add_armature(use_limit_rotation: bool=False):
     # Get reference to armature
     rig = bpy.data.objects['metarig']
     # Rename the rig object to root
-    rig.name = "root"    
+    rig.name = "root"
+    # Get reference to the renamed armature
+    rig = bpy.data.objects['root']
     
     # Scale armature so it fits capture empties height. The reference point will be hips_center
     # Get the rig z dimension
