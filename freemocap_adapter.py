@@ -1,7 +1,7 @@
 bl_info = {
     'name'          : 'Freemocap Adapter',
     'author'        : 'ajc27',
-    'version'       : (1, 1, 0),
+    'version'       : (1, 1, 1),
     'blender'       : (3, 0, 0),
     'location'      : '3D Viewport > Sidebar > Freemocap Adapter',
     'description'   : 'Add-on to adapt the Freemocap Blender output',
@@ -28,6 +28,9 @@ import statistics
 #######################################################################
 
 # Global Variables
+# Variable to save if the function Adjust Empties has been already executed
+adjust_empties_executed = False
+
 # Dictionary to save the global vector position of all the empties for every animation frame
 empty_positions = {}
 
@@ -308,6 +311,9 @@ def adjust_empties(z_align_ref_empty: str='left_knee',
                    ground_ref_empty: str='left_foot_index',
                    z_translation_offset: float=-0.01,
                    ):
+    
+    # Reference to the global adjust_empties_executed variable
+    global adjust_empties_executed
 
     # Play and stop the animation in case the first frame empties are in a strange position
     bpy.ops.screen.animation_play()
@@ -424,6 +430,9 @@ def adjust_empties(z_align_ref_empty: str='left_knee',
     # Deselect all objects
     for object in bpy.data.objects:
         object.select_set(False)
+
+    # Change the adjust_empties_executed variable
+    adjust_empties_executed = True
 
 ######################################################################
 #################### REDUCE BONE LENGTH DISPERSION ###################
@@ -2152,17 +2161,19 @@ class FMC_ADAPTER_OT_add_rig(Operator):
 
         # Get start time
         start = time.time()
-        print('Executing First Adjust Empties...')
-        
+
         # Reset the scene frame to the start
         scene.frame_set(scene.frame_start)
 
-        # Execute Adjust Empties first
-        adjust_empties(z_align_ref_empty=fmc_adapter_tool.vertical_align_reference,
-                       z_align_angle_offset=fmc_adapter_tool.vertical_align_angle_offset,
-                       ground_ref_empty=fmc_adapter_tool.ground_align_reference,
-                       z_translation_offset=fmc_adapter_tool.vertical_align_position_offset                       
-                       )
+        if not adjust_empties_executed:
+            print('Executing First Adjust Empties...')
+
+            # Execute Adjust Empties first
+            adjust_empties(z_align_ref_empty=fmc_adapter_tool.vertical_align_reference,
+                        z_align_angle_offset=fmc_adapter_tool.vertical_align_angle_offset,
+                        ground_ref_empty=fmc_adapter_tool.ground_align_reference,
+                        z_translation_offset=fmc_adapter_tool.vertical_align_position_offset                       
+                        )
         
         print('Executing Add Rig...')
 
@@ -2188,17 +2199,20 @@ class FMC_ADAPTER_OT_add_body_mesh(Operator):
 
         # Get start time
         start = time.time()
-        print('Executing First Adjust Empties...')
 
         # Reset the scene frame to the start
         scene.frame_set(scene.frame_start)
 
-        # Execute Adjust Empties first
-        adjust_empties(z_align_ref_empty=fmc_adapter_tool.vertical_align_reference,
-                       z_align_angle_offset=fmc_adapter_tool.vertical_align_angle_offset,
-                       ground_ref_empty=fmc_adapter_tool.ground_align_reference,
-                       z_translation_offset=fmc_adapter_tool.vertical_align_position_offset                       
-                       )
+        if not adjust_empties_executed:
+            print('Executing First Adjust Empties...')
+
+            # Execute Adjust Empties first
+            adjust_empties(z_align_ref_empty=fmc_adapter_tool.vertical_align_reference,
+                        z_align_angle_offset=fmc_adapter_tool.vertical_align_angle_offset,
+                        ground_ref_empty=fmc_adapter_tool.ground_align_reference,
+                        z_translation_offset=fmc_adapter_tool.vertical_align_position_offset                       
+                        )
+        
         # Execute Add Rig if there is no rig in the scene
         try:
             root = bpy.data.objects['root']
