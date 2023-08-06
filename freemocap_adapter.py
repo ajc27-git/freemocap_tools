@@ -1,7 +1,7 @@
 bl_info = {
     'name'          : 'Freemocap Adapter',
     'author'        : 'ajc27',
-    'version'       : (1, 1, 2),
+    'version'       : (1, 1, 3),
     'blender'       : (3, 0, 0),
     'location'      : '3D Viewport > Sidebar > Freemocap Adapter',
     'description'   : 'Add-on to adapt the Freemocap Blender output',
@@ -344,12 +344,13 @@ def adjust_empties(z_align_ref_empty: str='left_knee',
     # Calculate left_hip xy coordinates from origin location
     left_hip_x_from_origin = left_hip_location[0] - origin.location[0]
     left_hip_y_from_origin = left_hip_location[1] - origin.location[1]
-    # Calculate angle from origin x axis to projection of left_hip on xy plane
-    left_hip_xy_angle = m.atan(left_hip_y_from_origin / left_hip_x_from_origin)
+    # Calculate angle from origin x axis to projection of left_hip on xy plane. It will depend if left_hip_x_from_origin is positive or negative
+    left_hip_xy_angle_prev  = m.atan(left_hip_y_from_origin / left_hip_x_from_origin)
+    left_hip_xy_angle       = left_hip_xy_angle_prev if left_hip_x_from_origin >= 0 else m.radians(180) + left_hip_xy_angle_prev
     # Rotate origin around the z axis to point at left_hip
     origin.rotation_euler[2] = left_hip_xy_angle
 
-    # Calculate left_hip z position from origin (inverted operators to produce the correspondent angle sign
+    # Calculate left_hip z position from origin
     left_hip_z_from_origin = left_hip_location[2] - origin.location[2]
     # Calculate angle from origin local x axis to the position of left_hip on origin xz plane
     left_hip_xz_angle = m.atan(left_hip_z_from_origin / m.sqrt(m.pow(left_hip_x_from_origin,2) + m.pow(left_hip_y_from_origin,2)))
