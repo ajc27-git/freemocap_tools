@@ -1,7 +1,7 @@
 bl_info = {
     'name'          : 'Freemocap Adapter',
     'author'        : 'ajc27',
-    'version'       : (1, 1, 3),
+    'version'       : (1, 1, 4),
     'blender'       : (3, 0, 0),
     'location'      : '3D Viewport > Sidebar > Freemocap Adapter',
     'description'   : 'Add-on to adapt the Freemocap Blender output',
@@ -31,8 +31,15 @@ import statistics
 # Variable to save if the function Adjust Empties has been already executed
 adjust_empties_executed = False
 
+# Location and rotation vectors of the freemocap_origin_axes in the Adjust Empties method just before resetting its location and rotation to (0, 0, 0)
+origin_location_pre_reset = (0, 0, 0)
+origin_rotation_pre_reset = (0, 0, 0)
+
 # Dictionary to save the global vector position of all the empties for every animation frame
 empty_positions = {}
+
+# Dictionary to save the speed of all the empties for every animation frame
+empty_speeds = {}
 
 # Create a dictionary with all the major bones with their head and tail empties.
 # Also add variables to store each frame bone lengths, the median and the stdev.
@@ -219,13 +226,15 @@ empties_dict = {
                         'right_hand_thumb_ip', 'right_hand_thumb_tip', 'right_hand_index_finger_mcp', 'right_hand_index_finger_pip', 'right_hand_index_finger_dip',
                         'right_hand_index_finger_tip', 'right_hand_middle_finger_mcp', 'right_hand_middle_finger_pip', 'right_hand_middle_finger_dip',
                         'right_hand_middle_finger_tip', 'right_hand_ring_finger_mcp', 'right_hand_ring_finger_pip', 'right_hand_ring_finger_dip',
-                        'right_hand_ring_finger_tip', 'right_hand_pinky_mcp', 'right_hand_pinky_pip', 'right_hand_pinky_dip', 'right_hand_pinky_tip']},
+                        'right_hand_ring_finger_tip', 'right_hand_pinky_mcp', 'right_hand_pinky_pip', 'right_hand_pinky_dip', 'right_hand_pinky_tip',
+                        'right_hand', 'right_hand_middle']},
     'left_wrist': {
         'children'    : ['left_thumb', 'left_index', 'left_pinky', 'left_hand_wrist', 'left_hand_thumb_cmc', 'left_hand_thumb_mcp',
                         'left_hand_thumb_ip', 'left_hand_thumb_tip', 'left_hand_index_finger_mcp', 'left_hand_index_finger_pip', 'left_hand_index_finger_dip',
                         'left_hand_index_finger_tip', 'left_hand_middle_finger_mcp', 'left_hand_middle_finger_pip', 'left_hand_middle_finger_dip',
                         'left_hand_middle_finger_tip', 'left_hand_ring_finger_mcp', 'left_hand_ring_finger_pip', 'left_hand_ring_finger_dip',
-                        'left_hand_ring_finger_tip', 'left_hand_pinky_mcp', 'left_hand_pinky_pip', 'left_hand_pinky_dip', 'left_hand_pinky_tip']},
+                        'left_hand_ring_finger_tip', 'left_hand_pinky_mcp', 'left_hand_pinky_pip', 'left_hand_pinky_dip', 'left_hand_pinky_tip',
+                        'left_hand', 'left_hand_middle']},
     'right_hip': {
         'children'    : ['right_knee']},
     'left_hip': {
@@ -253,7 +262,7 @@ def update_empty_positions():
 
     # Reset the empty positions dictionary with empty arrays for each empty
     for object in bpy.data.objects:
-        if object.type == 'EMPTY' and object.name != 'freemocap_origin_axes' and object.name != 'world_origin':
+        if object.type == 'EMPTY' and object.name != 'freemocap_origin_axes' and object.name != 'world_origin' and object.name != '_full_body_center_of_mass':
             empty_positions[object.name] = {'x': [], 'y': [], 'z': []}
 
     # Iterate through each scene frame and save the coordinates of each empty in the dictionary
@@ -262,7 +271,7 @@ def update_empty_positions():
         scene.frame_set(frame)
         # Iterate through each object
         for object in bpy.data.objects:
-            if object.type == 'EMPTY' and object.name != 'freemocap_origin_axes' and object.name != 'world_origin':
+            if object.type == 'EMPTY' and object.name != 'freemocap_origin_axes' and object.name != 'world_origin' and object.name != '_full_body_center_of_mass':
                 # Save the x, y, z position of the empty
                 empty_positions[object.name]['x'].append(bpy.data.objects[object.name].location[0])
                 empty_positions[object.name]['y'].append(bpy.data.objects[object.name].location[1])
@@ -273,6 +282,42 @@ def update_empty_positions():
 
     print('Empty Positions Dictionary update completed.')
 
+# Function to update all the empties speeds in the dictionary
+def update_empty_speeds(recording_fps):
+    
+    print('Updating Empty Speeds Dictionary...')
+
+    # Get the scene context
+    scene = bpy.context.scene
+
+    # Change to Object Mode
+    bpy.ops.object.mode_set(mode="OBJECT")
+
+    # Reset the empty speeds dictionary with an array with one element of value zero for each empty marker
+    for object in bpy.data.objects:
+        if object.type == 'EMPTY' and object.name != 'freemocap_origin_axes' and object.name != 'world_origin' and object.name != '_full_body_center_of_mass':
+            empty_speeds[object.name] = {'speed': [0]}
+
+    # Iterate through each scene frame starting from frame start + 1 and save the speed of each empty in the dictionary
+    for frame in range (scene.frame_start + 1, scene.frame_end + 1):
+        # Set scene frame
+        scene.frame_set(frame)
+        # Iterate through each object
+        for object in bpy.data.objects:
+            if object.type == 'EMPTY' and object.name != 'freemocap_origin_axes' and object.name != 'world_origin' and object.name != '_full_body_center_of_mass':
+                # Save the speed of the empty based on the recording fps and the distance to the position of the empty in the previous frame
+                #print('length:' + str(len(empty_positions[object.name]['x'])))
+                #print('frame:'+str(frame))
+                current_frame_position  = (empty_positions[object.name]['x'][frame-1], empty_positions[object.name]['y'][frame-1], empty_positions[object.name]['z'][frame-1])
+                previous_frame_position = (empty_positions[object.name]['x'][frame-2], empty_positions[object.name]['y'][frame-2], empty_positions[object.name]['z'][frame-2])
+                seconds_per_frame       = 1 / recording_fps
+                empty_speeds[object.name]['speed'].append(m.dist(current_frame_position, previous_frame_position) / seconds_per_frame)
+
+    # Reset the scene frame to the start
+    scene.frame_set(scene.frame_start)
+
+    print('Empty Speeds Dictionary update completed.')
+    
 # Function to update all the information of the virtual bones dictionary (lengths, median and stdev)
 def update_virtual_bones_info():
 
@@ -281,6 +326,15 @@ def update_virtual_bones_info():
     # Reset the lengths list for every virtual bone
     for bone in virtual_bones:
         virtual_bones[bone]['lengths'] = []
+
+    # Adjust tail empty of hand bones depending if hand_middle empties exist or not
+    try:
+        right_hand_middle_name = bpy.data.objects['right_hand_middle'].name
+        virtual_bones['hand.R']['tail'] = 'right_hand_middle'
+        virtual_bones['hand.L']['tail'] = 'left_hand_middle'
+    except:
+        virtual_bones['hand.R']['tail'] = 'right_index'
+        virtual_bones['hand.L']['tail'] = 'left_index'
 
     # Iterate through the empty_positions dictionary and calculate the distance between the head and tail and append it to the lengths list
     for frame in range (0, len(empty_positions['hips_center']['x'])):
@@ -302,6 +356,82 @@ def update_virtual_bones_info():
 
     print('Virtual Bones Information update completed.')
 
+def add_hands_middle_empties():
+
+    # Try checking if the hand middle empties have been already added
+    try:
+        right_hand_middle_name = bpy.data.objects['right_hand_middle'].name
+        # Right Hand Middle Empty exists. Nothing is done
+        print('Hand Middle Empties already added.')
+
+    except:
+        # Hand Middle Empties do not exist
+        print('Adding Hand Middle Empties...')
+
+        # Add the empties
+        bpy.ops.object.empty_add(type='ARROWS', align='WORLD', location=(0, 0, 0), scale=(0.1, 0.1, 0.1))
+        right_hand_middle        = bpy.context.active_object
+        right_hand_middle.name   = 'right_hand_middle'
+        right_hand_middle.scale  = (0.02, 0.02, 0.02)
+
+        bpy.ops.object.empty_add(type='ARROWS', align='WORLD', location=(0, 0, 0), scale=(0.1, 0.1, 0.1))
+        left_hand_middle        = bpy.context.active_object
+        left_hand_middle.name   = 'left_hand_middle'
+        left_hand_middle.scale  = (0.02, 0.02, 0.02)
+
+        # Copy the action data from the index fingers to have the base
+        right_hand_middle.animation_data_create()
+        right_hand_middle.animation_data.action = bpy.data.actions["right_indexAction"].copy()
+        right_hand_middle.animation_data.action.name = 'right_hand_middleAction'
+
+        left_hand_middle.animation_data_create()
+        left_hand_middle.animation_data.action = bpy.data.actions["left_indexAction"].copy()
+        left_hand_middle.animation_data.action.name = 'left_hand_middleAction'
+
+        # Move the freemocap_origin_axes empty to the position and rotation previous to the Adjust Empties method ending
+        origin = bpy.data.objects['freemocap_origin_axes']
+        origin.location         = origin_location_pre_reset
+        origin.rotation_euler   = origin_rotation_pre_reset
+
+        # Select the new empties
+        right_hand_middle.select_set(True)
+        left_hand_middle.select_set(True)
+        # Set the origin active in 3Dview
+        bpy.context.view_layer.objects.active = bpy.data.objects['freemocap_origin_axes']
+        # Parent selected empties to freemocap_origin_axes keeping transforms
+        bpy.ops.object.parent_set(type='OBJECT', keep_transform=True)
+
+        origin.location         = mathutils.Vector([0, 0, 0])
+        origin.rotation_euler   = mathutils.Vector([0, 0, 0])
+
+        # Iterate through each frame and calculate the middle point between the index and pinky empty markers for each hand
+        # Update the new hand middle empties position with that point
+        for frame_index in range (0, len(empty_positions['right_index']['x']) - 1):
+            # Get the positions of the index and pinky empties
+            right_index_position    = mathutils.Vector([empty_positions['right_index']['x'][frame_index], empty_positions['right_index']['y'][frame_index], empty_positions['right_index']['z'][frame_index]])
+            right_pinky_position    = mathutils.Vector([empty_positions['right_pinky']['x'][frame_index], empty_positions['right_pinky']['y'][frame_index], empty_positions['right_pinky']['z'][frame_index]])
+            left_index_position     = mathutils.Vector([empty_positions['left_index']['x'][frame_index], empty_positions['left_index']['y'][frame_index], empty_positions['left_index']['z'][frame_index]])
+            left_pinky_position     = mathutils.Vector([empty_positions['left_pinky']['x'][frame_index], empty_positions['left_pinky']['y'][frame_index], empty_positions['left_pinky']['z'][frame_index]])
+            
+            # Get the vector between the corresponding empties
+            right_index_pinky_vector    = right_pinky_position - right_index_position
+            left_index_pinky_vector     = left_pinky_position - left_index_position
+
+            # Get the new position of the middle empties
+            right_hand_middle_position  = right_index_position + right_index_pinky_vector / 2
+            left_hand_middle_position   = left_index_position + left_index_pinky_vector / 2
+
+            # Update the action property of both right and left middle empties
+            right_hand_middle.animation_data.action.fcurves[0].keyframe_points[frame_index+1].co[1] = right_hand_middle_position[0]
+            right_hand_middle.animation_data.action.fcurves[1].keyframe_points[frame_index+1].co[1] = right_hand_middle_position[1]
+            right_hand_middle.animation_data.action.fcurves[2].keyframe_points[frame_index+1].co[1] = right_hand_middle_position[2]
+
+            left_hand_middle.animation_data.action.fcurves[0].keyframe_points[frame_index+1].co[1] = left_hand_middle_position[0]
+            left_hand_middle.animation_data.action.fcurves[1].keyframe_points[frame_index+1].co[1] = left_hand_middle_position[1]
+            left_hand_middle.animation_data.action.fcurves[2].keyframe_points[frame_index+1].co[1] = left_hand_middle_position[2]
+
+        print('Adding Hand Middle completed.')
+
 ######################################################################
 ######################### ADJUST EMPTIES #############################
 ######################################################################
@@ -314,6 +444,9 @@ def adjust_empties(z_align_ref_empty: str='left_knee',
     
     # Reference to the global adjust_empties_executed variable
     global adjust_empties_executed
+    # Reference to the global origin location and rotation pre reset variables
+    global origin_location_pre_reset
+    global origin_rotation_pre_reset
 
     # Play and stop the animation in case the first frame empties are in a strange position
     bpy.ops.screen.animation_play()
@@ -338,26 +471,28 @@ def adjust_empties(z_align_ref_empty: str='left_knee',
 
     # Move origin to hips_center
     origin.location = hips_center.location
+    
     # Rotate origin in the xy plane so its x axis crosses the vertical projection of left_hip
     # Obtain left_hip location
     left_hip_location = left_hip.location
     # Calculate left_hip xy coordinates from origin location
-    left_hip_x_from_origin = left_hip_location[0] - origin.location[0]
-    left_hip_y_from_origin = left_hip_location[1] - origin.location[1]
+    left_hip_x_from_origin  = left_hip_location[0] - origin.location[0]
+    left_hip_y_from_origin  = left_hip_location[1] - origin.location[1]
     # Calculate angle from origin x axis to projection of left_hip on xy plane. It will depend if left_hip_x_from_origin is positive or negative
     left_hip_xy_angle_prev  = m.atan(left_hip_y_from_origin / left_hip_x_from_origin)
     left_hip_xy_angle       = left_hip_xy_angle_prev if left_hip_x_from_origin >= 0 else m.radians(180) + left_hip_xy_angle_prev
     # Rotate origin around the z axis to point at left_hip
     origin.rotation_euler[2] = left_hip_xy_angle
-
+    
     # Calculate left_hip z position from origin
     left_hip_z_from_origin = left_hip_location[2] - origin.location[2]
+    #left_hip_z_from_origin = abs(left_hip_location[2]) - abs(origin.location[2])
     # Calculate angle from origin local x axis to the position of left_hip on origin xz plane
     left_hip_xz_angle = m.atan(left_hip_z_from_origin / m.sqrt(m.pow(left_hip_x_from_origin,2) + m.pow(left_hip_y_from_origin,2)))
 
     # Rotate origin around the local y axis to point at left_hip. The angle is multiplied by -1 because is the origin that is rotating
     origin.rotation_euler.rotate_axis("Y", left_hip_xz_angle * -1)
-
+    
     ### Calculate angle in the local yz plane to rotate origin so its z axis crosses the z_align_empty ###
     ### Preferably the trunk_center or left_knee ###
     # Get the z_align_empty object
@@ -419,6 +554,10 @@ def adjust_empties(z_align_ref_empty: str='left_knee',
         if object.type == "EMPTY" and object.name != "freemocap_origin_axes" and object.name != "world_origin":
             # Select empty
             object.select_set(True)
+
+    # Save the origin world matrix
+    origin_location_pre_reset = (origin.location[0], origin.location[1], origin.location[2])
+    origin_rotation_pre_reset = (origin.rotation_euler[0], origin.rotation_euler[1], origin.rotation_euler[2])
 
     # Set the origin active in 3Dview
     bpy.context.view_layer.objects.active = origin
@@ -520,24 +659,94 @@ def reduce_bone_length_dispersion(interval_variable: str='median', interval_fact
 # Function to translate the empties recursively
 def translate_empty(empties_dict, empty, frame_index, delta):
 
-    # Translate the empty in the animation location curve
-    actual_x = bpy.data.objects[empty].animation_data.action.fcurves[0].keyframe_points[frame_index].co[1]
-    bpy.data.objects[empty].animation_data.action.fcurves[0].keyframe_points[frame_index].co[1] = actual_x + delta[0]
-    actual_y = bpy.data.objects[empty].animation_data.action.fcurves[1].keyframe_points[frame_index].co[1]
-    bpy.data.objects[empty].animation_data.action.fcurves[1].keyframe_points[frame_index].co[1] = actual_y + delta[1]
-    actual_z = bpy.data.objects[empty].animation_data.action.fcurves[2].keyframe_points[frame_index].co[1]
-    bpy.data.objects[empty].animation_data.action.fcurves[2].keyframe_points[frame_index].co[1] = actual_z + delta[2]
+    try:
+        # Translate the empty in the animation location curve
+        actual_x = bpy.data.objects[empty].animation_data.action.fcurves[0].keyframe_points[frame_index].co[1]
+        bpy.data.objects[empty].animation_data.action.fcurves[0].keyframe_points[frame_index].co[1] = actual_x + delta[0]
+        actual_y = bpy.data.objects[empty].animation_data.action.fcurves[1].keyframe_points[frame_index].co[1]
+        bpy.data.objects[empty].animation_data.action.fcurves[1].keyframe_points[frame_index].co[1] = actual_y + delta[1]
+        actual_z = bpy.data.objects[empty].animation_data.action.fcurves[2].keyframe_points[frame_index].co[1]
+        bpy.data.objects[empty].animation_data.action.fcurves[2].keyframe_points[frame_index].co[1] = actual_z + delta[2]
+    except:
+        # Empty does not exist or does not have animation data
+        pass
 
     # If empty has children then call this function for every child
     if empty in empties_dict:
         for child in empties_dict[empty]['children']:
             translate_empty(empties_dict, child, frame_index, delta)
 
+# IN DEVELOPMENT
+# Function to reduce sudden movements of empties with an acceleration above a threshold
+def reduce_shakiness(recording_fps: float=30):
+    print('fps: ' + str(recording_fps))
+    # Update the empty positions dictionary
+    update_empty_positions()
+
+    # Update the empty speeds dictionary
+    update_empty_speeds(recording_fps)
+
+    # Get the time of each frame in seconds
+    seconds_per_frame   = 1 / recording_fps
+
+    # for f in range(150, 157):
+    #     empty_speed         = empty_speeds['left_wrist']['speed'][f-1]
+    #     acceleration        = (empty_speed - empty_speeds['left_wrist']['speed'][f-2]) / seconds_per_frame
+    #     print('left_wrist frame ' + str(f) + ' speed: ' + str(empty_speed) + ' acceleration: ' + str(acceleration))
+
+    # for f in range(1160, 1180):
+    #     empty_speed         = empty_speeds['right_wrist']['speed'][f-1]
+    #     acceleration        = (empty_speed - empty_speeds['right_wrist']['speed'][f-2]) / seconds_per_frame
+    #     print('right_wrist frame ' + str(f) + ' speed: ' + str(empty_speed) + ' acceleration: ' + str(acceleration))
+
+    for empty in empty_positions:
+        for frame_index in range(1, len(empty_speeds[empty]['speed']) - 2):
+            empty_speed         = empty_speeds[empty]['speed'][frame_index]
+            acceleration        = (empty_speed - empty_speeds[empty]['speed'][frame_index-1]) / seconds_per_frame
+
+            if acceleration > 10:
+
+                # Get the empty position
+                empty_position      = mathutils.Vector([empty_positions[empty]['x'][frame_index], empty_positions[empty]['y'][frame_index], empty_positions[empty]['z'][frame_index]])
+                # Get the empty position in the previous frame
+                empty_position_prev = mathutils.Vector([empty_positions[empty]['x'][frame_index - 1], empty_positions[empty]['y'][frame_index - 1], empty_positions[empty]['z'][frame_index - 1]])
+                # Get the empty position in the next frame
+                empty_position_next = mathutils.Vector([empty_positions[empty]['x'][frame_index + 1], empty_positions[empty]['y'][frame_index + 1], empty_positions[empty]['z'][frame_index + 1]])
+
+                # Get the direction vector of the empty in the current frame
+                empty_direction         = empty_position - empty_position_prev
+
+                # Get the direction vector of the empty in the next current
+                empty_direction_next    = empty_position_next - empty_position
+
+                # Get the addition of the direction vectors
+                direction_addition      = empty_direction + empty_direction_next
+
+                # Get the the direction addition length
+                direction_addition_length = m.dist((0,0,0), direction_addition)
+
+                # If the distance is less than the threshold then the current position of the empty is considered a shake
+                if direction_addition_length < 0.02:
+                    print(empty + ":" + str(frame_index + 1) + ": shake")
+
+                # print(empty_position)
+                # print(empty_position_prev)
+                # print(empty_direction)
+                # print(empty_direction_next)
+                # print(direction_addition)
+                # print(m.dist((0,0,0), direction_addition))
+                # print('right_wrist frame ' + str(frame_index + 1) + ' speed: ' + str(empty_speed) + ' acceleration: ' + str(acceleration))
+
+
 ######################################################################
 ############################# ADD RIG ################################
 ######################################################################
 
-def add_rig(bone_length_method: str='median_length', keep_symmetry: bool=False, use_limit_rotation: bool=False):
+def add_rig(bone_length_method: str='median_length',
+            keep_symmetry: bool=False,
+            add_hand_middle_empty: bool=True,
+            add_fingers_constraints: bool=False,
+            use_limit_rotation: bool=False):
 
     # Deselect all objects
     for object in bpy.data.objects:
@@ -1018,7 +1227,7 @@ def add_rig(bone_length_method: str='median_length', keep_symmetry: bool=False, 
         bpy.ops.pose.select_all(action='SELECT')
         bpy.ops.pose.armature_apply(selected=False)
 
-        # Change mode to edit mode
+        # Change mode to object mode
         bpy.ops.object.mode_set(mode='OBJECT')
 
     elif bone_length_method == 'current_frame':
@@ -1473,15 +1682,30 @@ def add_rig(bone_length_method: str='median_length', keep_symmetry: bool=False, 
         bpy.ops.pose.select_all(action='SELECT')
         bpy.ops.pose.armature_apply(selected=False)
 
-        # Change mode to edit mode
+        # Change mode to object mode
         bpy.ops.object.mode_set(mode='OBJECT')
+
+    # Add the hand middle empties if the option is enabled
+    if add_hand_middle_empty:
+        add_hands_middle_empties()
 
     ### Add bone constrains ###
     print('Adding bone constraints...')
+
     # Change to pose mode
+    bpy.context.view_layer.objects.active = rig
     bpy.ops.object.mode_set(mode='POSE')
 
     # Create a dictionary with the different bone constraints
+    # Define the hand bones damped track target as the hand middle empty if they were already added
+    try:
+        right_hand_middle_name = bpy.data.objects['right_hand_middle'].name
+        # Right Hand Middle Empty exists. Use hand middle as target
+        hand_target_sufix = 'hand_middle'
+    except:
+        # Hand middle empties do not exist. Use hand_index as target
+        hand_target_sufix = 'index'
+
     constraints = {
         "pelvis": [
             {'type':'COPY_LOCATION','target':'hips_center'},
@@ -1523,14 +1747,14 @@ def add_rig(bone_length_method: str='median_length', keep_symmetry: bool=False, 
             {'type':'DAMPED_TRACK','target':'left_wrist','track_axis':'TRACK_Y'},
             {'type':'LIMIT_ROTATION','use_limit_x':True,'min_x':-90,'max_x':79,'use_limit_y':True,'min_y':-146,'max_y':0,'use_limit_z':True,'min_z':0,'max_z':0,'owner_space':'LOCAL'}],
         "hand.R": [
-            {'type':'DAMPED_TRACK','target':'right_index','track_axis':'TRACK_Y'},
-            {'type':'LOCKED_TRACK','target':'right_thumb','track_axis':'TRACK_Z','lock_axis':'LOCK_Y','influence':0.8},
-            {'type':'LOCKED_TRACK','target':'right_thumb','track_axis':'TRACK_NEGATIVE_X','lock_axis':'LOCK_Y','influence':0.2},
+            {'type':'DAMPED_TRACK','target':'right_' + hand_target_sufix,'track_axis':'TRACK_Y'},
+            {'type':'LOCKED_TRACK','target':'right_thumb','track_axis':'TRACK_Z','lock_axis':'LOCK_Y','influence':1.0},
+            #{'type':'LOCKED_TRACK','target':'right_thumb','track_axis':'TRACK_NEGATIVE_X','lock_axis':'LOCK_Y','influence':0.2},
             {'type':'LIMIT_ROTATION','use_limit_x':True,'min_x':-45,'max_x':45,'use_limit_y':True,'min_y':-36,'max_y':25,'use_limit_z':True,'min_z':-86,'max_z':90,'owner_space':'LOCAL'}],
         "hand.L": [
-            {'type':'DAMPED_TRACK','target':'left_index','track_axis':'TRACK_Y'},
-            {'type':'LOCKED_TRACK','target':'left_thumb','track_axis':'TRACK_Z','lock_axis':'LOCK_Y','influence':0.8},
-            {'type':'LOCKED_TRACK','target':'left_thumb','track_axis':'TRACK_X','lock_axis':'LOCK_Y','influence':0.2},
+            {'type':'DAMPED_TRACK','target':'left_' + hand_target_sufix,'track_axis':'TRACK_Y'},
+            {'type':'LOCKED_TRACK','target':'left_thumb','track_axis':'TRACK_Z','lock_axis':'LOCK_Y','influence':1.0},
+            #{'type':'LOCKED_TRACK','target':'left_thumb','track_axis':'TRACK_X','lock_axis':'LOCK_Y','influence':0.2},
             {'type':'LIMIT_ROTATION','use_limit_x':True,'min_x':-45,'max_x':45,'use_limit_y':True,'min_y':-25,'max_y':36,'use_limit_z':True,'min_z':-90,'max_z':86,'owner_space':'LOCAL'}],
         "thigh.R": [
             {'type':'COPY_LOCATION','target':'right_hip'},
@@ -1556,10 +1780,91 @@ def add_rig(bone_length_method: str='median_length', keep_symmetry: bool=False, 
             {'type':'DAMPED_TRACK','target':'right_heel','track_axis':'TRACK_Y'}],
         "heel.02.L": [
             {'type':'DAMPED_TRACK','target':'left_heel','track_axis':'TRACK_Y'}],
+        "thumb.01.R": [
+            {'type':'DAMPED_TRACK','target':'right_hand_thumb_mcp','track_axis':'TRACK_Y'}],
+        "thumb.02.R": [
+            {'type':'DAMPED_TRACK','target':'right_hand_thumb_ip','track_axis':'TRACK_Y'}],
+        "thumb.03.R": [
+            {'type':'DAMPED_TRACK','target':'right_hand_thumb_tip','track_axis':'TRACK_Y'}],
+        "palm.01.R": [
+            {'type':'DAMPED_TRACK','target':'right_hand_index_finger_mcp','track_axis':'TRACK_Y'}],
+        "f_index.01.R": [
+            {'type':'DAMPED_TRACK','target':'right_hand_index_finger_pip','track_axis':'TRACK_Y'}],
+        "f_index.02.R": [
+            {'type':'DAMPED_TRACK','target':'right_hand_index_finger_dip','track_axis':'TRACK_Y'}],
+        "f_index.03.R": [
+            {'type':'DAMPED_TRACK','target':'right_hand_index_finger_tip','track_axis':'TRACK_Y'}],
+        "palm.02.R": [
+            {'type':'DAMPED_TRACK','target':'right_hand_middle_finger_mcp','track_axis':'TRACK_Y'}],
+        "f_middle.01.R": [
+            {'type':'DAMPED_TRACK','target':'right_hand_middle_finger_pip','track_axis':'TRACK_Y'}],
+        "f_middle.02.R": [
+            {'type':'DAMPED_TRACK','target':'right_hand_middle_finger_dip','track_axis':'TRACK_Y'}],
+        "f_middle.03.R": [
+            {'type':'DAMPED_TRACK','target':'right_hand_middle_finger_tip','track_axis':'TRACK_Y'}],
+        "palm.03.R": [
+            {'type':'DAMPED_TRACK','target':'right_hand_ring_finger_mcp','track_axis':'TRACK_Y'}],
+        "f_ring.01.R": [
+            {'type':'DAMPED_TRACK','target':'right_hand_ring_finger_pip','track_axis':'TRACK_Y'}],
+        "f_ring.02.R": [
+            {'type':'DAMPED_TRACK','target':'right_hand_ring_finger_dip','track_axis':'TRACK_Y'}],
+        "f_ring.03.R": [
+            {'type':'DAMPED_TRACK','target':'right_hand_ring_finger_tip','track_axis':'TRACK_Y'}],
+        "palm.04.R": [
+            {'type':'DAMPED_TRACK','target':'right_hand_pinky_mcp','track_axis':'TRACK_Y'}],
+        "f_pinky.01.R": [
+            {'type':'DAMPED_TRACK','target':'right_hand_pinky_pip','track_axis':'TRACK_Y'}],
+        "f_pinky.02.R": [
+            {'type':'DAMPED_TRACK','target':'right_hand_pinky_dip','track_axis':'TRACK_Y'}],
+        "f_pinky.03.R": [
+            {'type':'DAMPED_TRACK','target':'right_hand_pinky_tip','track_axis':'TRACK_Y'}],
+        "thumb.01.L": [
+            {'type':'DAMPED_TRACK','target':'left_hand_thumb_mcp','track_axis':'TRACK_Y'}],
+        "thumb.02.L": [
+            {'type':'DAMPED_TRACK','target':'left_hand_thumb_ip','track_axis':'TRACK_Y'}],
+        "thumb.03.L": [
+            {'type':'DAMPED_TRACK','target':'left_hand_thumb_tip','track_axis':'TRACK_Y'}],
+        "palm.01.L": [
+            {'type':'DAMPED_TRACK','target':'left_hand_index_finger_mcp','track_axis':'TRACK_Y'}],
+        "f_index.01.L": [
+            {'type':'DAMPED_TRACK','target':'left_hand_index_finger_pip','track_axis':'TRACK_Y'}],
+        "f_index.02.L": [
+            {'type':'DAMPED_TRACK','target':'left_hand_index_finger_dip','track_axis':'TRACK_Y'}],
+        "f_index.03.L": [
+            {'type':'DAMPED_TRACK','target':'left_hand_index_finger_tip','track_axis':'TRACK_Y'}],
+        "palm.02.L": [
+            {'type':'DAMPED_TRACK','target':'left_hand_middle_finger_mcp','track_axis':'TRACK_Y'}],
+        "f_middle.01.L": [
+            {'type':'DAMPED_TRACK','target':'left_hand_middle_finger_pip','track_axis':'TRACK_Y'}],
+        "f_middle.02.L": [
+            {'type':'DAMPED_TRACK','target':'left_hand_middle_finger_dip','track_axis':'TRACK_Y'}],
+        "f_middle.03.L": [
+            {'type':'DAMPED_TRACK','target':'left_hand_middle_finger_tip','track_axis':'TRACK_Y'}],
+        "palm.03.L": [
+            {'type':'DAMPED_TRACK','target':'left_hand_ring_finger_mcp','track_axis':'TRACK_Y'}],
+        "f_ring.01.L": [
+            {'type':'DAMPED_TRACK','target':'left_hand_ring_finger_pip','track_axis':'TRACK_Y'}],
+        "f_ring.02.L": [
+            {'type':'DAMPED_TRACK','target':'left_hand_ring_finger_dip','track_axis':'TRACK_Y'}],
+        "f_ring.03.L": [
+            {'type':'DAMPED_TRACK','target':'left_hand_ring_finger_tip','track_axis':'TRACK_Y'}],
+        "palm.04.L": [
+            {'type':'DAMPED_TRACK','target':'left_hand_pinky_mcp','track_axis':'TRACK_Y'}],
+        "f_pinky.01.L": [
+            {'type':'DAMPED_TRACK','target':'left_hand_pinky_pip','track_axis':'TRACK_Y'}],
+        "f_pinky.02.L": [
+            {'type':'DAMPED_TRACK','target':'left_hand_pinky_dip','track_axis':'TRACK_Y'}],
+        "f_pinky.03.L": [
+            {'type':'DAMPED_TRACK','target':'left_hand_pinky_tip','track_axis':'TRACK_Y'}],
     }
 
     # Create each constraint
     for bone in constraints:
+
+        # If it is a finger bone amd add_fingers_constraints is False continue with the next bone
+        if not add_fingers_constraints and len([finger_part for finger_part in ['palm', 'thumb', 'index', 'middle', 'ring', 'pinky'] if finger_part in bone]) > 0:
+            continue
+
         for cons in constraints[bone]:
             # Add new constraint determined by type
             if not use_limit_rotation and cons['type'] == 'LIMIT_ROTATION':
@@ -2001,6 +2306,15 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
                       'If variable is stdev, the factor will be limited to values inside [0, median/stdev]'
     )
 
+    # Reduce Shakiness Options
+    recording_fps: bpy.props.FloatProperty(
+        name        = '',
+        default     = 30,
+        min         = 0,
+        precision   = 3,
+        description = 'Frames per second (fps) of the capture recording'
+    )
+
     # Add Rig Options
     bone_length_method: bpy.props.EnumProperty(
         name        = '',
@@ -2013,6 +2327,16 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         name        = '',
         default     = False,
         description = 'Keep right/left side symmetry (use average right/left side bone length)'
+    )
+    add_hand_middle_empty: bpy.props.BoolProperty(
+        name        = '',
+        default     = True,
+        description = 'Add an empty in the middle of the hand between index and pinky empties. This empty is used for a better orientation of the hand (experimental)'
+    )
+    add_fingers_constraints: bpy.props.BoolProperty(
+        name        = '',
+        default     = False,
+        description = 'Add bone constraints for fingers'
     )
     use_limit_rotation: bpy.props.BoolProperty(
         name        = '',
@@ -2075,6 +2399,16 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         split.split().column().prop(fmc_adapter_tool, 'interval_factor')
 
         box.operator('fmc_adapter.reduce_bone_length_dispersion', text='Reduce Bone Length Dispersion')
+
+        # Reduce Shakiness Options
+        # box = layout.box()
+        # #box.label(text='Reduce Shakiness Options')
+        
+        # split = box.column().row().split(factor=0.6)
+        # split.column().label(text='Recording FPS')
+        # split.split().column().prop(fmc_adapter_tool, 'recording_fps')
+
+        # box.operator('fmc_adapter.reduce_shakiness', text='Reduce Shakiness')
         
         # Add Rig Options
         box = layout.box()
@@ -2087,6 +2421,14 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         split = box.column().row().split(factor=0.6)
         split.column().label(text='Keep right/left symmetry')
         split.split().column().prop(fmc_adapter_tool, 'keep_symmetry')
+
+        split = box.column().row().split(factor=0.6)
+        split.column().label(text='Add hand middle empty')
+        split.split().column().prop(fmc_adapter_tool, 'add_hand_middle_empty')
+
+        split = box.column().row().split(factor=0.6)
+        split.column().label(text='Add finger constraints')
+        split.split().column().prop(fmc_adapter_tool, 'add_fingers_constraints')
 
         split = box.column().row().split(factor=0.6)
         split.column().label(text='Add rotation limits')
@@ -2154,6 +2496,28 @@ class FMC_ADAPTER_OT_reduce_bone_length_dispersion(Operator):
 
         return {'FINISHED'}
 
+class FMC_ADAPTER_OT_reduce_shakiness(Operator):
+    bl_idname       = 'fmc_adapter.reduce_shakiness'
+    bl_label        = 'Freemocap Adapter - Reduce Shakiness'
+    bl_description  = 'Reduce the shakiness of the capture empties by restricting their acceleration to a defined threshold'
+    bl_options      = {'REGISTER', 'UNDO_GROUPED'}
+
+    def execute(self, context):
+        scene               = context.scene
+        fmc_adapter_tool    = scene.fmc_adapter_tool
+
+        # Get start time
+        start = time.time()
+        print('Executing Reduce Shakiness...')
+
+        reduce_shakiness(recording_fps=fmc_adapter_tool.recording_fps)
+
+        # Get end time and print execution time
+        end = time.time()
+        print('Finished. Execution time (s): ' + str(m.trunc((end - start)*1000)/1000))
+
+        return {'FINISHED'}
+
 class FMC_ADAPTER_OT_add_rig(Operator):
     bl_idname       = 'fmc_adapter.add_rig'
     bl_label        = 'Freemocap Adapter - Add Rig'
@@ -2184,6 +2548,8 @@ class FMC_ADAPTER_OT_add_rig(Operator):
 
         add_rig(bone_length_method=fmc_adapter_tool.bone_length_method,
                 keep_symmetry=fmc_adapter_tool.keep_symmetry,
+                add_hand_middle_empty=fmc_adapter_tool.add_hand_middle_empty,
+                add_fingers_constraints=fmc_adapter_tool.add_fingers_constraints,
                 use_limit_rotation=fmc_adapter_tool.use_limit_rotation)
 
         # Get end time and print execution time
@@ -2239,6 +2605,7 @@ classes = [FMC_ADAPTER_PROPERTIES,
            VIEW3D_PT_freemocap_adapter,
            FMC_ADAPTER_OT_adjust_empties,
            FMC_ADAPTER_OT_reduce_bone_length_dispersion,
+           FMC_ADAPTER_OT_reduce_shakiness,
            FMC_ADAPTER_OT_add_rig,
            FMC_ADAPTER_OT_add_body_mesh
 ]
