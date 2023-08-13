@@ -635,8 +635,8 @@ def reduce_bone_length_dispersion(interval_variable: str='median', interval_fact
                 bone_vector_norm = bone_vector / length
                 # Get the tail position delta by multiplying the normalized bone vector by the substraction of new_length and length
                 position_delta  = bone_vector_norm * (new_length - length)
-                # Translate the tail empty and its children by the position delta
-                translate_empty(empties_dict, tail, frame_index, position_delta)
+                # Translate the tail empty and its children by the position delta. frame_index is incremented by 1 to match the action curves index
+                translate_empty(empties_dict, tail, frame_index+1, position_delta)
 
                 empties_positions_corrected += 1
             
