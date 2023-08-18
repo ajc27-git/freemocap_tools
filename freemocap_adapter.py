@@ -1,7 +1,7 @@
 bl_info = {
     'name'          : 'Freemocap Adapter',
     'author'        : 'ajc27',
-    'version'       : (1, 1, 4),
+    'version'       : (1, 1, 5),
     'blender'       : (3, 0, 0),
     'location'      : '3D Viewport > Sidebar > Freemocap Adapter',
     'description'   : 'Add-on to adapt the Freemocap Blender output',
@@ -74,7 +74,7 @@ virtual_bones = {
         'lengths'   : [],
         'median'    : 0,
         'stdev'     : 0},
-    'head_nose': { # Imaginary bone from head center to nose tip to align the face bones 
+    'head_nose': { # Auxiliary bone from head center to nose tip to align the face bones 
         'head'      : 'head_center',
         'tail'      : 'nose',
         'lengths'   : [],
@@ -128,27 +128,243 @@ virtual_bones = {
         'lengths'   : [],
         'median'    : 0,
         'stdev'     : 0},
+    'thumb.carpal.R': { # Auxiliary bone to align the right_hand_thumb_cmc empty
+        'head'      : 'right_hand_wrist',
+        'tail'      : 'right_hand_thumb_cmc',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'thumb.carpal.L': { # Auxiliary bone to align the left_hand_thumb_cmc empty
+        'head'      : 'left_hand_wrist',
+        'tail'      : 'left_hand_thumb_cmc',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
     'thumb.01.R': {
-        'head'      : 'right_wrist',
-        'tail'      : 'right_thumb',
+        'head'      : 'right_hand_thumb_cmc',
+        'tail'      : 'right_hand_thumb_mcp',
         'lengths'   : [],
         'median'    : 0,
         'stdev'     : 0},
     'thumb.01.L': {
-        'head'      : 'left_wrist',
-        'tail'      : 'left_thumb',
+        'head'      : 'left_hand_thumb_cmc',
+        'tail'      : 'left_hand_thumb_mcp',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'thumb.02.R': {
+        'head'      : 'right_hand_thumb_mcp',
+        'tail'      : 'right_hand_thumb_ip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'thumb.02.L': {
+        'head'      : 'left_hand_thumb_mcp',
+        'tail'      : 'left_hand_thumb_ip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'thumb.03.R': {
+        'head'      : 'right_hand_thumb_ip',
+        'tail'      : 'right_hand_thumb_tip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'thumb.03.L': {
+        'head'      : 'left_hand_thumb_ip',
+        'tail'      : 'left_hand_thumb_tip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'palm.01.R': {
+        'head'      : 'right_hand_wrist',
+        'tail'      : 'right_hand_index_finger_mcp',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'palm.01.L': {
+        'head'      : 'left_hand_wrist',
+        'tail'      : 'left_hand_index_finger_mcp',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_index.01.R': {
+        'head'      : 'right_hand_index_finger_mcp',
+        'tail'      : 'right_hand_index_finger_pip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_index.01.L': {
+        'head'      : 'left_hand_index_finger_mcp',
+        'tail'      : 'left_hand_index_finger_pip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_index.02.R': {
+        'head'      : 'right_hand_index_finger_pip',
+        'tail'      : 'right_hand_index_finger_dip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_index.02.L': {
+        'head'      : 'left_hand_index_finger_pip',
+        'tail'      : 'left_hand_index_finger_dip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_index.03.R': {
+        'head'      : 'right_hand_index_finger_dip',
+        'tail'      : 'right_hand_index_finger_tip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_index.03.L': {
+        'head'      : 'left_hand_index_finger_dip',
+        'tail'      : 'left_hand_index_finger_tip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'palm.02.R': {
+        'head'      : 'right_hand_wrist',
+        'tail'      : 'right_hand_middle_finger_mcp',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'palm.02.L': {
+        'head'      : 'left_hand_wrist',
+        'tail'      : 'left_hand_middle_finger_mcp',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_middle.01.R': {
+        'head'      : 'right_hand_middle_finger_mcp',
+        'tail'      : 'right_hand_middle_finger_pip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_middle.01.L': {
+        'head'      : 'left_hand_middle_finger_mcp',
+        'tail'      : 'left_hand_middle_finger_pip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_middle.02.R': {
+        'head'      : 'right_hand_middle_finger_pip',
+        'tail'      : 'right_hand_middle_finger_dip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_middle.02.L': {
+        'head'      : 'left_hand_middle_finger_pip',
+        'tail'      : 'left_hand_middle_finger_dip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_middle.03.R': {
+        'head'      : 'right_hand_middle_finger_dip',
+        'tail'      : 'right_hand_middle_finger_tip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_middle.03.L': {
+        'head'      : 'left_hand_middle_finger_dip',
+        'tail'      : 'left_hand_middle_finger_tip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'palm.03.R': {
+        'head'      : 'right_hand_wrist',
+        'tail'      : 'right_hand_ring_finger_mcp',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'palm.03.L': {
+        'head'      : 'left_hand_wrist',
+        'tail'      : 'left_hand_ring_finger_mcp',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_ring.01.R': {
+        'head'      : 'right_hand_ring_finger_mcp',
+        'tail'      : 'right_hand_ring_finger_pip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_ring.01.L': {
+        'head'      : 'left_hand_ring_finger_mcp',
+        'tail'      : 'left_hand_ring_finger_pip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_ring.02.R': {
+        'head'      : 'right_hand_ring_finger_pip',
+        'tail'      : 'right_hand_ring_finger_dip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_ring.02.L': {
+        'head'      : 'left_hand_ring_finger_pip',
+        'tail'      : 'left_hand_ring_finger_dip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_ring.03.R': {
+        'head'      : 'right_hand_ring_finger_dip',
+        'tail'      : 'right_hand_ring_finger_tip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_ring.03.L': {
+        'head'      : 'left_hand_ring_finger_dip',
+        'tail'      : 'left_hand_ring_finger_tip',
         'lengths'   : [],
         'median'    : 0,
         'stdev'     : 0},
     'palm.04.R': {
-        'head'      : 'right_wrist',
-        'tail'      : 'right_pinky',
+        'head'      : 'right_hand_wrist',
+        'tail'      : 'right_hand_pinky_mcp',
         'lengths'   : [],
         'median'    : 0,
         'stdev'     : 0},
     'palm.04.L': {
-        'head'      : 'left_wrist',
-        'tail'      : 'left_pinky',
+        'head'      : 'left_hand_wrist',
+        'tail'      : 'left_hand_pinky_mcp',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_pinky.01.R': {
+        'head'      : 'right_hand_pinky_mcp',
+        'tail'      : 'right_hand_pinky_pip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_pinky.01.L': {
+        'head'      : 'left_hand_pinky_mcp',
+        'tail'      : 'left_hand_pinky_pip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_pinky.02.R': {
+        'head'      : 'right_hand_pinky_pip',
+        'tail'      : 'right_hand_pinky_dip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_pinky.02.L': {
+        'head'      : 'left_hand_pinky_pip',
+        'tail'      : 'left_hand_pinky_dip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_pinky.03.R': {
+        'head'      : 'right_hand_pinky_dip',
+        'tail'      : 'right_hand_pinky_tip',
+        'lengths'   : [],
+        'median'    : 0,
+        'stdev'     : 0},
+    'f_pinky.03.L': {
+        'head'      : 'left_hand_pinky_dip',
+        'tail'      : 'left_hand_pinky_tip',
         'lengths'   : [],
         'median'    : 0,
         'stdev'     : 0},
@@ -222,19 +438,73 @@ empties_dict = {
     'left_elbow': {
         'children'    : ['left_wrist']},
     'right_wrist': {
-        'children'    : ['right_thumb', 'right_index', 'right_pinky', 'right_hand_wrist', 'right_hand_thumb_cmc', 'right_hand_thumb_mcp',
-                        'right_hand_thumb_ip', 'right_hand_thumb_tip', 'right_hand_index_finger_mcp', 'right_hand_index_finger_pip', 'right_hand_index_finger_dip',
-                        'right_hand_index_finger_tip', 'right_hand_middle_finger_mcp', 'right_hand_middle_finger_pip', 'right_hand_middle_finger_dip',
-                        'right_hand_middle_finger_tip', 'right_hand_ring_finger_mcp', 'right_hand_ring_finger_pip', 'right_hand_ring_finger_dip',
-                        'right_hand_ring_finger_tip', 'right_hand_pinky_mcp', 'right_hand_pinky_pip', 'right_hand_pinky_dip', 'right_hand_pinky_tip',
-                        'right_hand', 'right_hand_middle']},
+        'children'    : ['right_thumb', 'right_index', 'right_pinky', 'right_hand', 'right_hand_middle', 'right_hand_wrist']},
     'left_wrist': {
-        'children'    : ['left_thumb', 'left_index', 'left_pinky', 'left_hand_wrist', 'left_hand_thumb_cmc', 'left_hand_thumb_mcp',
-                        'left_hand_thumb_ip', 'left_hand_thumb_tip', 'left_hand_index_finger_mcp', 'left_hand_index_finger_pip', 'left_hand_index_finger_dip',
-                        'left_hand_index_finger_tip', 'left_hand_middle_finger_mcp', 'left_hand_middle_finger_pip', 'left_hand_middle_finger_dip',
-                        'left_hand_middle_finger_tip', 'left_hand_ring_finger_mcp', 'left_hand_ring_finger_pip', 'left_hand_ring_finger_dip',
-                        'left_hand_ring_finger_tip', 'left_hand_pinky_mcp', 'left_hand_pinky_pip', 'left_hand_pinky_dip', 'left_hand_pinky_tip',
-                        'left_hand', 'left_hand_middle']},
+        'children'    : ['left_thumb', 'left_index', 'left_pinky', 'left_hand', 'left_hand_middle', 'left_hand_wrist']},
+    'right_hand_wrist': {
+        'children'    : ['right_hand_thumb_cmc', 'right_hand_index_finger_mcp', 'right_hand_middle_finger_mcp', 'right_hand_ring_finger_mcp', 'right_hand_pinky_mcp']},
+    'left_hand_wrist': {
+        'children'    : ['left_hand_thumb_cmc', 'left_hand_index_finger_mcp', 'left_hand_middle_finger_mcp', 'left_hand_ring_finger_mcp', 'left_hand_pinky_mcp']},
+    'right_hand_thumb_cmc': {
+        'children'    : ['right_hand_thumb_mcp']},
+    'left_hand_thumb_cmc': {
+        'children'    : ['left_hand_thumb_mcp']},
+    'right_hand_thumb_mcp': {
+        'children'    : ['right_hand_thumb_ip']},
+    'left_hand_thumb_mcp': {
+        'children'    : ['left_hand_thumb_ip']},
+    'right_hand_thumb_ip': {
+        'children'    : ['right_hand_thumb_tip']},
+    'left_hand_thumb_ip': {
+        'children'    : ['left_hand_thumb_tip']},
+    'right_hand_index_finger_mcp': {
+        'children'    : ['right_hand_index_finger_pip']},
+    'left_hand_index_finger_mcp': {
+        'children'    : ['left_hand_index_finger_pip']},
+    'right_hand_index_finger_pip': {
+        'children'    : ['right_hand_index_finger_dip']},
+    'left_hand_index_finger_pip': {
+        'children'    : ['left_hand_index_finger_dip']},
+    'right_hand_index_finger_dip': {
+        'children'    : ['right_hand_index_finger_tip']},
+    'left_hand_index_finger_dip': {
+        'children'    : ['left_hand_index_finger_tip']},
+    'right_hand_middle_finger_mcp': {
+        'children'    : ['right_hand_middle_finger_pip']},
+    'left_hand_middle_finger_mcp': {
+        'children'    : ['left_hand_middle_finger_pip']},
+    'right_hand_middle_finger_pip': {
+        'children'    : ['right_hand_middle_finger_dip']},
+    'left_hand_middle_finger_pip': {
+        'children'    : ['left_hand_middle_finger_dip']},
+    'right_hand_middle_finger_dip': {
+        'children'    : ['right_hand_middle_finger_tip']},
+    'left_hand_middle_finger_dip': {
+        'children'    : ['left_hand_middle_finger_tip']},
+    'right_hand_ring_finger_mcp': {
+        'children'    : ['right_hand_ring_finger_pip']},
+    'left_hand_ring_finger_mcp': {
+        'children'    : ['left_hand_ring_finger_pip']},
+    'right_hand_ring_finger_pip': {
+        'children'    : ['right_hand_ring_finger_dip']},
+    'left_hand_ring_finger_pip': {
+        'children'    : ['left_hand_ring_finger_dip']},
+    'right_hand_ring_finger_dip': {
+        'children'    : ['right_hand_ring_finger_tip']},
+    'left_hand_ring_finger_dip': {
+        'children'    : ['left_hand_ring_finger_tip']},
+    'right_hand_pinky_mcp': {
+        'children'    : ['right_hand_pinky_pip']},
+    'left_hand_pinky_mcp': {
+        'children'    : ['left_hand_pinky_pip']},
+    'right_hand_pinky_pip': {
+        'children'    : ['right_hand_pinky_dip']},
+    'left_hand_pinky_pip': {
+        'children'    : ['left_hand_pinky_dip']},
+    'right_hand_pinky_dip': {
+        'children'    : ['right_hand_pinky_tip']},
+    'left_hand_pinky_dip': {
+        'children'    : ['left_hand_pinky_tip']},
     'right_hip': {
         'children'    : ['right_knee']},
     'left_hip': {
@@ -265,8 +535,8 @@ def update_empty_positions():
         if object.type == 'EMPTY' and object.name != 'freemocap_origin_axes' and object.name != 'world_origin' and object.name != '_full_body_center_of_mass':
             empty_positions[object.name] = {'x': [], 'y': [], 'z': []}
 
-    # Iterate through each scene frame and save the coordinates of each empty in the dictionary
-    for frame in range (scene.frame_start, scene.frame_end + 1):
+    # Iterate through each scene frame and save the coordinates of each empty in the dictionary. Frame is displaced by -1 to match animation curves.
+    for frame in range (scene.frame_start - 1, scene.frame_end):
         # Set scene frame
         scene.frame_set(frame)
         # Iterate through each object
@@ -368,6 +638,10 @@ def add_hands_middle_empties():
         # Hand Middle Empties do not exist
         print('Adding Hand Middle Empties...')
 
+        # Define the empties that serve as reference to locate the middle empties
+        # middle_references = ['index', 'pinky']
+        middle_references = ['hand_middle_finger_mcp', 'hand_ring_finger_mcp']
+
         # Add the empties
         bpy.ops.object.empty_add(type='ARROWS', align='WORLD', location=(0, 0, 0), scale=(0.1, 0.1, 0.1))
         right_hand_middle        = bpy.context.active_object
@@ -381,11 +655,11 @@ def add_hands_middle_empties():
 
         # Copy the action data from the index fingers to have the base
         right_hand_middle.animation_data_create()
-        right_hand_middle.animation_data.action = bpy.data.actions["right_indexAction"].copy()
+        right_hand_middle.animation_data.action = bpy.data.actions["right_" + middle_references[0] + "Action"].copy()
         right_hand_middle.animation_data.action.name = 'right_hand_middleAction'
 
         left_hand_middle.animation_data_create()
-        left_hand_middle.animation_data.action = bpy.data.actions["left_indexAction"].copy()
+        left_hand_middle.animation_data.action = bpy.data.actions["left_" + middle_references[0] + "Action"].copy()
         left_hand_middle.animation_data.action.name = 'left_hand_middleAction'
 
         # Move the freemocap_origin_axes empty to the position and rotation previous to the Adjust Empties method ending
@@ -396,39 +670,43 @@ def add_hands_middle_empties():
         # Select the new empties
         right_hand_middle.select_set(True)
         left_hand_middle.select_set(True)
+
         # Set the origin active in 3Dview
         bpy.context.view_layer.objects.active = bpy.data.objects['freemocap_origin_axes']
         # Parent selected empties to freemocap_origin_axes keeping transforms
         bpy.ops.object.parent_set(type='OBJECT', keep_transform=True)
 
+        # Reset the position and rotation of the origin
         origin.location         = mathutils.Vector([0, 0, 0])
         origin.rotation_euler   = mathutils.Vector([0, 0, 0])
+
+        # Create a list with the new hand middle empties
+        hand_middle_empties = [right_hand_middle, left_hand_middle]
+
+        # Create a list of the hand sides
+        hand_side = ['right', 'left']
 
         # Iterate through each frame and calculate the middle point between the index and pinky empty markers for each hand
         # Update the new hand middle empties position with that point
         for frame_index in range (0, len(empty_positions['right_index']['x']) - 1):
-            # Get the positions of the index and pinky empties
-            right_index_position    = mathutils.Vector([empty_positions['right_index']['x'][frame_index], empty_positions['right_index']['y'][frame_index], empty_positions['right_index']['z'][frame_index]])
-            right_pinky_position    = mathutils.Vector([empty_positions['right_pinky']['x'][frame_index], empty_positions['right_pinky']['y'][frame_index], empty_positions['right_pinky']['z'][frame_index]])
-            left_index_position     = mathutils.Vector([empty_positions['left_index']['x'][frame_index], empty_positions['left_index']['y'][frame_index], empty_positions['left_index']['z'][frame_index]])
-            left_pinky_position     = mathutils.Vector([empty_positions['left_pinky']['x'][frame_index], empty_positions['left_pinky']['y'][frame_index], empty_positions['left_pinky']['z'][frame_index]])
-            
-            # Get the vector between the corresponding empties
-            right_index_pinky_vector    = right_pinky_position - right_index_position
-            left_index_pinky_vector     = left_pinky_position - left_index_position
 
-            # Get the new position of the middle empties
-            right_hand_middle_position  = right_index_position + right_index_pinky_vector / 2
-            left_hand_middle_position   = left_index_position + left_index_pinky_vector / 2
+            for side_index in range (0, 2):
+                # Get the positions of the middle references
+                ref0_position    = mathutils.Vector([empty_positions[hand_side[side_index] + '_' + middle_references[0]]['x'][frame_index],
+                                                     empty_positions[hand_side[side_index] + '_' + middle_references[0]]['y'][frame_index],
+                                                     empty_positions[hand_side[side_index] + '_' + middle_references[0]]['z'][frame_index]])
+                ref1_position    = mathutils.Vector([empty_positions[hand_side[side_index] + '_' + middle_references[1]]['x'][frame_index],
+                                                     empty_positions[hand_side[side_index] + '_' + middle_references[1]]['y'][frame_index],
+                                                     empty_positions[hand_side[side_index] + '_' + middle_references[1]]['z'][frame_index]])
+                
+                # Get the new position of the middle empties
+                hand_middle_position  = ref0_position + (ref1_position - ref0_position) / 2
 
-            # Update the action property of both right and left middle empties
-            right_hand_middle.animation_data.action.fcurves[0].keyframe_points[frame_index+1].co[1] = right_hand_middle_position[0]
-            right_hand_middle.animation_data.action.fcurves[1].keyframe_points[frame_index+1].co[1] = right_hand_middle_position[1]
-            right_hand_middle.animation_data.action.fcurves[2].keyframe_points[frame_index+1].co[1] = right_hand_middle_position[2]
+                # Update the action property of the middle empty
+                hand_middle_empties[side_index].animation_data.action.fcurves[0].keyframe_points[frame_index].co[1] = hand_middle_position[0]
+                hand_middle_empties[side_index].animation_data.action.fcurves[1].keyframe_points[frame_index].co[1] = hand_middle_position[1]
+                hand_middle_empties[side_index].animation_data.action.fcurves[2].keyframe_points[frame_index].co[1] = hand_middle_position[2]
 
-            left_hand_middle.animation_data.action.fcurves[0].keyframe_points[frame_index+1].co[1] = left_hand_middle_position[0]
-            left_hand_middle.animation_data.action.fcurves[1].keyframe_points[frame_index+1].co[1] = left_hand_middle_position[1]
-            left_hand_middle.animation_data.action.fcurves[2].keyframe_points[frame_index+1].co[1] = left_hand_middle_position[2]
 
         print('Adding Hand Middle completed.')
 
@@ -440,6 +718,7 @@ def adjust_empties(z_align_ref_empty: str='left_knee',
                    z_align_angle_offset: float=0,
                    ground_ref_empty: str='left_foot_index',
                    z_translation_offset: float=-0.01,
+                   correct_fingers_empties: bool=False,
                    ):
     
     # Reference to the global adjust_empties_executed variable
@@ -447,6 +726,9 @@ def adjust_empties(z_align_ref_empty: str='left_knee',
     # Reference to the global origin location and rotation pre reset variables
     global origin_location_pre_reset
     global origin_rotation_pre_reset
+
+    # Get the scene context
+    scene = bpy.context.scene
 
     # Play and stop the animation in case the first frame empties are in a strange position
     bpy.ops.screen.animation_play()
@@ -571,6 +853,26 @@ def adjust_empties(z_align_ref_empty: str='left_knee',
     for object in bpy.data.objects:
         object.select_set(False)
 
+    # Adjust the position of the finger tracking empties. Move right_hand_wrist (and all its child empties) to match the right_wrist position
+    if correct_fingers_empties:
+        hand_side = ['right', 'left']
+
+        # Iterate through each scene frame and calculate the position delta from x_hand_wrist to x_wrist and move all the fingers empties by that delta
+        for frame in range (scene.frame_start, scene.frame_end):
+            # Set scene frame
+            scene.frame_set(frame)
+
+            for side in hand_side:
+                # Get the position delta
+                position_delta      = bpy.data.objects[side + '_wrist'].location - bpy.data.objects[side + '_hand_wrist'].location
+
+                # Translate the hand_wrist empty and its children by the position delta
+                translate_empty(empties_dict, side + '_hand_wrist', frame, position_delta)
+
+        # Reset the scene frame to the start
+        scene.frame_set(scene.frame_start)
+
+
     # Change the adjust_empties_executed variable
     adjust_empties_executed = True
 
@@ -602,9 +904,10 @@ def reduce_bone_length_dispersion(interval_variable: str='median', interval_fact
 
         for length in virtual_bones[bone]['lengths']:
         
-            # Check if bone length is outside interval
-            median          = virtual_bones[bone]['median']
-            stdev           = virtual_bones[bone]['stdev']
+            # Get the bone median and stdev values
+            median  = virtual_bones[bone]['median']
+            stdev   = virtual_bones[bone]['stdev']
+
             # Calculate inferior and superior interval limit depending on interval variable
             if interval_variable == 'median':
                 # Fix interval_factor to 1 in case is greater than 1
@@ -621,6 +924,7 @@ def reduce_bone_length_dispersion(interval_variable: str='median', interval_fact
                 inferior_limit  = median - interval_factor * stdev
                 superior_limit  = median + interval_factor * stdev
 
+            # Check if bone length is outside the interval
             if length < inferior_limit or length > superior_limit:
 
                 head        = virtual_bones[bone]['head']
@@ -635,8 +939,8 @@ def reduce_bone_length_dispersion(interval_variable: str='median', interval_fact
                 bone_vector_norm = bone_vector / length
                 # Get the tail position delta by multiplying the normalized bone vector by the substraction of new_length and length
                 position_delta  = bone_vector_norm * (new_length - length)
-                # Translate the tail empty and its children by the position delta. frame_index is incremented by 1 to match the action curves index
-                translate_empty(empties_dict, tail, frame_index+1, position_delta)
+                # Translate the tail empty and its children by the position delta.
+                translate_empty(empties_dict, tail, frame_index, position_delta)
 
                 empties_positions_corrected += 1
             
@@ -644,7 +948,7 @@ def reduce_bone_length_dispersion(interval_variable: str='median', interval_fact
     
     # Update the empty positions dictionary
     update_empty_positions()
-
+    
     # Update the information of the virtual bones
     update_virtual_bones_info()
 
@@ -655,6 +959,7 @@ def reduce_bone_length_dispersion(interval_variable: str='median', interval_fact
         print('{:<12} {:>12} {:>12} {:>12}'.format(bone, str(m.trunc(virtual_bones[bone]['median']*100*10000000)/10000000), str(m.trunc(virtual_bones[bone]['stdev']*100*10000000)/10000000), str(m.trunc(virtual_bones[bone]['stdev']/virtual_bones[bone]['median']*100*10000)/10000)))
 
     print('Total empties positions corrected: ' + str(empties_positions_corrected))
+    
 
 # Function to translate the empties recursively
 def translate_empty(empties_dict, empty, frame_index, delta):
@@ -669,6 +974,7 @@ def translate_empty(empties_dict, empty, frame_index, delta):
         bpy.data.objects[empty].animation_data.action.fcurves[2].keyframe_points[frame_index].co[1] = actual_z + delta[2]
     except:
         # Empty does not exist or does not have animation data
+        print('Empty ' + empty + ' does not have animation data on frame ' + str(frame_index))
         pass
 
     # If empty has children then call this function for every child
@@ -756,7 +1062,7 @@ def add_rig(bone_length_method: str='median_length',
     try:
         print('Deleting previous metarigs...')
         for object in bpy.data.objects:
-            if object.type == "ARMATURE" :
+            if object.type == "ARMATURE":
                 bpy.data.objects.remove(object, do_unlink=True)
     except:
         print('No existing metarigs to delete')
@@ -1011,6 +1317,10 @@ def add_rig(bone_length_method: str='median_length',
         breast_L.head[1] += breast_y_offset
         breast_L.tail[1] += breast_y_offset
 
+        # Temporarily remove breast bones
+        rig.data.edit_bones.remove(rig.data.edit_bones[breast_R.name])
+        rig.data.edit_bones.remove(rig.data.edit_bones[breast_L.name])
+
         # Set the y position to which the arms bones will be aligned
         arms_bones_y_pos = spine_001.tail[1]
         # Move shoulders on y axis and also move shoulders head to the center at x=0 , 
@@ -1054,11 +1364,11 @@ def add_rig(bone_length_method: str='median_length',
         bpy.ops.object.mode_set(mode='POSE')
         pose_upper_arm_R = rig.pose.bones['upper_arm.R']
         pose_upper_arm_R.rotation_mode  = 'XYZ'
-        pose_upper_arm_R.rotation_euler = (0,0,m.radians(-29))
+        pose_upper_arm_R.rotation_euler = (0,m.radians(-7),m.radians(-29))
         pose_upper_arm_R.rotation_mode  = 'QUATERNION'
         pose_upper_arm_L = rig.pose.bones['upper_arm.L']
         pose_upper_arm_L.rotation_mode  = 'XYZ'
-        pose_upper_arm_L.rotation_euler = (0,0,m.radians(29))
+        pose_upper_arm_L.rotation_euler = (0,m.radians(7),m.radians(29))
         pose_upper_arm_L.rotation_mode  = 'QUATERNION'
         pose_forearm_R = rig.pose.bones['forearm.R']
         pose_forearm_R.rotation_mode    = 'XYZ'
@@ -1106,7 +1416,7 @@ def add_rig(bone_length_method: str='median_length',
         forearm_R       = rig.data.edit_bones['forearm.R']
         forearm_L       = rig.data.edit_bones['forearm.L']
         hand_R          = rig.data.edit_bones['hand.R']
-        hand_L          = rig.data.edit_bones['hand.L']
+        hand_L          = rig.data.edit_bones['hand.L']        
 
         # Get average upperarm length
         avg_upper_arm_length = (virtual_bones['upper_arm.R']['median'] + virtual_bones['upper_arm.L']['median']) / 2
@@ -1147,6 +1457,31 @@ def add_rig(bone_length_method: str='median_length',
                 bone.tail[0] += forearm_L_tail_x_offset
             else:
                 bone.tail[0] += forearm_L_tail_x_offset
+
+        ############################################################
+        ### DEBUG ###
+        if True:
+            # Add an auxiliary bone to the side of the upperarms and forearms to check their rotation
+            upper_arm_R_Rot             = rig.data.edit_bones.new('uppe_rarm.R.Rot')
+            upper_arm_R_Rot.head        = (upper_arm_R.head[0] - upper_arm_R_length/2, upper_arm_R.head[1], upper_arm_R.head[2])
+            upper_arm_R_Rot.tail        = (upper_arm_R_Rot.head[0], upper_arm_R_Rot.head[1], upper_arm_R_Rot.head[2] + 0.1)
+            upper_arm_R_Rot.parent      = upper_arm_R
+            upper_arm_R_Rot.use_connect = False
+            upper_arm_L_Rot             = rig.data.edit_bones.new('uppe_rarm.L.Rot')
+            upper_arm_L_Rot.head        = (upper_arm_L.head[0] + upper_arm_L_length/2, upper_arm_L.head[1], upper_arm_L.head[2])
+            upper_arm_L_Rot.tail        = (upper_arm_L_Rot.head[0], upper_arm_L_Rot.head[1], upper_arm_L_Rot.head[2] + 0.1)
+            upper_arm_L_Rot.parent      = upper_arm_L
+            upper_arm_L_Rot.use_connect = False
+            forearm_R_Rot               = rig.data.edit_bones.new('uppe_rarm.R.Rot')
+            forearm_R_Rot.head          = (forearm_R.head[0] - forearm_R_length/2, forearm_R.head[1], forearm_R.head[2])
+            forearm_R_Rot.tail          = (forearm_R_Rot.head[0], forearm_R_Rot.head[1], forearm_R_Rot.head[2] + 0.1)
+            forearm_R_Rot.parent        = forearm_R
+            forearm_R_Rot.use_connect   = False
+            forearm_L_Rot               = rig.data.edit_bones.new('uppe_rarm.L.Rot')
+            forearm_L_Rot.head          = (forearm_L.head[0] + forearm_L_length/2, forearm_L.head[1], forearm_L.head[2])
+            forearm_L_Rot.tail          = (forearm_L_Rot.head[0], forearm_L_Rot.head[1], forearm_L_Rot.head[2] + 0.1)
+            forearm_L_Rot.parent        = forearm_L
+            forearm_L_Rot.use_connect   = False
 
         # Get average hand length
         avg_hand_length = (virtual_bones['hand.R']['median'] + virtual_bones['hand.L']['median']) / 2
@@ -1227,9 +1562,152 @@ def add_rig(bone_length_method: str='median_length',
         bpy.ops.pose.select_all(action='SELECT')
         bpy.ops.pose.armature_apply(selected=False)
 
+        # Adjust the fingers
+
+        # Change mode to edit mode
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        # Get new bone references
+        hand_R          = rig.data.edit_bones['hand.R']
+        hand_L          = rig.data.edit_bones['hand.L']
+        palm_01_R       = rig.data.edit_bones['palm.01.R']
+        palm_01_L       = rig.data.edit_bones['palm.01.L']
+        palm_02_R       = rig.data.edit_bones['palm.02.R']
+        palm_02_L       = rig.data.edit_bones['palm.02.L']
+        palm_03_R       = rig.data.edit_bones['palm.03.R']
+        palm_03_L       = rig.data.edit_bones['palm.03.L']
+        palm_04_R       = rig.data.edit_bones['palm.04.R']
+        palm_04_L       = rig.data.edit_bones['palm.04.L']
+        thumb_01_R      = rig.data.edit_bones['thumb.01.R']
+        thumb_01_L      = rig.data.edit_bones['thumb.01.L']
+        thumb_02_R      = rig.data.edit_bones['thumb.02.R']
+        thumb_02_L      = rig.data.edit_bones['thumb.02.L']
+        thumb_03_R      = rig.data.edit_bones['thumb.03.R']
+        thumb_03_L      = rig.data.edit_bones['thumb.03.L']
+        f_index_01_R    = rig.data.edit_bones['f_index.01.R']
+        f_index_01_L    = rig.data.edit_bones['f_index.01.L']
+        f_index_02_R    = rig.data.edit_bones['f_index.02.R']
+        f_index_02_L    = rig.data.edit_bones['f_index.02.L']
+        f_index_03_R    = rig.data.edit_bones['f_index.03.R']
+        f_index_03_L    = rig.data.edit_bones['f_index.03.L']
+        f_middle_01_R    = rig.data.edit_bones['f_middle.01.R']
+        f_middle_01_L    = rig.data.edit_bones['f_middle.01.L']
+        f_middle_02_R    = rig.data.edit_bones['f_middle.02.R']
+        f_middle_02_L    = rig.data.edit_bones['f_middle.02.L']
+        f_middle_03_R    = rig.data.edit_bones['f_middle.03.R']
+        f_middle_03_L    = rig.data.edit_bones['f_middle.03.L']
+        f_ring_01_R    = rig.data.edit_bones['f_ring.01.R']
+        f_ring_01_L    = rig.data.edit_bones['f_ring.01.L']
+        f_ring_02_R    = rig.data.edit_bones['f_ring.02.R']
+        f_ring_02_L    = rig.data.edit_bones['f_ring.02.L']
+        f_ring_03_R    = rig.data.edit_bones['f_ring.03.R']
+        f_ring_03_L    = rig.data.edit_bones['f_ring.03.L']
+        f_pinky_01_R    = rig.data.edit_bones['f_pinky.01.R']
+        f_pinky_01_L    = rig.data.edit_bones['f_pinky.01.L']
+        f_pinky_02_R    = rig.data.edit_bones['f_pinky.02.R']
+        f_pinky_02_L    = rig.data.edit_bones['f_pinky.02.L']
+        f_pinky_03_R    = rig.data.edit_bones['f_pinky.03.R']
+        f_pinky_03_L    = rig.data.edit_bones['f_pinky.03.L']
+
+        # Add the thumb carpals
+        thumb_carpal_R = rig.data.edit_bones.new('thumb.carpal.R')
+        thumb_carpal_R.head = hand_R.head
+        thumb_carpal_R.tail = thumb_carpal_R.head + mathutils.Vector([0, -virtual_bones['thumb.carpal.R']['median'], 0])
+        thumb_carpal_L = rig.data.edit_bones.new('thumb.carpal.L')
+        thumb_carpal_L.head = hand_L.head
+        thumb_carpal_L.tail = thumb_carpal_L.head + mathutils.Vector([0, -virtual_bones['thumb.carpal.L']['median'], 0])
+        
+        # Asign the parent to thumb carpals
+        thumb_carpal_R.parent       = hand_R
+        thumb_carpal_R.use_connect  = False
+        thumb_carpal_L.parent       = hand_L
+        thumb_carpal_L.use_connect  = False
+
+        # Change the parent of thumb.01 to thumb.carpal
+        thumb_01_R.parent   = thumb_carpal_R
+        thumb_01_L.parent   = thumb_carpal_L
+
+        # Create a palm bones list and phalanges dictionary to continue the finger adjustment
+        palm_bones  = [thumb_carpal_R, thumb_carpal_L, palm_01_R, palm_01_L, palm_02_R, palm_02_L, palm_03_R, palm_03_L, palm_04_R, palm_04_L]
+        phalanges   = {
+            'thumb.carpal.R'    : [thumb_01_R, thumb_02_R, thumb_03_R],
+            'thumb.carpal.L'    : [thumb_01_L, thumb_02_L, thumb_03_L],
+            'palm.01.R'         : [f_index_01_R, f_index_02_R, f_index_03_R],
+            'palm.01.L'         : [f_index_01_L, f_index_02_L, f_index_03_L],
+            'palm.02.R'         : [f_middle_01_R, f_middle_02_R, f_middle_03_R],
+            'palm.02.L'         : [f_middle_01_L, f_middle_02_L, f_middle_03_L],
+            'palm.03.R'         : [f_ring_01_R, f_ring_02_R, f_ring_03_R],
+            'palm.03.L'         : [f_ring_01_L, f_ring_02_L, f_ring_03_L],
+            'palm.04.R'         : [f_pinky_01_R, f_pinky_02_R, f_pinky_03_R],
+            'palm.04.L'         : [f_pinky_01_L, f_pinky_02_L, f_pinky_03_L],
+        }
+
+        # Iterate through the palm bones to adjust several properties
+        for palm_bone in palm_bones:
+            # Change the first phalange connect setting to True
+            phalanges[palm_bone.name][0].use_connect  = True
+            # Move the head of the metacarpal bones to match the hand bone head
+            palm_bone.head = palm_bone.parent.head
+            # Move the tail of the metacarpal bones so they are aligned horizontally
+            palm_bone.tail[2] = palm_bone.head[2]
+            # Change metacarpal bones lengths
+            palm_bone.length = virtual_bones[palm_bone.name]['median']
+        
+        # Align the phalanges to the x axis (set bones head and tail y position equal to yz position of metacarpals bone tail)
+        for palm_bone in palm_bones:
+            for phalange in phalanges[palm_bone.name]:
+                phalange.head = phalange.parent.tail
+                # Calculate the sign to multiply the length of the phalange
+                length_sign = -1 if ".R" in phalange.name else 1
+                # Set the length by moving the bone tail along the x axis. Using this instead of just setting bone.length because that causes some bone inversions
+                phalange.tail = (phalange.head[0] + length_sign * virtual_bones[phalange.name]['median'], phalange.head[1], phalange.head[2])
+                # Reset the phalange bone roll to 0
+                phalange.roll = 0
+
+
+        # Rotate the thumb bones to form a natural pose
+        bpy.ops.object.mode_set(mode='POSE')
+
+        pose_thumb_carpal_R                 = rig.pose.bones['thumb.carpal.R']
+        pose_thumb_carpal_R.rotation_mode   = 'XYZ'
+        pose_thumb_carpal_R.rotation_euler  = (m.radians(-28.048091), m.radians(7.536737), m.radians(-40.142189))
+        pose_thumb_carpal_R.rotation_mode   = 'QUATERNION'
+        pose_thumb_01_R                     = rig.pose.bones['thumb.01.R']
+        pose_thumb_01_R.rotation_mode       = 'XYZ'
+        pose_thumb_01_R.rotation_euler      = (m.radians(20), m.radians(0), m.radians(80))
+        pose_thumb_01_R.rotation_mode       = 'QUATERNION'
+        pose_thumb_02_R                     = rig.pose.bones['thumb.02.R']
+        pose_thumb_02_R.rotation_mode       = 'XYZ'
+        pose_thumb_02_R.rotation_euler      = (m.radians(0), m.radians(0), m.radians(-25))
+        pose_thumb_02_R.rotation_mode       = 'QUATERNION'
+        pose_thumb_03_R                     = rig.pose.bones['thumb.03.R']
+        pose_thumb_03_R.rotation_mode       = 'XYZ'
+        pose_thumb_03_R.rotation_euler      = (m.radians(0), m.radians(0), m.radians(-10))
+        pose_thumb_03_R.rotation_mode       = 'QUATERNION'
+        pose_thumb_carpal_L                 = rig.pose.bones['thumb.carpal.L']
+        pose_thumb_carpal_L.rotation_mode   = 'XYZ'
+        pose_thumb_carpal_L.rotation_euler  = (m.radians(-28.048091), m.radians(-7.536737), m.radians(40.142189))
+        pose_thumb_carpal_L.rotation_mode   = 'QUATERNION'
+        pose_thumb_01_L                     = rig.pose.bones['thumb.01.L']
+        pose_thumb_01_L.rotation_mode       = 'XYZ'
+        pose_thumb_01_L.rotation_euler      = (m.radians(20), m.radians(0), m.radians(-80))
+        pose_thumb_01_L.rotation_mode       = 'QUATERNION'
+        pose_thumb_02_L                     = rig.pose.bones['thumb.02.L']
+        pose_thumb_02_L.rotation_mode       = 'XYZ'
+        pose_thumb_02_L.rotation_euler      = (m.radians(0), m.radians(0), m.radians(25))
+        pose_thumb_02_L.rotation_mode       = 'QUATERNION'
+        pose_thumb_03_L                     = rig.pose.bones['thumb.03.L']
+        pose_thumb_03_L.rotation_mode       = 'XYZ'
+        pose_thumb_03_L.rotation_euler      = (m.radians(0), m.radians(0), m.radians(10))
+        pose_thumb_03_L.rotation_mode       = 'QUATERNION'
+
+        # Apply the actual pose to the rest pose
+        bpy.ops.pose.select_all(action='SELECT')
+        bpy.ops.pose.armature_apply(selected=False)
+
         # Change mode to object mode
         bpy.ops.object.mode_set(mode='OBJECT')
-
+        
     elif bone_length_method == 'current_frame':
 
         print('Adding rig with current frame length method...')
@@ -1696,16 +2174,22 @@ def add_rig(bone_length_method: str='median_length',
     bpy.context.view_layer.objects.active = rig
     bpy.ops.object.mode_set(mode='POSE')
 
-    # Create a dictionary with the different bone constraints
     # Define the hand bones damped track target as the hand middle empty if they were already added
     try:
         right_hand_middle_name = bpy.data.objects['right_hand_middle'].name
         # Right Hand Middle Empty exists. Use hand middle as target
-        hand_target_sufix = 'hand_middle'
+        hand_damped_track_target = 'hand_middle'
     except:
         # Hand middle empties do not exist. Use hand_index as target
-        hand_target_sufix = 'index'
+        hand_damped_track_target = 'index'
 
+    # Define the hands LOCKED_TRACK target empty based on the add_fingers_constraints parameter
+    if add_fingers_constraints:
+        hand_locked_track_target = 'hand_thumb_cmc'
+    else:
+        hand_locked_track_target = 'thumb'
+
+    # Create the dictionary with the different bone constraints
     constraints = {
         "pelvis": [
             {'type':'COPY_LOCATION','target':'hips_center'},
@@ -1742,19 +2226,20 @@ def add_rig(bone_length_method: str='median_length',
             {'type':'LIMIT_ROTATION','use_limit_x':True,'min_x':-135,'max_x':90,'use_limit_y':True,'min_y':-180,'max_y':98,'use_limit_z':True,'min_z':-91,'max_z':97,'owner_space':'LOCAL'}],
         "forearm.R": [
             {'type':'DAMPED_TRACK','target':'right_wrist','track_axis':'TRACK_Y'},
+            #{'type':'LOCKED_TRACK','target':'right_' + hand_locked_track_target,'track_axis':'TRACK_Z','lock_axis':'LOCK_Y','influence':1.0},
             {'type':'LIMIT_ROTATION','use_limit_x':True,'min_x':-90,'max_x':79,'use_limit_y':True,'min_y':0,'max_y':146,'use_limit_z':True,'min_z':0,'max_z':0,'owner_space':'LOCAL'}],
         "forearm.L": [
+            #{'type':'IK','target':'left_wrist','pole_target':'left_elbow','chain_count':2,'pole_angle':-90},
             {'type':'DAMPED_TRACK','target':'left_wrist','track_axis':'TRACK_Y'},
+            #{'type':'LOCKED_TRACK','target':'left_' + hand_locked_track_target,'track_axis':'TRACK_Z','lock_axis':'LOCK_Y','influence':1.0},
             {'type':'LIMIT_ROTATION','use_limit_x':True,'min_x':-90,'max_x':79,'use_limit_y':True,'min_y':-146,'max_y':0,'use_limit_z':True,'min_z':0,'max_z':0,'owner_space':'LOCAL'}],
         "hand.R": [
-            {'type':'DAMPED_TRACK','target':'right_' + hand_target_sufix,'track_axis':'TRACK_Y'},
-            {'type':'LOCKED_TRACK','target':'right_thumb','track_axis':'TRACK_Z','lock_axis':'LOCK_Y','influence':1.0},
-            #{'type':'LOCKED_TRACK','target':'right_thumb','track_axis':'TRACK_NEGATIVE_X','lock_axis':'LOCK_Y','influence':0.2},
+            {'type':'DAMPED_TRACK','target':'right_' + hand_damped_track_target,'track_axis':'TRACK_Y'},
+            {'type':'LOCKED_TRACK','target':'right_' + hand_locked_track_target,'track_axis':'TRACK_Z','lock_axis':'LOCK_Y','influence':1.0},
             {'type':'LIMIT_ROTATION','use_limit_x':True,'min_x':-45,'max_x':45,'use_limit_y':True,'min_y':-36,'max_y':25,'use_limit_z':True,'min_z':-86,'max_z':90,'owner_space':'LOCAL'}],
         "hand.L": [
-            {'type':'DAMPED_TRACK','target':'left_' + hand_target_sufix,'track_axis':'TRACK_Y'},
-            {'type':'LOCKED_TRACK','target':'left_thumb','track_axis':'TRACK_Z','lock_axis':'LOCK_Y','influence':1.0},
-            #{'type':'LOCKED_TRACK','target':'left_thumb','track_axis':'TRACK_X','lock_axis':'LOCK_Y','influence':0.2},
+            {'type':'DAMPED_TRACK','target':'left_' + hand_damped_track_target,'track_axis':'TRACK_Y'},
+            {'type':'LOCKED_TRACK','target':'left_' + hand_locked_track_target,'track_axis':'TRACK_Z','lock_axis':'LOCK_Y','influence':1.0},
             {'type':'LIMIT_ROTATION','use_limit_x':True,'min_x':-45,'max_x':45,'use_limit_y':True,'min_y':-25,'max_y':36,'use_limit_z':True,'min_z':-90,'max_z':86,'owner_space':'LOCAL'}],
         "thigh.R": [
             {'type':'COPY_LOCATION','target':'right_hip'},
@@ -1780,6 +2265,8 @@ def add_rig(bone_length_method: str='median_length',
             {'type':'DAMPED_TRACK','target':'right_heel','track_axis':'TRACK_Y'}],
         "heel.02.L": [
             {'type':'DAMPED_TRACK','target':'left_heel','track_axis':'TRACK_Y'}],
+        "thumb.carpal.R": [
+            {'type':'DAMPED_TRACK','target':'right_hand_thumb_cmc','track_axis':'TRACK_Y'}],
         "thumb.01.R": [
             {'type':'DAMPED_TRACK','target':'right_hand_thumb_mcp','track_axis':'TRACK_Y'}],
         "thumb.02.R": [
@@ -1818,6 +2305,8 @@ def add_rig(bone_length_method: str='median_length',
             {'type':'DAMPED_TRACK','target':'right_hand_pinky_dip','track_axis':'TRACK_Y'}],
         "f_pinky.03.R": [
             {'type':'DAMPED_TRACK','target':'right_hand_pinky_tip','track_axis':'TRACK_Y'}],
+        "thumb.carpal.L": [
+            {'type':'DAMPED_TRACK','target':'left_hand_thumb_cmc','track_axis':'TRACK_Y'}],
         "thumb.01.L": [
             {'type':'DAMPED_TRACK','target':'left_hand_thumb_mcp','track_axis':'TRACK_Y'}],
         "thumb.02.L": [
@@ -1895,6 +2384,11 @@ def add_rig(bone_length_method: str='median_length',
             elif cons['type'] == 'DAMPED_TRACK':
                 bone_cons.target        = bpy.data.objects[cons['target']]
                 bone_cons.track_axis    = cons['track_axis']
+            elif cons['type'] == 'IK':
+                bone_cons.target        = bpy.data.objects[cons['target']]
+                bone_cons.pole_target   = bpy.data.objects[cons['pole_target']]
+                bone_cons.chain_count   = cons['chain_count']
+                bone_cons.pole_angle    = cons['pole_angle']
 
     ### Bake animation to the rig ###
     # Get the empties ending frame
@@ -2133,45 +2627,45 @@ def add_mesh_to_rig(body_mesh_mode: str="file"):
         bpy.ops.mesh.subdivide(number_cuts=cylinder_cuts)
         bpy.ops.object.mode_set(mode="OBJECT")
 
-        # Right Hand
-        bpy.ops.mesh.primitive_uv_sphere_add(
-            radius          = right_hand_mesh_radius,
-            enter_editmode  = False,
-            align           = 'WORLD',
-            location        = right_hand_mesh_location,
-            scale           = (1.4, 0.8, 0.5)
-        )
-        body_meshes.append(bpy.context.active_object)
+        # # Right Hand
+        # bpy.ops.mesh.primitive_uv_sphere_add(
+        #     radius          = right_hand_mesh_radius,
+        #     enter_editmode  = False,
+        #     align           = 'WORLD',
+        #     location        = right_hand_mesh_location,
+        #     scale           = (1.4, 0.8, 0.5)
+        # )
+        # body_meshes.append(bpy.context.active_object)
 
-        # Right Thumb
-        bpy.ops.mesh.primitive_uv_sphere_add(
-            radius          = right_thumb_mesh_radius,
-            enter_editmode  = False,
-            align           = 'WORLD',
-            location        = right_thumb_mesh_location,
-            scale           = (1.0, 1.4, 1.0)
-        )
-        body_meshes.append(bpy.context.active_object)
+        # # Right Thumb
+        # bpy.ops.mesh.primitive_uv_sphere_add(
+        #     radius          = right_thumb_mesh_radius,
+        #     enter_editmode  = False,
+        #     align           = 'WORLD',
+        #     location        = right_thumb_mesh_location,
+        #     scale           = (1.0, 1.4, 1.0)
+        # )
+        # body_meshes.append(bpy.context.active_object)
 
-        # Left Hand
-        bpy.ops.mesh.primitive_uv_sphere_add(
-            radius          = left_hand_mesh_radius,
-            enter_editmode  = False,
-            align           = 'WORLD',
-            location        = left_hand_mesh_location,
-            scale           = (1.4, 0.8, 0.5)
-        )
-        body_meshes.append(bpy.context.active_object)
+        # # Left Hand
+        # bpy.ops.mesh.primitive_uv_sphere_add(
+        #     radius          = left_hand_mesh_radius,
+        #     enter_editmode  = False,
+        #     align           = 'WORLD',
+        #     location        = left_hand_mesh_location,
+        #     scale           = (1.4, 0.8, 0.5)
+        # )
+        # body_meshes.append(bpy.context.active_object)
 
-        # Left Thumb
-        bpy.ops.mesh.primitive_uv_sphere_add(
-            radius          = left_thumb_mesh_radius,
-            enter_editmode  = False,
-            align           = 'WORLD',
-            location        = left_thumb_mesh_location,
-            scale           = (1.0, 1.4, 1.0)
-        )
-        body_meshes.append(bpy.context.active_object)
+        # # Left Thumb
+        # bpy.ops.mesh.primitive_uv_sphere_add(
+        #     radius          = left_thumb_mesh_radius,
+        #     enter_editmode  = False,
+        #     align           = 'WORLD',
+        #     location        = left_thumb_mesh_location,
+        #     scale           = (1.0, 1.4, 1.0)
+        # )
+        # body_meshes.append(bpy.context.active_object)
 
         # Right Leg
         bpy.ops.mesh.primitive_cylinder_add(
@@ -2288,6 +2782,11 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         precision   = 3,
         description = 'Additional z offset to the axes origin relative to the imaginary ground level'
     )
+    correct_fingers_empties: bpy.props.BoolProperty(
+        name        = '',
+        default     = True,
+        description = 'Correct the fingers empties. Match hand_wrist (axis empty) position to wrist (sphere empty)'
+    )
     
     # Reduce Bone Length Dispersion Options
     interval_variable: bpy.props.EnumProperty(
@@ -2384,6 +2883,10 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         split.column().label(text='Vertical Position Offset')
         split.split().column().prop(fmc_adapter_tool, 'vertical_align_position_offset')
         
+        split = box.column().row().split(factor=0.6)
+        split.column().label(text='Correct Fingers Empties')
+        split.split().column().prop(fmc_adapter_tool, 'correct_fingers_empties')
+
         box.operator('fmc_adapter.adjust_empties', text='Adjust Empties')
 
         # Reduce Bone Length Dispersion Options
@@ -2447,6 +2950,10 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         #box.operator('fmc_adapter.actions_op', text='Add Body Mesh').action = 'ADD_BODY_MESH'
         box.operator('fmc_adapter.add_body_mesh', text='Add Body Mesh')
 
+        # FBX Export
+        box = layout.box()
+        box.operator('fmc_adapter.export_fbx', text='Export FBX')
+
 # Operator classes that executes the methods
 class FMC_ADAPTER_OT_adjust_empties(Operator):
     bl_idname       = 'fmc_adapter.adjust_empties'
@@ -2465,7 +2972,8 @@ class FMC_ADAPTER_OT_adjust_empties(Operator):
         adjust_empties(z_align_ref_empty=fmc_adapter_tool.vertical_align_reference,
                        z_align_angle_offset=fmc_adapter_tool.vertical_align_angle_offset,
                        ground_ref_empty=fmc_adapter_tool.ground_align_reference,
-                       z_translation_offset=fmc_adapter_tool.vertical_align_position_offset                       
+                       z_translation_offset=fmc_adapter_tool.vertical_align_position_offset,
+                       correct_fingers_empties=fmc_adapter_tool.correct_fingers_empties
                        )
         
         # Get end time and print execution time
@@ -2599,7 +3107,15 @@ class FMC_ADAPTER_OT_add_body_mesh(Operator):
         print('Finished. Execution time (s): ' + str(m.trunc((end - start)*1000)/1000))
 
         return {'FINISHED'}
+    
+class FMC_ADAPTER_OT_export_fbx(Operator):
+    bl_idname       = 'fmc_adapter.export_fbx'
+    bl_label        = 'Freemocap Adapter - Export FBX'
+    bl_description  = 'Export FBX'
+    bl_options      = {'REGISTER', 'UNDO_GROUPED'}
 
+    def execute(self, context):
+        return {'FINISHED'}
 
 classes = [FMC_ADAPTER_PROPERTIES,
            VIEW3D_PT_freemocap_adapter,
@@ -2607,7 +3123,8 @@ classes = [FMC_ADAPTER_PROPERTIES,
            FMC_ADAPTER_OT_reduce_bone_length_dispersion,
            FMC_ADAPTER_OT_reduce_shakiness,
            FMC_ADAPTER_OT_add_rig,
-           FMC_ADAPTER_OT_add_body_mesh
+           FMC_ADAPTER_OT_add_body_mesh,
+           FMC_ADAPTER_OT_export_fbx
 ]
 
 def register():
