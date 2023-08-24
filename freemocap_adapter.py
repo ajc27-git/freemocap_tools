@@ -1,7 +1,7 @@
 bl_info = {
     'name'          : 'Freemocap Adapter',
     'author'        : 'ajc27',
-    'version'       : (1, 1, 6),
+    'version'       : (1, 1, 7),
     'blender'       : (3, 0, 0),
     'location'      : '3D Viewport > Sidebar > Freemocap Adapter',
     'description'   : 'Add-on to adapt the Freemocap Blender output',
@@ -625,8 +625,11 @@ def update_virtual_bones_info():
 
     # Update the length median and stdev values for each bone
     for bone in virtual_bones:
-        virtual_bones[bone]['median'] = statistics.median(virtual_bones[bone]['lengths'])
-        virtual_bones[bone]['stdev'] = statistics.stdev(virtual_bones[bone]['lengths'])
+        # Exclude posible length NaN (produced by an empty with NaN values as position) values from the median and standard deviation
+        virtual_bones[bone]['median'] = statistics.median([length for length in virtual_bones[bone]['lengths'] if not m.isnan(length)])
+        #virtual_bones[bone]['median'] = statistics.median(virtual_bones[bone]['lengths'])
+        virtual_bones[bone]['stdev'] = statistics.stdev([length for length in virtual_bones[bone]['lengths'] if not m.isnan(length)])
+        #virtual_bones[bone]['stdev'] = statistics.stdev(virtual_bones[bone]['lengths'])
 
     print('Virtual Bones Information update completed.')
 
@@ -905,9 +908,16 @@ def reduce_bone_length_dispersion(interval_variable: str='median', interval_fact
 
     # Print the current bones length median, standard deviation and coefficient of variation
     print('Current Virtual Bone Information:')
-    print('{:<12} {:>12} {:>12} {:>12}'.format('BONE', 'MEDIAN (cm)', 'STDEV (cm)', 'CV (%)'))
+    print('{:<15} {:>12} {:>12} {:>12}'.format('BONE', 'MEDIAN (cm)', 'STDEV (cm)', 'CV (%)'))
+
     for bone in virtual_bones:
-        print('{:<12} {:>12} {:>12} {:>12}'.format(bone, str(m.trunc(virtual_bones[bone]['median']*100*10000000)/10000000), str(m.trunc(virtual_bones[bone]['stdev']*100*10000000)/10000000), str(m.trunc(virtual_bones[bone]['stdev']/virtual_bones[bone]['median']*100*10000)/10000)))
+
+        # Get the statistic values
+        current_median  = virtual_bones[bone]['median']
+        current_stdev   = virtual_bones[bone]['stdev']
+        current_cv      = virtual_bones[bone]['stdev']/virtual_bones[bone]['median']
+
+        print('{:<15} {:>12} {:>12} {:>12}'.format(bone, str(m.trunc(current_median*100*10000000)/10000000), str(m.trunc(current_stdev*100*10000000)/10000000), str(m.trunc(current_cv*100*10000)/10000)))
 
     # Iterate through the lengths array of each bone and check if the length is outside the interval defined by x*stdev with x as a factor
     # If the bone length is outside the interval, adjust the coordinates of the tail empty and its children so the new bone length is at the border of the interval
@@ -919,6 +929,11 @@ def reduce_bone_length_dispersion(interval_variable: str='median', interval_fact
 
         for length in virtual_bones[bone]['lengths']:
         
+            # If the length is equal to nan (bone head or/and tail is nan) then continue with the next length
+            if m.isnan(length):
+                frame_index += 1
+                continue
+
             # Get the bone median and stdev values
             median  = virtual_bones[bone]['median']
             stdev   = virtual_bones[bone]['stdev']
@@ -969,9 +984,15 @@ def reduce_bone_length_dispersion(interval_variable: str='median', interval_fact
 
     # Print the new bones length median, standard deviation and coefficient of variation
     print('New Virtual Bone Information:')
-    print('{:<12} {:>12} {:>12} {:>12}'.format('BONE', 'MEDIAN (cm)', 'STDEV (cm)', 'CV (%)'))
+    print('{:<15} {:>12} {:>12} {:>12}'.format('BONE', 'MEDIAN (cm)', 'STDEV (cm)', 'CV (%)'))
     for bone in virtual_bones:
-        print('{:<12} {:>12} {:>12} {:>12}'.format(bone, str(m.trunc(virtual_bones[bone]['median']*100*10000000)/10000000), str(m.trunc(virtual_bones[bone]['stdev']*100*10000000)/10000000), str(m.trunc(virtual_bones[bone]['stdev']/virtual_bones[bone]['median']*100*10000)/10000)))
+
+        # Get the statistic values
+        new_median  = virtual_bones[bone]['median']
+        new_stdev   = virtual_bones[bone]['stdev']
+        new_cv      = virtual_bones[bone]['stdev']/virtual_bones[bone]['median']
+
+        print('{:<15} {:>12} {:>12} {:>12}'.format(bone, str(m.trunc(new_median*100*10000000)/10000000), str(m.trunc(new_stdev*100*10000000)/10000000), str(m.trunc(new_cv*100*10000)/10000)))
 
     print('Total empties positions corrected: ' + str(empties_positions_corrected))
     
@@ -989,7 +1010,7 @@ def translate_empty(empties_dict, empty, frame_index, delta):
         bpy.data.objects[empty].animation_data.action.fcurves[2].keyframe_points[frame_index].co[1] = actual_z + delta[2]
     except:
         # Empty does not exist or does not have animation data
-        print('Empty ' + empty + ' does not have animation data on frame ' + str(frame_index))
+        #print('Empty ' + empty + ' does not have animation data on frame ' + str(frame_index))
         pass
 
     # If empty has children then call this function for every child
@@ -3419,7 +3440,7 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
     )
     interval_factor: bpy.props.FloatProperty(
         name        = '',
-        default     = 0.01,
+        default     = 0,
         min         = 0,
         precision   = 3,
         description = 'Factor to multiply the variable and form the limits of the dispersion interval like [median-factor*variable,median+factor*variable]. ' +
