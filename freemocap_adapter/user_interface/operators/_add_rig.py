@@ -5,7 +5,7 @@ from bpy.types import Operator
 
 from freemocap_adapter.core_functions.empties.adjust_empties import adjust_empties
 from freemocap_adapter.core_functions.rig.add_rig import add_rig
-from freemocap_adapter.user_interface.operators.FMC_ADAPTER_OT_add_body_mesh import ADJUST_EMPTIES_EXECUTED
+from freemocap_adapter.user_interface.operators._add_body_mesh import ADJUST_EMPTIES_EXECUTED
 
 
 class FMC_ADAPTER_OT_add_rig(Operator):

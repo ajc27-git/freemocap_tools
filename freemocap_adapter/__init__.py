@@ -5,7 +5,25 @@ import bpy
 from freemocap_adapter.user_interface import USER_INTERFACE_CLASSES, FMC_ADAPTER_PROPERTIES
 
 
+# Create logger
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+# Create console handler
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+
+# Create formatter
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s -  %(pathname)s:%(lineno)d - %(message)s')
+
+# Add formatter to console handler
+ch.setFormatter(formatter)
+
+# Add console handler to logger
+logger.addHandler(ch)
+
+# Test the logger
+logger.debug('This is a debug message')
 
 #######################################################################
 ### Add-on to adapt the Freemocap Blender output. It can adjust the
