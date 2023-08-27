@@ -1,9 +1,9 @@
 from typing import List
 
 import numpy as np
-import logging
 
-logger = logging.getLogger(__name__)
+from freemocap_adapter.core_functions.load_data.load_freemocap_data import logger
+
 
 def create_keyframed_empty_from_3d_trajectory_data(
     trajectory_fr_xyz: np.ndarray,
@@ -32,19 +32,3 @@ def create_keyframed_empty_from_3d_trajectory_data(
         ]
 
         empty_object.keyframe_insert(data_path="location", frame=frame_number)
-
-
-def load_and_create_empties(filepath:str):
-
-    if filepath.endswith(".npy"):
-        data = np.load(filepath)
-    elif filepath.endswith(".csv"):
-        data = np.loadtxt(filepath, delimiter=",")
-
-    # Then, you'll create one empty for each trajectory in the data.
-    # Again, this is just an example, replace it with your own creation code.
-    for i, trajectory in enumerate(data):
-        create_keyframed_empty_from_3d_trajectory_data(
-            trajectory,
-            f"Trajectory {i}"
-        )

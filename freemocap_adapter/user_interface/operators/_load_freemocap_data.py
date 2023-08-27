@@ -1,7 +1,7 @@
 import bpy
 import bpy_extras
 
-from freemocap_adapter.core_functions.empties.load_freemocap_data import load_and_create_empties
+from freemocap_adapter.core_functions.load_data.load_freemocap_data import load_and_create_empties
 
 
 class FMC_ADAPTER_load_freemocap_data(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
