@@ -423,7 +423,7 @@ virtual_bones = {
 }
 
 # Dictionary containing the empty children for each of the capture empties.
-# This will be used to correct the position of the empties (and its children) that are outside the bone length interval defined by x*stdev
+# This will be used to correct the position of the empties (and its children) that are outside the bone length interval defined in reduce dispersion function
 empties_dict = {
     'hips_center': {
         'children'    : ['right_hip', 'left_hip', 'trunk_center']},
@@ -539,8 +539,8 @@ def update_empty_positions():
         if object.type == 'EMPTY' and object.name != 'freemocap_origin_axes' and object.name != 'world_origin' and object.name != '_full_body_center_of_mass':
             empty_positions[object.name] = {'x': [], 'y': [], 'z': []}
 
-    # Iterate through each scene frame and save the coordinates of each empty in the dictionary. Frame is displaced by -1 to match animation curves.
-    for frame in range (scene.frame_start - 1, scene.frame_end):
+    # Iterate through each scene frame and save the coordinates of each empty in the dictionary.
+    for frame in range (scene.frame_start, scene.frame_end):
         # Set scene frame
         scene.frame_set(frame)
         # Iterate through each object
