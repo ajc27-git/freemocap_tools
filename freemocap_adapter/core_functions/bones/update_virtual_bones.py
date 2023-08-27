@@ -4,7 +4,7 @@ import statistics
 import bpy
 
 from freemocap_adapter.core_functions.empties.empties import EMPTY_POSITIONS
-from freemocap_adapter.data_models.virtual_bones import VIRTUAL_BONES
+from freemocap_adapter.data_models.bones.bone_definitions import VIRTUAL_BONES
 
 
 def update_virtual_bones_info():

@@ -5,8 +5,8 @@ import mathutils
 from freemocap_adapter.core_functions.bones.update_virtual_bones import update_virtual_bones_info
 from freemocap_adapter.core_functions.empties.empties import update_empty_positions, EMPTY_POSITIONS
 from freemocap_adapter.core_functions.empties.translate_empty import translate_empty
-from freemocap_adapter.data_models.empties_heirarchy import EMPTIES_HEIRARCHY
-from freemocap_adapter.data_models.virtual_bones import VIRTUAL_BONES
+from freemocap_adapter.data_models.mediapipe_names.empties_heirarchy import EMPTIES_HEIRARCHY
+from freemocap_adapter.data_models.bones.bone_definitions import VIRTUAL_BONES
 
 
 def reduce_bone_length_dispersion(interval_variable: str = 'median', interval_factor: float = 0.01):

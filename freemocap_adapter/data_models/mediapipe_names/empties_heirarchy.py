@@ -23,7 +23,6 @@ EMPTIES_HEIRARCHY = {
                      'right_eye_inner',
                      'right_eye_outer',
                      'left_eye',
-
                      'left_eye_inner',
                      'left_eye_outer',
                      'right_ear',
