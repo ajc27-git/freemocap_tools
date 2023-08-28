@@ -1,5 +1,3 @@
-
-
 BONES_CONSTRAINTS = {
     "pelvis": [
         {'type': 'COPY_LOCATION',

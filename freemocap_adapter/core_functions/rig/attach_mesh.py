@@ -1,5 +1,6 @@
 import math as m
 
+import bpy
 
 def add_mesh_to_rig(body_mesh_mode: str = "custom"):
     if body_mesh_mode == "file":

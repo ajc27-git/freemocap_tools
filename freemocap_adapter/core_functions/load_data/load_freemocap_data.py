@@ -61,7 +61,7 @@ def load_freemocap_data(
                                                        )
 
     logger.info(f"Adding virtual marker names to body trajectory names  - {virtual_marker_names}")
-    mediapipe_names["body".extend(virtual_marker_names)]
+    mediapipe_names["body"].extend(virtual_marker_names)
     logger.info("Done creating virtual markers")
 
 

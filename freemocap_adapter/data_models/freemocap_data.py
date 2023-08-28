@@ -45,5 +45,6 @@ class FreemocapData:
         return cls.from_data_paths(data_paths=data_paths, scale=scale)
 
 
+
 if __name__ == "__main__":
     pass

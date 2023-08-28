@@ -6,6 +6,7 @@ import mathutils
 from freemocap_adapter.core_functions.bones.update_virtual_bones import update_virtual_bones_info
 from freemocap_adapter.core_functions.empties.update_empty_positions import update_empty_positions
 from freemocap_adapter.data_models.bones.bone_definitions import VIRTUAL_BONES
+from freemocap_adapter.data_models.bones.bone_constraints import BONES_CONSTRAINTS
 
 
 def add_rig(bone_length_method: str = 'median_length',

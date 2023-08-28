@@ -3,8 +3,11 @@ import time
 
 from bpy.types import Operator
 
-from freemocap_adapter.core_functions.bones import reduce_bone_length_dispersion
+
 import logging
+
+from freemocap_adapter.core_functions.bones.reduce_bone_length_dispersion import reduce_bone_length_dispersion
+
 logger = logging.getLogger(__name__)
 
 

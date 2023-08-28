@@ -5,6 +5,7 @@ from pathlib import Path
 import bpy
 import mathutils
 from bpy.types import Operator
+import addon_utils
 
 
 def export_fbx(self: Operator):
@@ -211,10 +212,10 @@ def export_fbx(self: Operator):
                 # the armature object's position is the reference we use to offset all location keyframes
                 if ob_obj.type == 'ARMATURE':
                     location_offset = loc
-                    # subtract the location offset from each location keyframe if the use_object_origin is on
-                    if bpy.context.scene.send2ue.use_object_origin:
-                        loc = mathutils.Vector(
-                            (loc[0] - location_offset[0], loc[1] - location_offset[1], loc[2] - location_offset[2]))
+                    # # subtract the location offset from each location keyframe if the use_object_origin is on
+                    # if bpy.context.scene.send2ue.use_object_origin:
+                    #     loc = mathutils.Vector(
+                    #         (loc[0] - location_offset[0], loc[1] - location_offset[1], loc[2] - location_offset[2]))
 
                 p_rots[ob_obj] = rot
                 anim_loc.add_keyframe(real_currframe, loc * location_multiple)
@@ -409,24 +410,24 @@ def export_fbx(self: Operator):
             obj_type = b"Camera"
 
         if ob_obj.type == 'ARMATURE':
-            if bpy.context.scene.send2ue.export_object_name_as_root:
-                # if the object is already named armature this forces the object name to root
-                if 'armature' == ob_obj.name.lower():
-                    ob_obj.name = 'root'
+            # if bpy.context.scene.send2ue.export_object_name_as_root:
+            #     # if the object is already named armature this forces the object name to root
+            #     if 'armature' == ob_obj.name.lower():
+            #         ob_obj.name = 'root'
 
-            # otherwise don't use the armature objects name as the root in unreal
-            else:
-                # Rename the armature object to 'Armature'. This is important, because this is a special
-                # reserved keyword for the Unreal FBX importer that will be ignored when the bone hierarchy
-                # is imported from the FBX file. That way there is not an additional root bone in the Unreal
-                # skeleton hierarchy.
-                ob_obj.name = 'Armature'
+            # # otherwise don't use the armature objects name as the root in unreal
+            # else:
+            #     # Rename the armature object to 'Armature'. This is important, because this is a special
+            #     # reserved keyword for the Unreal FBX importer that will be ignored when the bone hierarchy
+            #     # is imported from the FBX file. That way there is not an additional root bone in the Unreal
+            #     # skeleton hierarchy.
+            ob_obj.name = 'Armature'
 
         model = elem_data_single_int64(root, b"Model", ob_obj.fbx_uuid)
         model.add_string(fbx_name_class(ob_obj.name.encode(), b"Model"))
         model.add_string(obj_type)
 
-        elem_data_single_int32(model, b"Version", FBX_MODELS_VERSION)
+        elem_data_single_int32(model, b"Version", FBX_MODELS_VERSION) 
 
         # Object transform info.
         loc, rot, scale, matrix, matrix_rot = ob_obj.fbx_object_tx(scene_data)
@@ -435,36 +436,37 @@ def export_fbx(self: Operator):
         # Todo add to FBX addon
         if ob_obj.type == 'ARMATURE':
             scale = mathutils.Vector((scale[0] / SCALE_FACTOR, scale[1] / SCALE_FACTOR, scale[2] / SCALE_FACTOR))
-            if bpy.context.scene.send2ue.use_object_origin:
-                loc = mathutils.Vector((0, 0, 0))
+            # if bpy.context.scene.send2ue.use_object_origin:
+            #     loc = mathutils.Vector((0, 0, 0))
 
         elif ob_obj.type == 'Ellipsis':
             loc = mathutils.Vector((loc[0] * SCALE_FACTOR, loc[1] * SCALE_FACTOR, loc[2] * SCALE_FACTOR))
         elif ob_obj.type == 'MESH':
-            # centers mesh object by their object origin
-            if bpy.context.scene.send2ue.use_object_origin:
-                asset_id = bpy.context.window_manager.send2ue.asset_id
-                asset_data = bpy.context.window_manager.send2ue.asset_data.get(asset_id)
-                # if this is a static mesh then check that all other mesh objects in this export are
-                # centered relative the asset object
-                if asset_data['_asset_type'] == 'StaticMesh':
-                    asset_object = bpy.data.objects.get(asset_data['_mesh_object_name'])
-                    current_object = bpy.data.objects.get(ob_obj.name)
-                    asset_world_location = asset_object.matrix_world.to_translation()
-                    object_world_location = current_object.matrix_world.to_translation()
-                    loc = mathutils.Vector((
-                        (object_world_location[0] - asset_world_location[0]) * SCALE_FACTOR,
-                        (object_world_location[1] - asset_world_location[1]) * SCALE_FACTOR,
-                        (object_world_location[2] - asset_world_location[2]) * SCALE_FACTOR
-                    ))
+            pass
+            # # centers mesh object by their object origin
+            # if bpy.context.scene.send2ue.use_object_origin:
+            #     asset_id = bpy.context.window_manager.send2ue.asset_id
+            #     asset_data = bpy.context.window_manager.send2ue.asset_data.get(asset_id)
+            #     # if this is a static mesh then check that all other mesh objects in this export are
+            #     # centered relative the asset object
+            #     if asset_data['_asset_type'] == 'StaticMesh':
+            #         asset_object = bpy.data.objects.get(asset_data['_mesh_object_name'])
+            #         current_object = bpy.data.objects.get(ob_obj.name)
+            #         asset_world_location = asset_object.matrix_world.to_translation()
+            #         object_world_location = current_object.matrix_world.to_translation()
+            #         loc = mathutils.Vector((
+            #             (object_world_location[0] - asset_world_location[0]) * SCALE_FACTOR,
+            #             (object_world_location[1] - asset_world_location[1]) * SCALE_FACTOR,
+            #             (object_world_location[2] - asset_world_location[2]) * SCALE_FACTOR
+            #         ))
 
-                    if bpy.context.scene.send2ue.extensions.instance_assets.place_in_active_level:
-                        # clear rotation and scale only if spawning actor
-                        # https://github.com/EpicGames/BlenderTools/issues/610
-                        rot = (0, 0, 0)
-                        scale = (1.0 * SCALE_FACTOR, 1.0 * SCALE_FACTOR, 1.0 * SCALE_FACTOR)
-                else:
-                    loc = mathutils.Vector((0, 0, 0))
+            #         if bpy.context.scene.send2ue.extensions.instance_assets.place_in_active_level:
+            #             # clear rotation and scale only if spawning actor
+            #             # https://github.com/EpicGames/BlenderTools/issues/610
+            #             rot = (0, 0, 0)
+            #             scale = (1.0 * SCALE_FACTOR, 1.0 * SCALE_FACTOR, 1.0 * SCALE_FACTOR)
+            #     else:
+            #         loc = mathutils.Vector((0, 0, 0))
 
         tmpl = elem_props_template_init(scene_data.templates, b"Model")
         # For now add only loc/rot/scale...
