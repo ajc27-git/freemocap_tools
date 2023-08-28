@@ -12,17 +12,15 @@ logger = logging.getLogger(__name__)
 
 
 def get_sample_data_path() -> str:
-    return str(Path(Path.home()) / "freemocap_data" / "sample_data" )
+    return str(Path(Path.home()) / "freemocap_data" / "sample_data")
 
 
-
-
-
-def download_sample_data(sample_data_zip_file_url: str = FIGSHARE_TEST_ZIP_FILE_URL) -> str:
+def download_sample_data(save_path:str = get_sample_data_path(),
+                         sample_data_zip_file_url: str = FIGSHARE_TEST_ZIP_FILE_URL) -> str:
     try:
         logger.info(f"Downloading sample data from {sample_data_zip_file_url}...")
 
-        recording_session_folder_path = Path(get_sample_data_path())
+        recording_session_folder_path = Path(save_path)
         recording_session_folder_path.mkdir(parents=True, exist_ok=True)
 
         # Download the file and convert it to bytes
@@ -41,6 +39,16 @@ def download_sample_data(sample_data_zip_file_url: str = FIGSHARE_TEST_ZIP_FILE_
     except zipfile.BadZipFile as e:
         logger.error(f"Failed to unzip the file: {e}")
 
+def get_or_download_sample_data():
+    global recording_path
+    recording_path = Path(get_sample_data_path())
+    if not recording_path.exists() or not any(recording_path.iterdir()):
+        logging.info("Downloading sample data...")
+        from freemocap_adapter.core_functions.load_data.download_sample_data import download_sample_data
+        download_sample_data()
+
 if __name__ == "__main__":
     sample_data_path = download_sample_data()
     print(f"Sample data downloaded successfully to path: {str(sample_data_path)}")
+
+

@@ -4,15 +4,12 @@ from typing import List
 import numpy as np
 
 
-def test_virtual_marker_definitions(virtual_marker_definitions_dict: dict):
+def test_virtual_marker_definitions(virtual_marker_definitions: dict):
     """
     Validate the virtual marker definitions dictionary to ensure that there are the same number of marker names and weights, and that the weights sum to 1
     """
 
-    for (
-            virtual_marker_name,
-            virtual_marker_definition,
-    ) in virtual_marker_definitions_dict.items():
+    for (virtual_marker_name, virtual_marker_definition,) in virtual_marker_definitions.items():
         assert len(virtual_marker_definition["marker_names"]) == len(
             virtual_marker_definition["marker_weights"]
         ), f"marker_names and marker_weights must be the same length for virtual marker {virtual_marker_name}"
@@ -52,4 +49,3 @@ def calculate_virtual_marker_trajectory(
         virtual_marker_xyz += component_trajectory_xyz
 
     return virtual_marker_xyz
-

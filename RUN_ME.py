@@ -11,15 +11,12 @@ from freemocap_adapter.core_functions.rig.attach_mesh import add_mesh_to_rig
 
 logger = logging.getLogger(__name__)
 
-def main(recording_path: str):
-
+def main():
+    logger.info("Running RUN_ME.py...")
     logger.info("Clearing scene...")
     clear_scene()
-
     logger.info("Loading FreeMoCap data...")
-    load_freemocap_data(recording_path=recording_path)
-
-    logger.info("Create keyframed empties...")
+    load_freemocap_data()
 
     logger.info("Adjusting empties...")
     adjust_empties()
