@@ -14,6 +14,15 @@ class VIEW3D_PT_freemocap_adapter(Panel):
 
         # Load empties Options
         load_freemocap_box = layout.box()
+
+        row = load_freemocap_box.row()
+        row.label(text="FreeMoCap Recording:")
+        row.prop(fmc_adapter_tool, "recording_path", text="")
+
+        # row = load_freemocap_box.row()
+        # row.label(text="Download sample data?")
+        # row.operator('fmc_adapter.download_sample_data', text='Download')
+
         load_freemocap_box.operator('fmc_adapter.load_freemocap_data', text='0. Load FreeMoCap Data')
 
         # adjust_empties_box.operator('fmc_adapter.adjust_empties', text='1. Adjust Empties')

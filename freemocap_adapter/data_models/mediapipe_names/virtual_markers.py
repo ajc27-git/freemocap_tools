@@ -1,5 +1,5 @@
 
-mediapipe_virtual_marker_definitions_dict = {
+MEDIAPIPE_VIRTUAL_MARKER_DEFINITIONS = {
     "head_center": {
         "marker_names": ["left_ear", "right_ear"],
         "marker_weights": [0.5, 0.5],
@@ -14,6 +14,14 @@ mediapipe_virtual_marker_definitions_dict = {
     },
     "hips_center": {
         "marker_names": ["left_hip", "right_hip"],
+        "marker_weights": [0.5, 0.5],
+    },
+    "right_hand_middle": {
+        "marker_names": ["right_index", "right_pinky"],
+        "marker_weights": [0.5, 0.5],
+    },
+    "left_hand_middle": {
+        "marker_names": ["left_index", "left_pinky"],
         "marker_weights": [0.5, 0.5],
     },
 }

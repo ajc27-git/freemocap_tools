@@ -4,6 +4,8 @@ import time
 from bpy.types import Operator
 
 from freemocap_adapter.core_functions.bones import reduce_bone_length_dispersion
+import logging
+logger = logging.getLogger(__name__)
 
 
 class FMC_ADAPTER_OT_reduce_bone_length_dispersion(Operator):
@@ -13,6 +15,7 @@ class FMC_ADAPTER_OT_reduce_bone_length_dispersion(Operator):
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
+        logger.info("Reducing bone length dispersion....")
         scene = context.scene
         fmc_adapter_tool = scene.fmc_adapter_tool
 

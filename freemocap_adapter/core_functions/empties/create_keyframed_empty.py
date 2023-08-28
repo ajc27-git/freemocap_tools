@@ -1,14 +1,15 @@
 from typing import List
 
 import numpy as np
+import bpy
 
-from freemocap_adapter.core_functions.load_data.load_freemocap_data import logger
-
+import logging
+logger = logging.getLogger(__name__)
 
 def create_keyframed_empty_from_3d_trajectory_data(
     trajectory_fr_xyz: np.ndarray,
     trajectory_name: str,
-    parent_origin: List[float, float, float] = (0, 0, 0),
+    parent_origin: List[float] = [0, 0, 0],
     empty_scale: float = 0.1,
     empty_type: str = "PLAIN_AXES",
 ):

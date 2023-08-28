@@ -3,7 +3,7 @@ import math as m
 import bpy
 import mathutils
 
-from freemocap_adapter.core_functions.empties.empties import update_empty_positions
+from freemocap_adapter.core_functions.empties.update_empty_positions import update_empty_positions
 from freemocap_adapter.core_functions.empties.hands import add_hands_middle_empties
 from freemocap_adapter.core_functions.empties.translate_empty import translate_empty
 from freemocap_adapter.data_models.mediapipe_names.empties_heirarchy import EMPTIES_HEIRARCHY

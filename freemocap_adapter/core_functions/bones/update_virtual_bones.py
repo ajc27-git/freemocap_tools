@@ -3,7 +3,7 @@ import statistics
 
 import bpy
 
-from freemocap_adapter.core_functions.empties.empties import EMPTY_POSITIONS
+from freemocap_adapter.core_functions.empties.update_empty_positions import EMPTY_POSITIONS
 from freemocap_adapter.data_models.bones.bone_definitions import VIRTUAL_BONES
 
 

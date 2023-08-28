@@ -4,7 +4,7 @@ import bpy
 import mathutils
 
 from freemocap_adapter.core_functions.bones.update_virtual_bones import update_virtual_bones_info
-from freemocap_adapter.core_functions.empties.empties import update_empty_positions
+from freemocap_adapter.core_functions.empties.update_empty_positions import update_empty_positions
 from freemocap_adapter.data_models.bones.bone_definitions import VIRTUAL_BONES
 
 

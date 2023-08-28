@@ -24,7 +24,7 @@ class DataPaths:
 
 
 @dataclass
-class FreeMoCapData:
+class FreemocapData:
     body_fr_mar_xyz: np.ndarray
     right_hand_fr_mar_xyz: np.ndarray
     left_hand_fr_mar_xyz: np.ndarray
@@ -43,3 +43,7 @@ class FreeMoCapData:
     def from_recording_path(cls, recording_path: str, scale: float = 1000):
         data_paths = DataPaths.from_recording_folder(recording_path)
         return cls.from_data_paths(data_paths=data_paths, scale=scale)
+
+
+if __name__ == "__main__":
+    pass

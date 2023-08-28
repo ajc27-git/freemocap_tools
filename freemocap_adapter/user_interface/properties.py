@@ -1,7 +1,14 @@
 import bpy
-
+from bpy.props import StringProperty
 
 class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
+    recording_path: StringProperty(
+        name="FreeMoCap recording path",
+        description="Path to a freemocap recording",
+        default="",
+        subtype='FILE_PATH',
+    )
+
     # Adjust Empties Options
     vertical_align_reference: bpy.props.EnumProperty(
         name='',

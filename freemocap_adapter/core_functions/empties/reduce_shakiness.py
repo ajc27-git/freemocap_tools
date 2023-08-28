@@ -1,6 +1,6 @@
 import math as m
 
-from freemocap_adapter.core_functions.empties.empties import update_empty_positions, update_empty_velocities, \
+from freemocap_adapter.core_functions.empties.update_empty_positions import update_empty_positions, update_empty_velocities, \
     EMPTY_POSITIONS, EMPTY_VELOCITIES
 
 
