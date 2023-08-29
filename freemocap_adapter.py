@@ -1,7 +1,7 @@
 bl_info = {
     'name'          : 'Freemocap Adapter',
     'author'        : 'ajc27',
-    'version'       : (1, 1, 7),
+    'version'       : (1, 1, 8),
     'blender'       : (3, 0, 0),
     'location'      : '3D Viewport > Sidebar > Freemocap Adapter',
     'description'   : 'Add-on to adapt the Freemocap Blender output',
@@ -44,6 +44,134 @@ empty_positions = {}
 
 # Dictionary to save the speed of all the empties for every animation frame
 empty_speeds = {}
+
+# Dictionary with the Anthropomorphic human dimensions by Winter, D. This values will be used the specified actor height when using standard bone lengths
+anthropomorphic_dimensions = {
+    'pelvis.R': {
+        'dimension': 0.0955},
+    'pelvis.L': {
+        'dimension': 0.0955},
+    'spine': {
+        'dimension': 0.144},
+    'spine.001': {
+        'dimension': 0.144},
+    'neck': {
+        'dimension': 0.118},
+    'head_nose': { # Auxiliary bone from head center to nose tip to align the face bones 
+        'dimension': 0.0743},
+    'shoulder.R': {
+        'dimension': 0.129},
+    'shoulder.L': {
+        'dimension': 0.129},
+    'upper_arm.R': {
+        'dimension': 0.186},
+    'upper_arm.L': {
+        'dimension': 0.186},
+    'forearm.R': {
+        'dimension': 0.146},
+    'forearm.L': {
+        'dimension': 0.146},
+    'hand.R': {
+        'dimension': 0.054},
+    'hand.L': {
+        'dimension': 0.054},
+    'thumb.carpal.R': { # Auxiliary bone to align the right_hand_thumb_cmc empty
+        'dimension': 0.03},
+    'thumb.carpal.L': { # Auxiliary bone to align the left_hand_thumb_cmc empty
+        'dimension': 0.03},
+    'thumb.01.R': {
+        'dimension': 0.021},
+    'thumb.01.L': {
+        'dimension': 0.021},
+    'thumb.02.R': {
+        'dimension': 0.024},
+    'thumb.02.L': {
+        'dimension': 0.024},
+    'thumb.03.R': {
+        'dimension': 0.0192},
+    'thumb.03.L': {
+        'dimension': 0.0192},
+    'palm.01.R': {
+        'dimension': 0.054},
+    'palm.01.L': {
+        'dimension': 0.054},
+    'f_index.01.R': {
+        'dimension': 0.0282},
+    'f_index.01.L': {
+        'dimension': 0.0282},
+    'f_index.02.R': {
+        'dimension': 0.0186},
+    'f_index.02.L': {
+        'dimension': 0.0186},
+    'f_index.03.R': {
+        'dimension': 0.015},
+    'f_index.03.L': {
+        'dimension': 0.015},
+    'palm.02.R': {
+        'dimension': 0.054},
+    'palm.02.L': {
+        'dimension': 0.054},
+    'f_middle.01.R': {
+        'dimension': 0.03},
+    'f_middle.01.L': {
+        'dimension': 0.03},
+    'f_middle.02.R': {
+        'dimension': 0.0192},
+    'f_middle.02.L': {
+        'dimension': 0.0192},
+    'f_middle.03.R': {
+        'dimension': 0.0156},
+    'f_middle.03.L': {
+        'dimension': 0.0156},
+    'palm.03.R': {
+        'dimension': 0.0522},
+    'palm.03.L': {
+        'dimension': 0.0522},
+    'f_ring.01.R': {
+        'dimension': 0.0282},
+    'f_ring.01.L': {
+        'dimension': 0.0282},
+    'f_ring.02.R': {
+        'dimension': 0.0186},
+    'f_ring.02.L': {
+        'dimension': 0.0186},
+    'f_ring.03.R': {
+        'dimension': 0.0156},
+    'f_ring.03.L': {
+        'dimension': 0.0156},
+    'palm.04.R': {
+        'dimension': 0.0498},
+    'palm.04.L': {
+        'dimension': 0.0498},
+    'f_pinky.01.R': {
+        'dimension': 0.0264},
+    'f_pinky.01.L': {
+        'dimension': 0.0264},
+    'f_pinky.02.R': {
+        'dimension': 0.0156},
+    'f_pinky.02.L': {
+        'dimension': 0.0156},
+    'f_pinky.03.R': {
+        'dimension': 0.0144},
+    'f_pinky.03.L': {
+        'dimension': 0.0144},
+    'thigh.R': {
+        'dimension': 0.245},
+    'thigh.L': {
+        'dimension': 0.245},
+    'shin.R': {
+        'dimension': 0.246},
+    'shin.L': {
+        'dimension': 0.246},
+    'foot.R': {
+        'dimension': 0.152},
+    'foot.L': {
+        'dimension': 0.152},
+    'heel.02.R': {
+        'dimension': 0.039},
+    'heel.02.L': {
+        'dimension': 0.039},
+}
 
 # Create a dictionary with all the major bones with their head and tail empties.
 # Also add variables to store each frame bone lengths, the median and the stdev.
@@ -423,7 +551,7 @@ virtual_bones = {
 }
 
 # Dictionary containing the empty children for each of the capture empties.
-# This will be used to correct the position of the empties (and its children) that are outside the bone length interval defined in reduce dispersion function
+# This will be used to correct the position of the empties (and its children) that are outside the bone length interval defined by x*stdev
 empties_dict = {
     'hips_center': {
         'children'    : ['right_hip', 'left_hip', 'trunk_center']},
@@ -539,7 +667,7 @@ def update_empty_positions():
         if object.type == 'EMPTY' and object.name != 'freemocap_origin_axes' and object.name != 'world_origin' and object.name != '_full_body_center_of_mass':
             empty_positions[object.name] = {'x': [], 'y': [], 'z': []}
 
-    # Iterate through each scene frame and save the coordinates of each empty in the dictionary.
+    # Iterate through each scene frame and save the coordinates of each empty in the dictionary. Frame is displaced by -1 to match animation curves.
     for frame in range (scene.frame_start, scene.frame_end):
         # Set scene frame
         scene.frame_set(frame)
@@ -626,10 +754,20 @@ def update_virtual_bones_info():
     # Update the length median and stdev values for each bone
     for bone in virtual_bones:
         # Exclude posible length NaN (produced by an empty with NaN values as position) values from the median and standard deviation
-        virtual_bones[bone]['median'] = statistics.median([length for length in virtual_bones[bone]['lengths'] if not m.isnan(length)])
-        #virtual_bones[bone]['median'] = statistics.median(virtual_bones[bone]['lengths'])
-        virtual_bones[bone]['stdev'] = statistics.stdev([length for length in virtual_bones[bone]['lengths'] if not m.isnan(length)])
-        #virtual_bones[bone]['stdev'] = statistics.stdev(virtual_bones[bone]['lengths'])
+        try:
+            virtual_bones[bone]['median'] = statistics.median([length for length in virtual_bones[bone]['lengths'] if not m.isnan(length)])
+        except:
+            virtual_bones[bone]['median'] = m.nan
+
+        # If the median is nan (every length values was nan) then directly set the stdev as nan to avoid a calculus error
+        if m.isnan(virtual_bones[bone]['median']):
+            virtual_bones[bone]['stdev'] = m.nan
+        else:
+            try:
+                virtual_bones[bone]['stdev'] = statistics.stdev([length for length in virtual_bones[bone]['lengths'] if not m.isnan(length)])
+            except:
+                virtual_bones[bone]['stdev'] = m.nan
+
 
     print('Virtual Bones Information update completed.')
 
@@ -898,7 +1036,7 @@ def adjust_empties(z_align_ref_empty: str='left_knee',
 #################### REDUCE BONE LENGTH DISPERSION ###################
 ######################################################################
 
-def reduce_bone_length_dispersion(interval_variable: str='median', interval_factor: float=0.01):
+def reduce_bone_length_dispersion(interval_variable: str='capture_median', interval_factor: float=0.01, body_height: float=1.75):
 
     # Update the empty positions dictionary
     update_empty_positions()
@@ -939,20 +1077,24 @@ def reduce_bone_length_dispersion(interval_variable: str='median', interval_fact
             stdev   = virtual_bones[bone]['stdev']
 
             # Calculate inferior and superior interval limit depending on interval variable
-            if interval_variable == 'median':
+            if interval_variable == 'capture_median':
                 # Fix interval_factor to 1 in case is greater than 1
                 if interval_factor > 1:
                     interval_factor = 1
                 # Calculate limits
                 inferior_limit  = median * (1 - interval_factor)
                 superior_limit  = median * (1 + interval_factor)
-            elif interval_variable == 'stdev':
+            elif interval_variable == 'capture_stdev':
                 # Fix interval_factor to median/stdev in case is greater than median/stdev
                 if interval_factor > (median/stdev):
                     interval_factor = median / stdev
                 # Calculate limits
                 inferior_limit  = median - interval_factor * stdev
                 superior_limit  = median + interval_factor * stdev
+            elif interval_variable == 'standard_lenght':
+                # Use the bone standard anthropomorphic dimension relative to the body height
+                inferior_limit  = anthropomorphic_dimensions[bone]['dimension'] * body_height * (1 - interval_factor)
+                superior_limit  = anthropomorphic_dimensions[bone]['dimension'] * body_height * (1 + interval_factor)
 
             # Check if bone length is outside the interval
             if length < inferior_limit or length > superior_limit:
@@ -1084,8 +1226,7 @@ def reduce_shakiness(recording_fps: float=30):
 ############################# ADD RIG ################################
 ######################################################################
 
-def add_rig(bone_length_method: str='median_length',
-            keep_symmetry: bool=False,
+def add_rig(keep_symmetry: bool=False,
             add_fingers_constraints: bool=False,
             use_limit_rotation: bool=False):
 
@@ -1113,1104 +1254,648 @@ def add_rig(bone_length_method: str='median_length',
     # Get reference to the renamed armature
     rig = bpy.data.objects['root']
 
-    if bone_length_method == 'median_length':
-
-        print('Adding rig with median length method...')
-
-        # Update the empty positions dictionary
-        update_empty_positions()
-
-        # Update the information of the virtual bones
-        update_virtual_bones_info()
-
-        # Deselect all objects
-        bpy.ops.object.select_all(action='DESELECT')
-        # Select the only the rig
-        rig.select_set(True)
-
-        # Get rig height as the sum of the major bones length in a standing position. Assume foot declination angle of 23º
-        avg_ankle_projection_length     = (m.sin(m.radians(23)) * virtual_bones['foot.R']['median'] + m.sin(m.radians(23)) * virtual_bones['foot.L']['median']) / 2
-        avg_shin_length                 = (virtual_bones['shin.R']['median'] + virtual_bones['shin.L']['median']) / 2
-        avg_thigh_length                = (virtual_bones['thigh.R']['median'] + virtual_bones['thigh.L']['median']) / 2
-
-        rig_height = avg_ankle_projection_length + avg_shin_length + avg_thigh_length + virtual_bones['spine']['median'] + virtual_bones['spine.001']['median'] + virtual_bones['neck']['median']
-        
-        # Calculate new rig proportion
-        rig_new_proportion = rig_height / rig.dimensions.z
-        # Scale the rig by the new proportion
-        rig.scale = (rig_new_proportion, rig_new_proportion, rig_new_proportion)
-
-        # Apply transformations to rig (scale must be (1, 1, 1) so it doesn't fail on send2ue export
-        bpy.context.view_layer.objects.active = rig
-        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-
-        # Get references to the different rig bones
-        bpy.ops.object.mode_set(mode='EDIT')
-
-        spine           = rig.data.edit_bones['spine']
-        spine_003       = rig.data.edit_bones['spine.003']
-        spine_004       = rig.data.edit_bones['spine.004']
-        spine_005       = rig.data.edit_bones['spine.005']
-        spine_006       = rig.data.edit_bones['spine.006']
-        face            = rig.data.edit_bones['face']
-        nose            = rig.data.edit_bones['nose']
-        breast_R        = rig.data.edit_bones['breast.R']
-        breast_L        = rig.data.edit_bones['breast.L']
-        shoulder_R      = rig.data.edit_bones['shoulder.R']
-        shoulder_L      = rig.data.edit_bones['shoulder.L']
-        upper_arm_R     = rig.data.edit_bones['upper_arm.R']
-        upper_arm_L     = rig.data.edit_bones['upper_arm.L']
-        forearm_R       = rig.data.edit_bones['forearm.R']
-        forearm_L       = rig.data.edit_bones['forearm.L']
-        hand_R          = rig.data.edit_bones['hand.R']
-        hand_L          = rig.data.edit_bones['hand.L']
-        pelvis_R        = rig.data.edit_bones['pelvis.R']
-        pelvis_L        = rig.data.edit_bones['pelvis.L']
-        thigh_R         = rig.data.edit_bones['thigh.R']
-        thigh_L         = rig.data.edit_bones['thigh.L']
-        shin_R          = rig.data.edit_bones['shin.R']
-        shin_L          = rig.data.edit_bones['shin.L']
-        foot_R          = rig.data.edit_bones['foot.R']
-        foot_L          = rig.data.edit_bones['foot.L']
-        toe_R           = rig.data.edit_bones['toe.R']
-        toe_L           = rig.data.edit_bones['toe.L']
-        heel_02_R       = rig.data.edit_bones['heel.02.R']
-        heel_02_L       = rig.data.edit_bones['heel.02.L']
-
-        # Get the hips_center z position as the sum of heel, shin and thigh lengths
-        hips_center_z_pos = avg_ankle_projection_length + avg_shin_length + avg_thigh_length
-
-        # Move the spine and pelvis bone heads to the point (0, 0, hips_center_z_pos)
-        spine.head      = (0, 0, hips_center_z_pos)
-        pelvis_R.head   = (0, 0, hips_center_z_pos)
-        pelvis_L.head   = (0, 0, hips_center_z_pos)
-
-        # Calculate the average length of the pelvis bones
-        avg_pelvis_length = (virtual_bones['pelvis.R']['median'] + virtual_bones['pelvis.L']['median']) / 2
-
-        # Set the pelvis bones length based on the keep symmetry parameter
-        pelvis_R_length  = avg_pelvis_length if keep_symmetry else virtual_bones['pelvis.R']['median']
-        pelvis_L_length  = avg_pelvis_length if keep_symmetry else virtual_bones['pelvis.L']['median']
-
-        # Align the pelvis bone tails to the hips center
-        pelvis_R.tail   = (-pelvis_R_length, 0, hips_center_z_pos)
-        pelvis_L.tail   = (pelvis_L_length, 0, hips_center_z_pos)
-        # Reset pelvis bones rotations
-        pelvis_R.roll   = 0
-        pelvis_L.roll   = 0
-
-        # Move thighs bone head to the position of corresponding pelvis bone tail
-        thigh_R.head    = (-pelvis_R_length, 0, hips_center_z_pos)
-        thigh_L.head    = (pelvis_L_length, 0, hips_center_z_pos)
-
-        # Set the thigh bones length based on the keep symmetry parameter
-        thigh_R_length  = avg_thigh_length if keep_symmetry else virtual_bones['thigh.R']['median']
-        thigh_L_length  = avg_thigh_length if keep_symmetry else virtual_bones['thigh.L']['median']
-
-        # Align the thighs bone tail to the bone head
-        thigh_R.tail    = (-pelvis_R_length, 0, hips_center_z_pos - thigh_R_length)
-        thigh_L.tail    = (pelvis_L_length, 0, hips_center_z_pos - thigh_L_length)
-
-        # Set the shin bones length based on the keep symmetry parameter
-        shin_R_length   = avg_shin_length if keep_symmetry else virtual_bones['shin.R']['median']
-        shin_L_length   = avg_shin_length if keep_symmetry else virtual_bones['shin.L']['median']
-
-        # Align the shin bones to the thigh bones
-        shin_R.tail     = (-pelvis_R_length, 0, hips_center_z_pos - thigh_R_length - shin_R_length)
-        shin_L.tail     = (pelvis_L_length, 0, hips_center_z_pos - thigh_L_length - shin_L_length)
-
-        # Remove the toe bones
-        rig.data.edit_bones.remove(rig.data.edit_bones['toe.R'])
-        rig.data.edit_bones.remove(rig.data.edit_bones['toe.L'])
-
-        # Move the foot bones tail to adjust their length depending on keep symmetry and also form a 23º degree with the horizontal plane
-        avg_foot_length = (virtual_bones['foot.R']['median'] + virtual_bones['foot.L']['median']) / 2
-
-        # Set the foot bones length based on the keep symmetry parameter
-        foot_R_length   = avg_foot_length if keep_symmetry else virtual_bones['foot.R']['median']
-        foot_L_length   = avg_foot_length if keep_symmetry else virtual_bones['foot.L']['median']
-
-        foot_R.tail     = (-pelvis_R_length, -foot_R_length * m.cos(m.radians(23)), foot_R.head[2] - foot_R_length * m.sin(m.radians(23)))
-        foot_L.tail     = (pelvis_L_length, -foot_L_length * m.cos(m.radians(23)), foot_L.head[2] - foot_L_length * m.sin(m.radians(23)))
-
-        # Move the heel bones so their head is aligned with the ankle on the x axis
-        avg_heel_length    = (virtual_bones['heel.02.R']['median'] + virtual_bones['heel.02.L']['median']) / 2
-
-        # Set the heel bones length based on the keep symmetry parameter
-        heel_02_R_length   = avg_heel_length if keep_symmetry else virtual_bones['heel.02.R']['median']
-        heel_02_L_length   = avg_heel_length if keep_symmetry else virtual_bones['heel.02.L']['median']
-
-        heel_02_R.head      = (-pelvis_R_length, heel_02_R.head[1], heel_02_R.head[2])
-        heel_02_R.length    = heel_02_R_length
-        heel_02_L.head      = (pelvis_L_length, heel_02_L.head[1], heel_02_L.head[2])
-        heel_02_L.length    = heel_02_L_length
-
-        # Make the heel bones be connected with the shin bones
-        heel_02_R.parent        = shin_R
-        heel_02_R.use_connect   = True
-        heel_02_L.parent        = shin_L
-        heel_02_L.use_connect   = True
-
-        # Add a pelvis bone to the root and then make it the parent of spine, pelvis.R and pelvis.L bones
-        pelvis = rig.data.edit_bones.new('pelvis')
-        pelvis.head = spine.head
-        pelvis.tail = spine.head + mathutils.Vector([0, 0.1, 0])
-
-        # Change the pelvis.R, pelvis.L, thigh.R, thigh.L and spine parent to the new pelvis bone
-        pelvis_R.parent         = pelvis
-        pelvis_R.use_connect    = False
-        pelvis_L.parent         = pelvis
-        pelvis_L.use_connect    = False
-        thigh_R.parent          = pelvis
-        thigh_R.use_connect     = False
-        thigh_L.parent          = pelvis
-        thigh_L.use_connect     = False
-        spine.parent            = pelvis
-        spine.use_connect       = False
-
-        # Change parent of spine.003 bone to spine to erase bones spine.001 and spine.002
-        spine_003.parent        = spine
-        spine_003.use_connect   = True
-        # Remove spine.001 and spine.002 bones
-        rig.data.edit_bones.remove(rig.data.edit_bones['spine.001'])
-        rig.data.edit_bones.remove(rig.data.edit_bones['spine.002'])
-
-        # Rename spine.003 to spine.001
-        rig.data.edit_bones['spine.003'].name = "spine.001"
-        spine_001 = rig.data.edit_bones['spine.001']
-
-        # Adjust the spine bone length and align it vertically
-        spine.tail = (spine.head[0], spine.head[1], spine.head[2] + virtual_bones['spine']['median'])
-
-        # Adjust the spine.001 bone length and align it vertically
-        spine_001.tail = (spine_001.head[0], spine_001.head[1], spine_001.head[2] + virtual_bones['spine.001']['median'])
-
-        # Calculate the shoulders head z offset from the spine.001 tail. This to raise the shoulders and breasts by that offset
-        shoulder_z_offset = spine_001.tail[2] - shoulder_R.head[2]
-
-        # Raise breasts and shoulders by the z offset
-        breast_R.head[2]    += shoulder_z_offset
-        breast_R.tail[2]    += shoulder_z_offset
-        breast_L.head[2]    += shoulder_z_offset
-        breast_L.tail[2]    += shoulder_z_offset
-        shoulder_R.head[2]  += shoulder_z_offset
-        shoulder_R.tail[2]  += shoulder_z_offset
-        shoulder_L.head[2]  += shoulder_z_offset
-        shoulder_L.tail[2]  += shoulder_z_offset
-
-        # Get average shoulder length
-        avg_shoulder_length = (virtual_bones['shoulder.R']['median'] + virtual_bones['shoulder.L']['median']) / 2
-
-        # Set the shoulder bones length based on the keep symmetry parameter
-        shoulder_R_length   = avg_shoulder_length if keep_symmetry else virtual_bones['shoulder.R']['median']
-        shoulder_L_length   = avg_shoulder_length if keep_symmetry else virtual_bones['shoulder.L']['median']
-
-        # Move the shoulder tail in the x axis
-        shoulder_R.tail[0] = spine_001.tail[0] - shoulder_R_length
-        shoulder_L.tail[0] = spine_001.tail[0] + shoulder_L_length
-
-        # Calculate the upper_arms head x and z offset from the shoulder_R tail. This to raise and adjust the arms and hands by that offset
-        upper_arm_R_x_offset = shoulder_R.tail[0] - upper_arm_R.head[0]
-        upper_arm_R_z_offset = spine_001.tail[2] - upper_arm_R.head[2]
-        upper_arm_L_x_offset = shoulder_L.tail[0] - upper_arm_L.head[0]
-        upper_arm_L_z_offset = spine_001.tail[2] - upper_arm_L.head[2]
-        
-        upper_arm_R.head[2] += upper_arm_R_z_offset
-        upper_arm_R.tail[2] += upper_arm_R_z_offset
-        upper_arm_R.head[0] += upper_arm_R_x_offset
-        upper_arm_R.tail[0] += upper_arm_R_x_offset
-        for bone in upper_arm_R.children_recursive:
-            if not bone.use_connect:
-                bone.head[2] += upper_arm_R_z_offset
-                bone.tail[2] += upper_arm_R_z_offset
-                bone.head[0] += upper_arm_R_x_offset
-                bone.tail[0] += upper_arm_R_x_offset
-            else:
-                bone.tail[2] += upper_arm_R_z_offset
-                bone.tail[0] += upper_arm_R_x_offset
-                
-        upper_arm_L.head[2] += upper_arm_L_z_offset
-        upper_arm_L.tail[2] += upper_arm_L_z_offset
-        upper_arm_L.head[0] += upper_arm_L_x_offset
-        upper_arm_L.tail[0] += upper_arm_L_x_offset
-        for bone in upper_arm_L.children_recursive:
-            if not bone.use_connect:
-                bone.head[2] += upper_arm_L_z_offset
-                bone.tail[2] += upper_arm_L_z_offset
-                bone.head[0] += upper_arm_L_x_offset
-                bone.tail[0] += upper_arm_L_x_offset
-            else:
-                bone.tail[2] += upper_arm_L_z_offset
-                bone.tail[0] += upper_arm_L_x_offset
-
-        # Align the y position of breasts, shoulders, arms and hands to the y position of the spine.001 tail
-        # Calculate the breasts head y offset from the spine.001 tail
-        breast_y_offset = spine_001.tail[1] - breast_R.head[1]
-        # Move breast by the y offset
-        breast_R.head[1] += breast_y_offset
-        breast_R.tail[1] += breast_y_offset
-        breast_L.head[1] += breast_y_offset
-        breast_L.tail[1] += breast_y_offset
-
-        # Temporarily remove breast bones. (Comment these lines if breast bones are needed)
-        rig.data.edit_bones.remove(rig.data.edit_bones[breast_R.name])
-        rig.data.edit_bones.remove(rig.data.edit_bones[breast_L.name])
-
-        # Set the y position to which the arms bones will be aligned
-        arms_bones_y_pos = spine_001.tail[1]
-        # Move shoulders on y axis and also move shoulders head to the center at x=0 , 
-        shoulder_R.head[1] = arms_bones_y_pos
-        shoulder_R.head[0] = 0
-        shoulder_R.tail[1] = arms_bones_y_pos
-        shoulder_L.head[1] = arms_bones_y_pos
-        shoulder_L.head[0] = 0
-        shoulder_L.tail[1] = arms_bones_y_pos
-
-        # Move upper_arm and forearm
-        upper_arm_R.head[1] = arms_bones_y_pos
-        upper_arm_R.tail[1] = arms_bones_y_pos
-        upper_arm_L.head[1] = arms_bones_y_pos
-        upper_arm_L.tail[1] = arms_bones_y_pos
-
-        # Calculate hand head y offset to arms_bones_y_pos to move the whole hand
-        hand_R_y_offset = arms_bones_y_pos - hand_R.head[1]
-        hand_L_y_offset = arms_bones_y_pos - hand_L.head[1]
-
-        # Move hands and its children by the y offset (forearm tail is moved by hand head)
-        hand_R.head[1] += hand_R_y_offset
-        hand_R.tail[1] += hand_R_y_offset
-        for bone in hand_R.children_recursive:
-            if not bone.use_connect:
-                bone.head[1] += hand_R_y_offset
-                bone.tail[1] += hand_R_y_offset
-            else:
-                bone.tail[1] += hand_R_y_offset
-                
-        hand_L.head[1] += hand_L_y_offset
-        hand_L.tail[1] += hand_L_y_offset
-        for bone in hand_L.children_recursive:
-            if not bone.use_connect:
-                bone.head[1] += hand_L_y_offset
-                bone.tail[1] += hand_L_y_offset
-            else:
-                bone.tail[1] += hand_L_y_offset
-
-        # Change to Pose Mode to rotate the arms and make a T Pose for posterior retargeting
-        bpy.ops.object.mode_set(mode='POSE')
-        pose_upper_arm_R = rig.pose.bones['upper_arm.R']
-        pose_upper_arm_R.rotation_mode  = 'XYZ'
-        pose_upper_arm_R.rotation_euler = (0,m.radians(-7),m.radians(-29))
-        pose_upper_arm_R.rotation_mode  = 'QUATERNION'
-        pose_upper_arm_L = rig.pose.bones['upper_arm.L']
-        pose_upper_arm_L.rotation_mode  = 'XYZ'
-        pose_upper_arm_L.rotation_euler = (0,m.radians(7),m.radians(29))
-        pose_upper_arm_L.rotation_mode  = 'QUATERNION'
-        pose_forearm_R = rig.pose.bones['forearm.R']
-        pose_forearm_R.rotation_mode    = 'XYZ'
-        pose_forearm_R.rotation_euler   = (0,0,m.radians(-4))
-        pose_forearm_R.rotation_mode    = 'QUATERNION'
-        pose_forearm_L = rig.pose.bones['forearm.L']
-        pose_forearm_L.rotation_mode    = 'XYZ'
-        pose_forearm_L.rotation_euler   = (0,0,m.radians(4))
-        pose_forearm_L.rotation_mode    = 'QUATERNION'
-        pose_hand_R = rig.pose.bones['hand.R']
-        pose_hand_R.rotation_mode    = 'XYZ'
-        pose_hand_R.rotation_euler   = (m.radians(-5.7),0,m.radians(-3.7))
-        pose_hand_R.rotation_mode    = 'QUATERNION'
-        pose_hand_L = rig.pose.bones['hand.L']
-        pose_hand_L.rotation_mode    = 'XYZ'
-        pose_hand_L.rotation_euler   = (m.radians(-5.7),0,m.radians(3.7))
-        pose_hand_L.rotation_mode    = 'QUATERNION'
-        pose_thigh_R = rig.pose.bones['thigh.R']
-        pose_thigh_R.rotation_mode    = 'XYZ'
-        pose_thigh_R.rotation_euler   = (0,0,m.radians(3))
-        pose_thigh_R.rotation_mode    = 'QUATERNION'
-        pose_foot_R = rig.pose.bones['foot.R']
-        pose_foot_R.rotation_mode    = 'XYZ'
-        pose_foot_R.rotation_euler   = (0,0,m.radians(4))
-        pose_foot_R.rotation_mode    = 'QUATERNION'
-        pose_thigh_L = rig.pose.bones['thigh.L']
-        pose_thigh_L.rotation_mode    = 'XYZ'
-        pose_thigh_L.rotation_euler   = (0,0,m.radians(-3))
-        pose_thigh_L.rotation_mode    = 'QUATERNION'
-        pose_foot_L = rig.pose.bones['foot.L']
-        pose_foot_L.rotation_mode    = 'XYZ'
-        pose_foot_L.rotation_euler   = (0,0,m.radians(-4))
-        pose_foot_L.rotation_mode    = 'QUATERNION'
-
-        # Apply the actual pose to the rest pose
-        bpy.ops.pose.select_all(action='SELECT')
-        bpy.ops.pose.armature_apply(selected=False)
-
-        # Change mode to edit mode
-        bpy.ops.object.mode_set(mode='EDIT')
-
-        # Get new bone references
-        upper_arm_R     = rig.data.edit_bones['upper_arm.R']
-        upper_arm_L     = rig.data.edit_bones['upper_arm.L']
-        forearm_R       = rig.data.edit_bones['forearm.R']
-        forearm_L       = rig.data.edit_bones['forearm.L']
-        hand_R          = rig.data.edit_bones['hand.R']
-        hand_L          = rig.data.edit_bones['hand.L']        
-
-        # Get average upperarm length
-        avg_upper_arm_length = (virtual_bones['upper_arm.R']['median'] + virtual_bones['upper_arm.L']['median']) / 2
-
-        # Set the upperarm bones length based on the keep symmetry parameter
-        upper_arm_R_length   = avg_upper_arm_length if keep_symmetry else virtual_bones['upper_arm.R']['median']
-        upper_arm_L_length   = avg_upper_arm_length if keep_symmetry else virtual_bones['upper_arm.L']['median']
-
-        # Move the upper_arm tail in the x axis
-        upper_arm_R.tail[0] = upper_arm_R.head[0] - upper_arm_R_length
-        upper_arm_L.tail[0] = upper_arm_L.head[0] + upper_arm_L_length
-
-        # Get average forearm length
-        avg_forearm_length = (virtual_bones['forearm.R']['median'] + virtual_bones['forearm.L']['median']) / 2
-
-        # Set the forearm bones length based on the keep symmetry parameter
-        forearm_R_length   = avg_forearm_length if keep_symmetry else virtual_bones['forearm.R']['median']
-        forearm_L_length   = avg_forearm_length if keep_symmetry else virtual_bones['forearm.L']['median']
-
-        # Calculate the x axis offset of the current forearm tail x position and the forearm head x position plus the calculated forearm length
-        # This is to move the forearm tail and all the hand bones
-        forearm_R_tail_x_offset = (forearm_R.head[0] - forearm_R_length) - forearm_R.tail[0]
-        forearm_L_tail_x_offset = (forearm_L.head[0] + forearm_L_length) - forearm_L.tail[0]
-
-        # Move forearms tail and its children by the x offset
-        forearm_R.tail[0] += forearm_R_tail_x_offset
-        for bone in forearm_R.children_recursive:
-            if not bone.use_connect:
-                bone.head[0] += forearm_R_tail_x_offset
-                bone.tail[0] += forearm_R_tail_x_offset
-            else:
-                bone.tail[0] += forearm_R_tail_x_offset
-                
-        forearm_L.tail[0] += forearm_L_tail_x_offset
-        for bone in forearm_L.children_recursive:
-            if not bone.use_connect:
-                bone.head[0] += forearm_L_tail_x_offset
-                bone.tail[0] += forearm_L_tail_x_offset
-            else:
-                bone.tail[0] += forearm_L_tail_x_offset
-
-        #############################################################
-        ### DEBUG ###
-        if False:
-            # Add an auxiliary bone to the side of the upperarms and forearms to check their rotation
-            upper_arm_R_Rot             = rig.data.edit_bones.new('uppe_rarm.R.Rot')
-            upper_arm_R_Rot.head        = (upper_arm_R.head[0] - upper_arm_R_length/2, upper_arm_R.head[1], upper_arm_R.head[2])
-            upper_arm_R_Rot.tail        = (upper_arm_R_Rot.head[0], upper_arm_R_Rot.head[1], upper_arm_R_Rot.head[2] + 0.1)
-            upper_arm_R_Rot.parent      = upper_arm_R
-            upper_arm_R_Rot.use_connect = False
-            upper_arm_L_Rot             = rig.data.edit_bones.new('uppe_rarm.L.Rot')
-            upper_arm_L_Rot.head        = (upper_arm_L.head[0] + upper_arm_L_length/2, upper_arm_L.head[1], upper_arm_L.head[2])
-            upper_arm_L_Rot.tail        = (upper_arm_L_Rot.head[0], upper_arm_L_Rot.head[1], upper_arm_L_Rot.head[2] + 0.1)
-            upper_arm_L_Rot.parent      = upper_arm_L
-            upper_arm_L_Rot.use_connect = False
-            forearm_R_Rot               = rig.data.edit_bones.new('uppe_rarm.R.Rot')
-            forearm_R_Rot.head          = (forearm_R.head[0] - forearm_R_length/2, forearm_R.head[1], forearm_R.head[2])
-            forearm_R_Rot.tail          = (forearm_R_Rot.head[0], forearm_R_Rot.head[1], forearm_R_Rot.head[2] + 0.1)
-            forearm_R_Rot.parent        = forearm_R
-            forearm_R_Rot.use_connect   = False
-            forearm_L_Rot               = rig.data.edit_bones.new('uppe_rarm.L.Rot')
-            forearm_L_Rot.head          = (forearm_L.head[0] + forearm_L_length/2, forearm_L.head[1], forearm_L.head[2])
-            forearm_L_Rot.tail          = (forearm_L_Rot.head[0], forearm_L_Rot.head[1], forearm_L_Rot.head[2] + 0.1)
-            forearm_L_Rot.parent        = forearm_L
-            forearm_L_Rot.use_connect   = False
-        #############################################################
-
-        # Get average hand length
-        avg_hand_length = (virtual_bones['hand.R']['median'] + virtual_bones['hand.L']['median']) / 2
-
-        # Set the forearm bones length based on the keep symmetry parameter
-        hand_R_length   = avg_hand_length if keep_symmetry else virtual_bones['hand.R']['median']
-        hand_L_length   = avg_hand_length if keep_symmetry else virtual_bones['hand.L']['median']
-
-        # Move hands tail to match the average length
-        hand_R.tail[0] = hand_R.head[0] - hand_R_length
-        hand_L.tail[0] = hand_L.head[0] + hand_L_length
-
-        ### Adjust the position of the neck, head and face bones ###
-        spine_001   = rig.data.edit_bones['spine.001']
-        spine_004   = rig.data.edit_bones['spine.004']
-        nose        = rig.data.edit_bones['nose']
-        nose_001    = rig.data.edit_bones['nose.001']
-
-        # Set spine.004 bone head position equal to the spine.001 tail
-        spine_004.head = (spine_001.tail[0], spine_001.tail[1], spine_001.tail[2])
-
-        # Change spine.004 tail position values
-        spine_004.tail = (spine_004.head[0], spine_004.head[1], spine_004.head[2] + virtual_bones['neck']['median'])
-
-        # Change the parent of the face bone for the spine.004 bone
-        face = rig.data.edit_bones['face']
-        face.parent = spine_004
-        face.use_connect = False
-
-        # Remove spine.005 and spine.006 bones
-        rig.data.edit_bones.remove(rig.data.edit_bones['spine.005'])
-        rig.data.edit_bones.remove(rig.data.edit_bones['spine.006'])
-
-        # Calculate the y and z offset of the nose.001 bone tail using the imaginary head_nose bone. Assume a 18º of declination angle
-        nose_y_offset = -virtual_bones['head_nose']['median'] * m.cos(m.radians(18)) - nose_001.tail[1]
-        nose_z_offset = (spine_004.tail[2] - virtual_bones['head_nose']['median'] * m.sin(m.radians(18))) - nose_001.tail[2]
-        
-        # Move the face bone on the z axis using the calculated offset
-        face.head[2] += nose_z_offset
-        face.tail[2] += nose_z_offset
-
-        # Move on the y and z axis the children bones from the face bone using the calculated offsets
-        for bone in face.children_recursive:
-            if not bone.use_connect:
-                bone.head[1] += nose_y_offset
-                bone.tail[1] += nose_y_offset
-                bone.head[2] += nose_z_offset
-                bone.tail[2] += nose_z_offset
-            else:
-                bone.tail[1] += nose_y_offset
-                bone.tail[2] += nose_z_offset
-                
-        # Move the face bone head to align it horizontally
-        face.head[1] = spine_004.tail[1]
-        face.head[2] = face.tail[2]
-        face.tail[1] = face.head[1] - (virtual_bones['head_nose']['median'] * m.cos(m.radians(18)) / 2)
-
-        # Rename spine.004 to neck
-        rig.data.edit_bones['spine.004'].name = "neck"
-
-        # Rotate the spine and neck bones to complete the TPOSE
-        bpy.ops.object.mode_set(mode='POSE')
-
-        pose_spine = rig.pose.bones['spine']
-        pose_spine.rotation_mode    = 'XYZ'
-        pose_spine.rotation_euler   = (m.radians(3), 0, 0)
-        pose_spine.rotation_mode    = 'QUATERNION'
-        pose_spine_001 = rig.pose.bones['spine.001']
-        pose_spine_001.rotation_mode    = 'XYZ'
-        pose_spine_001.rotation_euler   = (m.radians(-10), 0, 0)
-        pose_spine_001.rotation_mode    = 'QUATERNION'
-        pose_neck = rig.pose.bones['neck']
-        pose_neck.rotation_mode    = 'XYZ'
-        pose_neck.rotation_euler   = (m.radians(6), 0, 0)
-        pose_neck.rotation_mode    = 'QUATERNION'
-
-        # Apply the actual pose to the rest pose
-        bpy.ops.pose.select_all(action='SELECT')
-        bpy.ops.pose.armature_apply(selected=False)
-
-        # Adjust the fingers
-
-        # Change mode to edit mode
-        bpy.ops.object.mode_set(mode='EDIT')
-
-        # Get new bone references
-        hand_R          = rig.data.edit_bones['hand.R']
-        hand_L          = rig.data.edit_bones['hand.L']
-        palm_01_R       = rig.data.edit_bones['palm.01.R']
-        palm_01_L       = rig.data.edit_bones['palm.01.L']
-        palm_02_R       = rig.data.edit_bones['palm.02.R']
-        palm_02_L       = rig.data.edit_bones['palm.02.L']
-        palm_03_R       = rig.data.edit_bones['palm.03.R']
-        palm_03_L       = rig.data.edit_bones['palm.03.L']
-        palm_04_R       = rig.data.edit_bones['palm.04.R']
-        palm_04_L       = rig.data.edit_bones['palm.04.L']
-        thumb_01_R      = rig.data.edit_bones['thumb.01.R']
-        thumb_01_L      = rig.data.edit_bones['thumb.01.L']
-        thumb_02_R      = rig.data.edit_bones['thumb.02.R']
-        thumb_02_L      = rig.data.edit_bones['thumb.02.L']
-        thumb_03_R      = rig.data.edit_bones['thumb.03.R']
-        thumb_03_L      = rig.data.edit_bones['thumb.03.L']
-        f_index_01_R    = rig.data.edit_bones['f_index.01.R']
-        f_index_01_L    = rig.data.edit_bones['f_index.01.L']
-        f_index_02_R    = rig.data.edit_bones['f_index.02.R']
-        f_index_02_L    = rig.data.edit_bones['f_index.02.L']
-        f_index_03_R    = rig.data.edit_bones['f_index.03.R']
-        f_index_03_L    = rig.data.edit_bones['f_index.03.L']
-        f_middle_01_R    = rig.data.edit_bones['f_middle.01.R']
-        f_middle_01_L    = rig.data.edit_bones['f_middle.01.L']
-        f_middle_02_R    = rig.data.edit_bones['f_middle.02.R']
-        f_middle_02_L    = rig.data.edit_bones['f_middle.02.L']
-        f_middle_03_R    = rig.data.edit_bones['f_middle.03.R']
-        f_middle_03_L    = rig.data.edit_bones['f_middle.03.L']
-        f_ring_01_R    = rig.data.edit_bones['f_ring.01.R']
-        f_ring_01_L    = rig.data.edit_bones['f_ring.01.L']
-        f_ring_02_R    = rig.data.edit_bones['f_ring.02.R']
-        f_ring_02_L    = rig.data.edit_bones['f_ring.02.L']
-        f_ring_03_R    = rig.data.edit_bones['f_ring.03.R']
-        f_ring_03_L    = rig.data.edit_bones['f_ring.03.L']
-        f_pinky_01_R    = rig.data.edit_bones['f_pinky.01.R']
-        f_pinky_01_L    = rig.data.edit_bones['f_pinky.01.L']
-        f_pinky_02_R    = rig.data.edit_bones['f_pinky.02.R']
-        f_pinky_02_L    = rig.data.edit_bones['f_pinky.02.L']
-        f_pinky_03_R    = rig.data.edit_bones['f_pinky.03.R']
-        f_pinky_03_L    = rig.data.edit_bones['f_pinky.03.L']
-
-        # Add the thumb carpals
-        thumb_carpal_R = rig.data.edit_bones.new('thumb.carpal.R')
-        thumb_carpal_R.head = hand_R.head
-        thumb_carpal_R.tail = thumb_carpal_R.head + mathutils.Vector([0, -virtual_bones['thumb.carpal.R']['median'], 0])
-        thumb_carpal_L = rig.data.edit_bones.new('thumb.carpal.L')
-        thumb_carpal_L.head = hand_L.head
-        thumb_carpal_L.tail = thumb_carpal_L.head + mathutils.Vector([0, -virtual_bones['thumb.carpal.L']['median'], 0])
-        
-        # Asign the parent to thumb carpals
-        thumb_carpal_R.parent       = hand_R
-        thumb_carpal_R.use_connect  = False
-        thumb_carpal_L.parent       = hand_L
-        thumb_carpal_L.use_connect  = False
-
-        # Change the parent of thumb.01 to thumb.carpal
-        thumb_01_R.parent   = thumb_carpal_R
-        thumb_01_L.parent   = thumb_carpal_L
-
-        # Create a palm bones list and phalanges dictionary to continue the finger adjustment
-        palm_bones  = [thumb_carpal_R, thumb_carpal_L, palm_01_R, palm_01_L, palm_02_R, palm_02_L, palm_03_R, palm_03_L, palm_04_R, palm_04_L]
-        phalanges   = {
-            'thumb.carpal.R'    : [thumb_01_R, thumb_02_R, thumb_03_R],
-            'thumb.carpal.L'    : [thumb_01_L, thumb_02_L, thumb_03_L],
-            'palm.01.R'         : [f_index_01_R, f_index_02_R, f_index_03_R],
-            'palm.01.L'         : [f_index_01_L, f_index_02_L, f_index_03_L],
-            'palm.02.R'         : [f_middle_01_R, f_middle_02_R, f_middle_03_R],
-            'palm.02.L'         : [f_middle_01_L, f_middle_02_L, f_middle_03_L],
-            'palm.03.R'         : [f_ring_01_R, f_ring_02_R, f_ring_03_R],
-            'palm.03.L'         : [f_ring_01_L, f_ring_02_L, f_ring_03_L],
-            'palm.04.R'         : [f_pinky_01_R, f_pinky_02_R, f_pinky_03_R],
-            'palm.04.L'         : [f_pinky_01_L, f_pinky_02_L, f_pinky_03_L],
-        }
-
-        # Iterate through the palm bones to adjust several properties
-        for palm_bone in palm_bones:
-            # Change the first phalange connect setting to True
-            phalanges[palm_bone.name][0].use_connect  = True
-            # Move the head of the metacarpal bones to match the hand bone head
-            palm_bone.head = palm_bone.parent.head
-            # Move the tail of the metacarpal bones so they are aligned horizontally
-            palm_bone.tail[2] = palm_bone.head[2]
-            # Change metacarpal bones lengths
-            palm_bone.length = virtual_bones[palm_bone.name]['median']
-        
-        # Align the phalanges to the x axis (set bones head and tail y position equal to yz position of metacarpals bone tail)
-        for palm_bone in palm_bones:
-            for phalange in phalanges[palm_bone.name]:
-                phalange.head = phalange.parent.tail
-                # Calculate the sign to multiply the length of the phalange
-                length_sign = -1 if ".R" in phalange.name else 1
-                # Set the length by moving the bone tail along the x axis. Using this instead of just setting bone.length because that causes some bone inversions
-                phalange.tail = (phalange.head[0] + length_sign * virtual_bones[phalange.name]['median'], phalange.head[1], phalange.head[2])
-                # Reset the phalange bone roll to 0
-                phalange.roll = 0
-
-
-        # Rotate the thumb bones to form a natural pose
-        bpy.ops.object.mode_set(mode='POSE')
-
-        pose_thumb_carpal_R                 = rig.pose.bones['thumb.carpal.R']
-        pose_thumb_carpal_R.rotation_mode   = 'XYZ'
-        pose_thumb_carpal_R.rotation_euler  = (m.radians(-28.048091), m.radians(7.536737), m.radians(-40.142189))
-        pose_thumb_carpal_R.rotation_mode   = 'QUATERNION'
-        pose_thumb_01_R                     = rig.pose.bones['thumb.01.R']
-        pose_thumb_01_R.rotation_mode       = 'XYZ'
-        # pose_thumb_01_R.rotation_euler      = (m.radians(20), m.radians(0), m.radians(80))
-        pose_thumb_01_R.rotation_euler      = (m.radians(0), m.radians(0), m.radians(90))
-        pose_thumb_01_R.rotation_mode       = 'QUATERNION'
-        # pose_thumb_02_R                     = rig.pose.bones['thumb.02.R']
-        # pose_thumb_02_R.rotation_mode       = 'XYZ'
-        # pose_thumb_02_R.rotation_euler      = (m.radians(0), m.radians(0), m.radians(-25))
-        # pose_thumb_02_R.rotation_mode       = 'QUATERNION'
-        # pose_thumb_03_R                     = rig.pose.bones['thumb.03.R']
-        # pose_thumb_03_R.rotation_mode       = 'XYZ'
-        # pose_thumb_03_R.rotation_euler      = (m.radians(0), m.radians(0), m.radians(-10))
-        # pose_thumb_03_R.rotation_mode       = 'QUATERNION'
-        pose_thumb_carpal_L                 = rig.pose.bones['thumb.carpal.L']
-        pose_thumb_carpal_L.rotation_mode   = 'XYZ'
-        pose_thumb_carpal_L.rotation_euler  = (m.radians(-28.048091), m.radians(-7.536737), m.radians(40.142189))
-        pose_thumb_carpal_L.rotation_mode   = 'QUATERNION'
-        pose_thumb_01_L                     = rig.pose.bones['thumb.01.L']
-        pose_thumb_01_L.rotation_mode       = 'XYZ'
-        # pose_thumb_01_L.rotation_euler      = (m.radians(20), m.radians(0), m.radians(-80))
-        pose_thumb_01_L.rotation_euler      = (m.radians(0), m.radians(0), m.radians(-90))
-        pose_thumb_01_L.rotation_mode       = 'QUATERNION'
-        # pose_thumb_02_L                     = rig.pose.bones['thumb.02.L']
-        # pose_thumb_02_L.rotation_mode       = 'XYZ'
-        # pose_thumb_02_L.rotation_euler      = (m.radians(0), m.radians(0), m.radians(25))
-        # pose_thumb_02_L.rotation_mode       = 'QUATERNION'
-        # pose_thumb_03_L                     = rig.pose.bones['thumb.03.L']
-        # pose_thumb_03_L.rotation_mode       = 'XYZ'
-        # pose_thumb_03_L.rotation_euler      = (m.radians(0), m.radians(0), m.radians(10))
-        # pose_thumb_03_L.rotation_mode       = 'QUATERNION'
-
-        # Rotate the forearms on the z axis to bend the elbows a little bit and avoid incorrect rotations
-        pose_forearm_R                  = rig.pose.bones['forearm.R']
-        pose_forearm_R.rotation_mode    = 'XYZ'
-        pose_forearm_R.rotation_euler   = (m.radians(1), m.radians(0), m.radians(0))
-        pose_forearm_R.rotation_mode    = 'QUATERNION'
-        pose_forearm_L                  = rig.pose.bones['forearm.L']
-        pose_forearm_L.rotation_mode    = 'XYZ'
-        pose_forearm_L.rotation_euler   = (m.radians(1), m.radians(0), m.radians(0))
-        pose_forearm_L.rotation_mode    = 'QUATERNION'
-
-        # Apply the actual pose to the rest pose
-        bpy.ops.pose.select_all(action='SELECT')
-        bpy.ops.pose.armature_apply(selected=False)
-
-        # Change mode to object mode
-        bpy.ops.object.mode_set(mode='OBJECT')
-        
-    elif bone_length_method == 'current_frame':
-
-        print('Adding rig with current frame length method...')
-
-        # Scale armature so it fits the capture empties height in a standing position. The reference point will be hips_center
-        # Get the rig z dimension
-        rig_z_dimension = rig.dimensions.z
-        # Get hips_center global position
-        hips_center_glob_pos = bpy.data.objects['hips_center'].matrix_world.translation
-        # Get the rig thigh.R bone head z position (this will be aligned with the hips_center empty
-        thigh_r_z_pos = (rig.matrix_world @ rig.pose.bones['thigh.R'].head)[2]
-        # Calculate the proportion between the hips_center z pos and the thigh_r_z_pos
-        hips_center_to_thigh_R = hips_center_glob_pos[2] / thigh_r_z_pos
-
-        # Scale the rig by the hips_center_z and the thigh_r_z_pos proportion
-        rig.scale = (hips_center_to_thigh_R, hips_center_to_thigh_R, hips_center_to_thigh_R)
-        # Apply transformations to rig (scale must be (1, 1, 1) so it doesn't fail on send2ue export
-        bpy.context.view_layer.objects.active = rig
-        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-        
-        # Get references to the different rig bones
-        bpy.ops.object.mode_set(mode='EDIT')
-
-        spine           = rig.data.edit_bones['spine']
-        spine_003       = rig.data.edit_bones['spine.003']
-        spine_004       = rig.data.edit_bones['spine.004']
-        spine_005       = rig.data.edit_bones['spine.005']
-        spine_006       = rig.data.edit_bones['spine.006']
-        face            = rig.data.edit_bones['face']
-        nose            = rig.data.edit_bones['nose']
-        breast_R        = rig.data.edit_bones['breast.R']
-        breast_L        = rig.data.edit_bones['breast.L']
-        shoulder_R      = rig.data.edit_bones['shoulder.R']
-        shoulder_L      = rig.data.edit_bones['shoulder.L']
-        upper_arm_R     = rig.data.edit_bones['upper_arm.R']
-        upper_arm_L     = rig.data.edit_bones['upper_arm.L']
-        forearm_R       = rig.data.edit_bones['forearm.R']
-        forearm_L       = rig.data.edit_bones['forearm.L']
-        hand_R          = rig.data.edit_bones['hand.R']
-        hand_L          = rig.data.edit_bones['hand.L']
-        pelvis_R        = rig.data.edit_bones['pelvis.R']
-        pelvis_L        = rig.data.edit_bones['pelvis.L']
-        thigh_R         = rig.data.edit_bones['thigh.R']
-        thigh_L         = rig.data.edit_bones['thigh.L']
-        shin_R          = rig.data.edit_bones['shin.R']
-        shin_L          = rig.data.edit_bones['shin.L']
-        foot_R          = rig.data.edit_bones['foot.R']
-        foot_L          = rig.data.edit_bones['foot.L']
-        toe_R           = rig.data.edit_bones['toe.R']
-        toe_L           = rig.data.edit_bones['toe.L']
-        heel_02_R       = rig.data.edit_bones['heel.02.R']
-        heel_02_L       = rig.data.edit_bones['heel.02.L']
-
-        # Move spine and pelvis bones head to hips_center location
-        spine.head      = hips_center_glob_pos
-        pelvis_R.head   = hips_center_glob_pos
-        pelvis_L.head   = hips_center_glob_pos
-        # Align each pelvis bone tail to its corresponding hip empty
-        right_hip_glob_pos = bpy.data.objects['right_hip'].matrix_world.translation
-        left_hip_glob_pos = bpy.data.objects['left_hip'].matrix_world.translation
-        pelvis_R.tail = right_hip_glob_pos
-        pelvis_L.tail = left_hip_glob_pos
-        
-        # Calculate the length of the thighs as the average distance between the hips and knees empties
-        # Get global position of knee empties
-        right_knee_glob_pos = bpy.data.objects['right_knee'].matrix_world.translation
-        left_knee_glob_pos  = bpy.data.objects['left_knee'].matrix_world.translation
-        # Get average distance
-        thigh_length = (m.dist(right_hip_glob_pos, right_knee_glob_pos) + m.dist(left_hip_glob_pos, left_knee_glob_pos)) / 2
-        # Move the thighs tail in the z axis
-        thigh_R.tail[2] = right_hip_glob_pos[2] - thigh_length
-        thigh_L.tail[2] = left_hip_glob_pos[2] - thigh_length
-        
-        # Calculate the length of the shins as the average distance between the knees and ankle empties
-        # Get global position of ankle empties
-        right_ankle_glob_pos = bpy.data.objects['right_ankle'].matrix_world.translation
-        left_ankle_glob_pos  = bpy.data.objects['left_ankle'].matrix_world.translation
-        # Get average distance
-        shin_length = (m.dist(right_knee_glob_pos, right_ankle_glob_pos) + m.dist(left_knee_glob_pos, left_ankle_glob_pos)) / 2
-        # Move the shins tail in the z axis
-        shin_R.tail[2] = shin_R.head[2] - shin_length
-        shin_L.tail[2] = shin_L.head[2] - shin_length
-        
-        # Calculate the distance between thighs bone heads and the corresponding hip empty in the x and y axes
-        thigh_R_head_x_offset = right_hip_glob_pos[0] - thigh_R.head[0]
-        thigh_R_head_y_offset = right_hip_glob_pos[1] - thigh_R.head[1]
-        thigh_L_head_x_offset = left_hip_glob_pos[0] - thigh_L.head[0]
-        thigh_L_head_y_offset = left_hip_glob_pos[1] - thigh_L.head[1]
-
-        # Translate the entire legs using the previous offsets
-        
-        # Right leg
-        thigh_R.head[0]     += thigh_R_head_x_offset
-        thigh_R.head[1]     += thigh_R_head_y_offset
-        thigh_R.tail[0]     += thigh_R_head_x_offset
-        # Align the thigh vertically
-        thigh_R.tail[1]     = thigh_R.head[1]
-        shin_R.tail[0]      += thigh_R_head_x_offset
-        shin_R.tail[1]      += thigh_R_head_y_offset
-        foot_R.tail[0]      += thigh_R_head_x_offset
-        toe_R.tail[0]       += thigh_R_head_x_offset
-        heel_02_R.head[0]   += thigh_R_head_x_offset
-        heel_02_R.head[1]   += thigh_R_head_y_offset
-        heel_02_R.tail[0]   += thigh_R_head_x_offset
-        heel_02_R.tail[1]   += thigh_R_head_y_offset
-        
-        # Move the right heel so its bone head aligns with the right ankle in the x axis
-        heel_02_R_head_x_offset = shin_R.tail[0] - heel_02_R.head[0]
-        heel_02_R.head[0] += heel_02_R_head_x_offset
-        heel_02_R.tail[0] += heel_02_R_head_x_offset
-        # Make the heel bone be connected with the shin bone
-        heel_02_R.use_connect    = True
+    # Add the rig setting the bones lenght as the median lenght across all the frames
+    print('Adding rig with median length method...')
+
+    # Update the empty positions dictionary
+    update_empty_positions()
+
+    # Update the information of the virtual bones
+    update_virtual_bones_info()
+
+    # Deselect all objects
+    bpy.ops.object.select_all(action='DESELECT')
+    # Select the only the rig
+    rig.select_set(True)
+
+    # Get rig height as the sum of the major bones length in a standing position. Assume foot declination angle of 23º
+    avg_ankle_projection_length     = (m.sin(m.radians(23)) * virtual_bones['foot.R']['median'] + m.sin(m.radians(23)) * virtual_bones['foot.L']['median']) / 2
+    avg_shin_length                 = (virtual_bones['shin.R']['median'] + virtual_bones['shin.L']['median']) / 2
+    avg_thigh_length                = (virtual_bones['thigh.R']['median'] + virtual_bones['thigh.L']['median']) / 2
+
+    rig_height = avg_ankle_projection_length + avg_shin_length + avg_thigh_length + virtual_bones['spine']['median'] + virtual_bones['spine.001']['median'] + virtual_bones['neck']['median']
+    
+    # Calculate new rig proportion
+    rig_new_proportion = rig_height / rig.dimensions.z
+    # Scale the rig by the new proportion
+    rig.scale = (rig_new_proportion, rig_new_proportion, rig_new_proportion)
+
+    # Apply transformations to rig (scale must be (1, 1, 1) so it doesn't fail on send2ue export
+    bpy.context.view_layer.objects.active = rig
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
+    # Get references to the different rig bones
+    bpy.ops.object.mode_set(mode='EDIT')
+
+    spine           = rig.data.edit_bones['spine']
+    spine_003       = rig.data.edit_bones['spine.003']
+    spine_004       = rig.data.edit_bones['spine.004']
+    spine_005       = rig.data.edit_bones['spine.005']
+    spine_006       = rig.data.edit_bones['spine.006']
+    face            = rig.data.edit_bones['face']
+    nose            = rig.data.edit_bones['nose']
+    breast_R        = rig.data.edit_bones['breast.R']
+    breast_L        = rig.data.edit_bones['breast.L']
+    shoulder_R      = rig.data.edit_bones['shoulder.R']
+    shoulder_L      = rig.data.edit_bones['shoulder.L']
+    upper_arm_R     = rig.data.edit_bones['upper_arm.R']
+    upper_arm_L     = rig.data.edit_bones['upper_arm.L']
+    forearm_R       = rig.data.edit_bones['forearm.R']
+    forearm_L       = rig.data.edit_bones['forearm.L']
+    hand_R          = rig.data.edit_bones['hand.R']
+    hand_L          = rig.data.edit_bones['hand.L']
+    pelvis_R        = rig.data.edit_bones['pelvis.R']
+    pelvis_L        = rig.data.edit_bones['pelvis.L']
+    thigh_R         = rig.data.edit_bones['thigh.R']
+    thigh_L         = rig.data.edit_bones['thigh.L']
+    shin_R          = rig.data.edit_bones['shin.R']
+    shin_L          = rig.data.edit_bones['shin.L']
+    foot_R          = rig.data.edit_bones['foot.R']
+    foot_L          = rig.data.edit_bones['foot.L']
+    toe_R           = rig.data.edit_bones['toe.R']
+    toe_L           = rig.data.edit_bones['toe.L']
+    heel_02_R       = rig.data.edit_bones['heel.02.R']
+    heel_02_L       = rig.data.edit_bones['heel.02.L']
+
+    # Get the hips_center z position as the sum of heel, shin and thigh lengths
+    hips_center_z_pos = avg_ankle_projection_length + avg_shin_length + avg_thigh_length
+
+    # Move the spine and pelvis bone heads to the point (0, 0, hips_center_z_pos)
+    spine.head      = (0, 0, hips_center_z_pos)
+    pelvis_R.head   = (0, 0, hips_center_z_pos)
+    pelvis_L.head   = (0, 0, hips_center_z_pos)
+
+    # Calculate the average length of the pelvis bones
+    avg_pelvis_length = (virtual_bones['pelvis.R']['median'] + virtual_bones['pelvis.L']['median']) / 2
+
+    # Set the pelvis bones length based on the keep symmetry parameter
+    pelvis_R_length  = avg_pelvis_length if keep_symmetry else virtual_bones['pelvis.R']['median']
+    pelvis_L_length  = avg_pelvis_length if keep_symmetry else virtual_bones['pelvis.L']['median']
+
+    # Align the pelvis bone tails to the hips center
+    pelvis_R.tail   = (-pelvis_R_length, 0, hips_center_z_pos)
+    pelvis_L.tail   = (pelvis_L_length, 0, hips_center_z_pos)
+    # Reset pelvis bones rotations
+    pelvis_R.roll   = 0
+    pelvis_L.roll   = 0
+
+    # Move thighs bone head to the position of corresponding pelvis bone tail
+    thigh_R.head    = (-pelvis_R_length, 0, hips_center_z_pos)
+    thigh_L.head    = (pelvis_L_length, 0, hips_center_z_pos)
+
+    # Set the thigh bones length based on the keep symmetry parameter
+    thigh_R_length  = avg_thigh_length if keep_symmetry else virtual_bones['thigh.R']['median']
+    thigh_L_length  = avg_thigh_length if keep_symmetry else virtual_bones['thigh.L']['median']
+
+    # Align the thighs bone tail to the bone head
+    thigh_R.tail    = (-pelvis_R_length, 0, hips_center_z_pos - thigh_R_length)
+    thigh_L.tail    = (pelvis_L_length, 0, hips_center_z_pos - thigh_L_length)
+
+    # Set the shin bones length based on the keep symmetry parameter
+    shin_R_length   = avg_shin_length if keep_symmetry else virtual_bones['shin.R']['median']
+    shin_L_length   = avg_shin_length if keep_symmetry else virtual_bones['shin.L']['median']
+
+    # Align the shin bones to the thigh bones
+    shin_R.tail     = (-pelvis_R_length, 0, hips_center_z_pos - thigh_R_length - shin_R_length)
+    shin_L.tail     = (pelvis_L_length, 0, hips_center_z_pos - thigh_L_length - shin_L_length)
+
+    # Remove the toe bones
+    rig.data.edit_bones.remove(rig.data.edit_bones['toe.R'])
+    rig.data.edit_bones.remove(rig.data.edit_bones['toe.L'])
+
+    # Move the foot bones tail to adjust their length depending on keep symmetry and also form a 23º degree with the horizontal plane
+    avg_foot_length = (virtual_bones['foot.R']['median'] + virtual_bones['foot.L']['median']) / 2
+
+    # Set the foot bones length based on the keep symmetry parameter
+    foot_R_length   = avg_foot_length if keep_symmetry else virtual_bones['foot.R']['median']
+    foot_L_length   = avg_foot_length if keep_symmetry else virtual_bones['foot.L']['median']
+
+    foot_R.tail     = (-pelvis_R_length, -foot_R_length * m.cos(m.radians(23)), foot_R.head[2] - foot_R_length * m.sin(m.radians(23)))
+    foot_L.tail     = (pelvis_L_length, -foot_L_length * m.cos(m.radians(23)), foot_L.head[2] - foot_L_length * m.sin(m.radians(23)))
+
+    # Move the heel bones so their head is aligned with the ankle on the x axis
+    avg_heel_length    = (virtual_bones['heel.02.R']['median'] + virtual_bones['heel.02.L']['median']) / 2
+
+    # Set the heel bones length based on the keep symmetry parameter
+    heel_02_R_length   = avg_heel_length if keep_symmetry else virtual_bones['heel.02.R']['median']
+    heel_02_L_length   = avg_heel_length if keep_symmetry else virtual_bones['heel.02.L']['median']
+
+    heel_02_R.head      = (-pelvis_R_length, heel_02_R.head[1], heel_02_R.head[2])
+    heel_02_R.length    = heel_02_R_length
+    heel_02_L.head      = (pelvis_L_length, heel_02_L.head[1], heel_02_L.head[2])
+    heel_02_L.length    = heel_02_L_length
+
+    # Make the heel bones be connected with the shin bones
+    heel_02_R.parent        = shin_R
+    heel_02_R.use_connect   = True
+    heel_02_L.parent        = shin_L
+    heel_02_L.use_connect   = True
+
+    # Add a pelvis bone to the root and then make it the parent of spine, pelvis.R and pelvis.L bones
+    pelvis = rig.data.edit_bones.new('pelvis')
+    pelvis.head = spine.head
+    pelvis.tail = spine.head + mathutils.Vector([0, 0.1, 0])
+
+    # Change the pelvis.R, pelvis.L, thigh.R, thigh.L and spine parent to the new pelvis bone
+    pelvis_R.parent         = pelvis
+    pelvis_R.use_connect    = False
+    pelvis_L.parent         = pelvis
+    pelvis_L.use_connect    = False
+    thigh_R.parent          = pelvis
+    thigh_R.use_connect     = False
+    thigh_L.parent          = pelvis
+    thigh_L.use_connect     = False
+    spine.parent            = pelvis
+    spine.use_connect       = False
+
+    # Change parent of spine.003 bone to spine to erase bones spine.001 and spine.002
+    spine_003.parent        = spine
+    spine_003.use_connect   = True
+    # Remove spine.001 and spine.002 bones
+    rig.data.edit_bones.remove(rig.data.edit_bones['spine.001'])
+    rig.data.edit_bones.remove(rig.data.edit_bones['spine.002'])
+
+    # Rename spine.003 to spine.001
+    rig.data.edit_bones['spine.003'].name = "spine.001"
+    spine_001 = rig.data.edit_bones['spine.001']
+
+    # Adjust the spine bone length and align it vertically
+    spine.tail = (spine.head[0], spine.head[1], spine.head[2] + virtual_bones['spine']['median'])
+
+    # Adjust the spine.001 bone length and align it vertically
+    spine_001.tail = (spine_001.head[0], spine_001.head[1], spine_001.head[2] + virtual_bones['spine.001']['median'])
+
+    # Calculate the shoulders head z offset from the spine.001 tail. This to raise the shoulders and breasts by that offset
+    shoulder_z_offset = spine_001.tail[2] - shoulder_R.head[2]
+
+    # Raise breasts and shoulders by the z offset
+    breast_R.head[2]    += shoulder_z_offset
+    breast_R.tail[2]    += shoulder_z_offset
+    breast_L.head[2]    += shoulder_z_offset
+    breast_L.tail[2]    += shoulder_z_offset
+    shoulder_R.head[2]  += shoulder_z_offset
+    shoulder_R.tail[2]  += shoulder_z_offset
+    shoulder_L.head[2]  += shoulder_z_offset
+    shoulder_L.tail[2]  += shoulder_z_offset
+
+    # Get average shoulder length
+    avg_shoulder_length = (virtual_bones['shoulder.R']['median'] + virtual_bones['shoulder.L']['median']) / 2
+
+    # Set the shoulder bones length based on the keep symmetry parameter
+    shoulder_R_length   = avg_shoulder_length if keep_symmetry else virtual_bones['shoulder.R']['median']
+    shoulder_L_length   = avg_shoulder_length if keep_symmetry else virtual_bones['shoulder.L']['median']
+
+    # Move the shoulder tail in the x axis
+    shoulder_R.tail[0] = spine_001.tail[0] - shoulder_R_length
+    shoulder_L.tail[0] = spine_001.tail[0] + shoulder_L_length
+
+    # Calculate the upper_arms head x and z offset from the shoulder_R tail. This to raise and adjust the arms and hands by that offset
+    upper_arm_R_x_offset = shoulder_R.tail[0] - upper_arm_R.head[0]
+    upper_arm_R_z_offset = spine_001.tail[2] - upper_arm_R.head[2]
+    upper_arm_L_x_offset = shoulder_L.tail[0] - upper_arm_L.head[0]
+    upper_arm_L_z_offset = spine_001.tail[2] - upper_arm_L.head[2]
+    
+    upper_arm_R.head[2] += upper_arm_R_z_offset
+    upper_arm_R.tail[2] += upper_arm_R_z_offset
+    upper_arm_R.head[0] += upper_arm_R_x_offset
+    upper_arm_R.tail[0] += upper_arm_R_x_offset
+    for bone in upper_arm_R.children_recursive:
+        if not bone.use_connect:
+            bone.head[2] += upper_arm_R_z_offset
+            bone.tail[2] += upper_arm_R_z_offset
+            bone.head[0] += upper_arm_R_x_offset
+            bone.tail[0] += upper_arm_R_x_offset
+        else:
+            bone.tail[2] += upper_arm_R_z_offset
+            bone.tail[0] += upper_arm_R_x_offset
             
-        # Left leg
-        thigh_L.head[0]     += thigh_L_head_x_offset
-        thigh_L.head[1]     += thigh_L_head_y_offset
-        thigh_L.tail[0]     += thigh_L_head_x_offset
-        # Align the thigh vertically
-        thigh_L.tail[1]     = thigh_L.head[1]
-        shin_L.tail[0]      += thigh_L_head_x_offset
-        shin_L.tail[1]      += thigh_L_head_y_offset
-        foot_L.tail[0]      += thigh_L_head_x_offset
-        toe_L.tail[0]       += thigh_L_head_x_offset
-        heel_02_L.head[0]   += thigh_L_head_x_offset
-        heel_02_L.head[1]   += thigh_L_head_y_offset
-        heel_02_L.tail[0]   += thigh_L_head_x_offset
-        heel_02_L.tail[1]   += thigh_L_head_y_offset
+    upper_arm_L.head[2] += upper_arm_L_z_offset
+    upper_arm_L.tail[2] += upper_arm_L_z_offset
+    upper_arm_L.head[0] += upper_arm_L_x_offset
+    upper_arm_L.tail[0] += upper_arm_L_x_offset
+    for bone in upper_arm_L.children_recursive:
+        if not bone.use_connect:
+            bone.head[2] += upper_arm_L_z_offset
+            bone.tail[2] += upper_arm_L_z_offset
+            bone.head[0] += upper_arm_L_x_offset
+            bone.tail[0] += upper_arm_L_x_offset
+        else:
+            bone.tail[2] += upper_arm_L_z_offset
+            bone.tail[0] += upper_arm_L_x_offset
 
-        # Move the left heel so its bone head aligns with the left ankle in the x axis
-        heel_02_L_head_x_offset = shin_L.tail[0] - heel_02_L.head[0]
-        heel_02_L.head[0] += heel_02_L_head_x_offset
-        heel_02_L.tail[0] += heel_02_L_head_x_offset
-        # Make the heel bone be connected with the shin bone
-        heel_02_L.use_connect    = True
+    # Align the y position of breasts, shoulders, arms and hands to the y position of the spine.001 tail
+    # Calculate the breasts head y offset from the spine.001 tail
+    breast_y_offset = spine_001.tail[1] - breast_R.head[1]
+    # Move breast by the y offset
+    breast_R.head[1] += breast_y_offset
+    breast_R.tail[1] += breast_y_offset
+    breast_L.head[1] += breast_y_offset
+    breast_L.tail[1] += breast_y_offset
 
-        # Add a pelvis bone to the root and then make it the parent of spine, pelvis.R and pelvis.L bones
-        pelvis = rig.data.edit_bones.new('pelvis')
-        pelvis.head = hips_center_glob_pos
-        pelvis.tail = hips_center_glob_pos + mathutils.Vector([0, 0.1, 0])
+    # Temporarily remove breast bones. (Comment these lines if breast bones are needed)
+    rig.data.edit_bones.remove(rig.data.edit_bones[breast_R.name])
+    rig.data.edit_bones.remove(rig.data.edit_bones[breast_L.name])
 
-        # Change the pelvis.R, pelvis.L, thigh.R, thigh.L and spine parent to the new pelvis bone
-        pelvis_R.parent         = pelvis
-        pelvis_R.use_connect    = False
-        pelvis_L.parent         = pelvis
-        pelvis_L.use_connect    = False
-        thigh_R.parent          = pelvis
-        thigh_R.use_connect     = False
-        thigh_L.parent          = pelvis
-        thigh_L.use_connect     = False
-        spine.parent            = pelvis
-        spine.use_connect       = False
+    # Set the y position to which the arms bones will be aligned
+    arms_bones_y_pos = spine_001.tail[1]
+    # Move shoulders on y axis and also move shoulders head to the center at x=0 , 
+    shoulder_R.head[1] = arms_bones_y_pos
+    shoulder_R.head[0] = 0
+    shoulder_R.tail[1] = arms_bones_y_pos
+    shoulder_L.head[1] = arms_bones_y_pos
+    shoulder_L.head[0] = 0
+    shoulder_L.tail[1] = arms_bones_y_pos
 
-        # Change parent of spine.003 bone to spine to erase bones spine.001 and spine.002
-        spine_003.parent = spine
-        spine_003.use_connect = True
-        # Remove spine.001 and spine.002 bones
-        rig.data.edit_bones.remove(rig.data.edit_bones['spine.001'])
-        rig.data.edit_bones.remove(rig.data.edit_bones['spine.002'])
+    # Move upper_arm and forearm
+    upper_arm_R.head[1] = arms_bones_y_pos
+    upper_arm_R.tail[1] = arms_bones_y_pos
+    upper_arm_L.head[1] = arms_bones_y_pos
+    upper_arm_L.tail[1] = arms_bones_y_pos
 
-        # Rename spine.003 to spine.001
-        rig.data.edit_bones['spine.003'].name = "spine.001"
-        spine_001 = rig.data.edit_bones['spine.001']
+    # Calculate hand head y offset to arms_bones_y_pos to move the whole hand
+    hand_R_y_offset = arms_bones_y_pos - hand_R.head[1]
+    hand_L_y_offset = arms_bones_y_pos - hand_L.head[1]
 
-        # Calculate the distance between the hips_center empty and the trunk_center empty
-        # This distance will be the length of the spine bone
-        # Get trunk_center global position
-        trunk_center_glob_pos = bpy.data.objects['trunk_center'].matrix_world.translation
-        # Get distance to hips_center empty
-        spine_length = m.dist(trunk_center_glob_pos, hips_center_glob_pos)
-        
-        # Change spine tail position values
-        spine.tail[1] = spine.head[1]
-        spine.tail[2] = spine.head[2] + spine_length
+    # Move hands and its children by the y offset (forearm tail is moved by hand head)
+    hand_R.head[1] += hand_R_y_offset
+    hand_R.tail[1] += hand_R_y_offset
+    for bone in hand_R.children_recursive:
+        if not bone.use_connect:
+            bone.head[1] += hand_R_y_offset
+            bone.tail[1] += hand_R_y_offset
+        else:
+            bone.tail[1] += hand_R_y_offset
+            
+    hand_L.head[1] += hand_L_y_offset
+    hand_L.tail[1] += hand_L_y_offset
+    for bone in hand_L.children_recursive:
+        if not bone.use_connect:
+            bone.head[1] += hand_L_y_offset
+            bone.tail[1] += hand_L_y_offset
+        else:
+            bone.tail[1] += hand_L_y_offset
 
-        # Calculate the distance between the trunk_center empty and the neck_center empty
-        # This distance will be the length of the spine.001 bone
-        # Get neck_center global position
-        neck_center_glob_pos = bpy.data.objects['neck_center'].matrix_world.translation
-        # Get distance to trunk_center empty
-        spine_001_length = m.dist(neck_center_glob_pos, trunk_center_glob_pos)
+    # Change to Pose Mode to rotate the arms and make a T Pose for posterior retargeting
+    bpy.ops.object.mode_set(mode='POSE')
+    pose_upper_arm_R = rig.pose.bones['upper_arm.R']
+    pose_upper_arm_R.rotation_mode  = 'XYZ'
+    pose_upper_arm_R.rotation_euler = (0,m.radians(-7),m.radians(-29))
+    pose_upper_arm_R.rotation_mode  = 'QUATERNION'
+    pose_upper_arm_L = rig.pose.bones['upper_arm.L']
+    pose_upper_arm_L.rotation_mode  = 'XYZ'
+    pose_upper_arm_L.rotation_euler = (0,m.radians(7),m.radians(29))
+    pose_upper_arm_L.rotation_mode  = 'QUATERNION'
+    pose_forearm_R = rig.pose.bones['forearm.R']
+    pose_forearm_R.rotation_mode    = 'XYZ'
+    pose_forearm_R.rotation_euler   = (0,0,m.radians(-4))
+    pose_forearm_R.rotation_mode    = 'QUATERNION'
+    pose_forearm_L = rig.pose.bones['forearm.L']
+    pose_forearm_L.rotation_mode    = 'XYZ'
+    pose_forearm_L.rotation_euler   = (0,0,m.radians(4))
+    pose_forearm_L.rotation_mode    = 'QUATERNION'
+    pose_hand_R = rig.pose.bones['hand.R']
+    pose_hand_R.rotation_mode    = 'XYZ'
+    pose_hand_R.rotation_euler   = (m.radians(-5.7),0,m.radians(-3.7))
+    pose_hand_R.rotation_mode    = 'QUATERNION'
+    pose_hand_L = rig.pose.bones['hand.L']
+    pose_hand_L.rotation_mode    = 'XYZ'
+    pose_hand_L.rotation_euler   = (m.radians(-5.7),0,m.radians(3.7))
+    pose_hand_L.rotation_mode    = 'QUATERNION'
+    pose_thigh_R = rig.pose.bones['thigh.R']
+    pose_thigh_R.rotation_mode    = 'XYZ'
+    pose_thigh_R.rotation_euler   = (0,0,m.radians(3))
+    pose_thigh_R.rotation_mode    = 'QUATERNION'
+    pose_foot_R = rig.pose.bones['foot.R']
+    pose_foot_R.rotation_mode    = 'XYZ'
+    pose_foot_R.rotation_euler   = (0,0,m.radians(4))
+    pose_foot_R.rotation_mode    = 'QUATERNION'
+    pose_thigh_L = rig.pose.bones['thigh.L']
+    pose_thigh_L.rotation_mode    = 'XYZ'
+    pose_thigh_L.rotation_euler   = (0,0,m.radians(-3))
+    pose_thigh_L.rotation_mode    = 'QUATERNION'
+    pose_foot_L = rig.pose.bones['foot.L']
+    pose_foot_L.rotation_mode    = 'XYZ'
+    pose_foot_L.rotation_euler   = (0,0,m.radians(-4))
+    pose_foot_L.rotation_mode    = 'QUATERNION'
 
-        # Change spine.001 tail position values
-        spine_001.tail[1] = spine_001.head[1]
-        spine_001.tail[2] = spine_001.head[2] + spine_001_length
+    # Apply the actual pose to the rest pose
+    bpy.ops.pose.select_all(action='SELECT')
+    bpy.ops.pose.armature_apply(selected=False)
 
-        # Calculate the shoulders head z offset from the spine.001 tail. This to raise the shoulders and breasts by that offset
-        shoulder_z_offset = spine_001.tail[2] - shoulder_R.head[2]
+    # Change mode to edit mode
+    bpy.ops.object.mode_set(mode='EDIT')
 
-        # Raise breasts and shoulders by the z offset
-        breast_R.head[2]    += shoulder_z_offset
-        breast_R.tail[2]    += shoulder_z_offset
-        breast_L.head[2]    += shoulder_z_offset
-        breast_L.tail[2]    += shoulder_z_offset
-        shoulder_R.head[2]  += shoulder_z_offset
-        shoulder_R.tail[2]  += shoulder_z_offset
-        shoulder_L.head[2]  += shoulder_z_offset
-        shoulder_L.tail[2]  += shoulder_z_offset
-        
-        # Calculate the shoulders length as the average of the distance between neck_center empty and shoulder empties
-        # Get global position of shoulder empties
-        right_shoulder_glob_pos = bpy.data.objects['right_shoulder'].matrix_world.translation
-        left_shoulder_glob_pos  = bpy.data.objects['left_shoulder'].matrix_world.translation
-        # Get average distance
-        shoulder_length = (m.dist(neck_center_glob_pos, right_shoulder_glob_pos) + m.dist(neck_center_glob_pos, left_shoulder_glob_pos)) / 2
-        # Move the shoulder tail in the x axis
-        shoulder_R.tail[0] = spine_001.tail[0] - shoulder_length
-        shoulder_L.tail[0] = spine_001.tail[0] + shoulder_length
-        
-        # Calculate the upper_arms head x and z offset from the shoulder_R tail. This to raise and adjust the arms and hands by that offset
-        upper_arm_R_x_offset = shoulder_R.tail[0] - upper_arm_R.head[0]
-        upper_arm_R_z_offset = spine_001.tail[2] - upper_arm_R.head[2]
-        
-        upper_arm_R.head[2] += upper_arm_R_z_offset
-        upper_arm_R.tail[2] += upper_arm_R_z_offset
-        upper_arm_R.head[0] += upper_arm_R_x_offset
-        upper_arm_R.tail[0] += upper_arm_R_x_offset
-        for bone in upper_arm_R.children_recursive:
-            if not bone.use_connect:
-                bone.head[0] += upper_arm_R_x_offset
-                bone.tail[0] += upper_arm_R_x_offset
-                bone.head[2] += upper_arm_R_z_offset
-                bone.tail[2] += upper_arm_R_z_offset
-            else:
-                bone.tail[0] += upper_arm_R_x_offset
-                bone.tail[2] += upper_arm_R_z_offset
-                
-        upper_arm_L.head[2] += upper_arm_R_z_offset
-        upper_arm_L.tail[2] += upper_arm_R_z_offset
-        upper_arm_L.head[0] -= upper_arm_R_x_offset
-        upper_arm_L.tail[0] -= upper_arm_R_x_offset
-        for bone in upper_arm_L.children_recursive:
-            if not bone.use_connect:
-                bone.head[0] -= upper_arm_R_x_offset
-                bone.tail[0] -= upper_arm_R_x_offset
-                bone.head[2] += upper_arm_R_z_offset
-                bone.tail[2] += upper_arm_R_z_offset
-            else:
-                bone.tail[0] -= upper_arm_R_x_offset
-                bone.tail[2] += upper_arm_R_z_offset
+    # Get new bone references
+    upper_arm_R     = rig.data.edit_bones['upper_arm.R']
+    upper_arm_L     = rig.data.edit_bones['upper_arm.L']
+    forearm_R       = rig.data.edit_bones['forearm.R']
+    forearm_L       = rig.data.edit_bones['forearm.L']
+    hand_R          = rig.data.edit_bones['hand.R']
+    hand_L          = rig.data.edit_bones['hand.L']        
 
-        # Align the y position of breasts, shoulders, arms and hands to the y position of the spine.001 tail
-        # Calculate the breasts head y offset from the spine.001 tail
-        breast_y_offset = spine_001.tail[1] - breast_R.head[1]
-        # Move breast by the y offset
-        breast_R.head[1] += breast_y_offset
-        breast_R.tail[1] += breast_y_offset
-        breast_L.head[1] += breast_y_offset
-        breast_L.tail[1] += breast_y_offset
+    # Get average upperarm length
+    avg_upper_arm_length = (virtual_bones['upper_arm.R']['median'] + virtual_bones['upper_arm.L']['median']) / 2
 
-        # Set the y position to which the arms bones will be aligned
-        arms_bones_y_pos = spine_001.tail[1]
-        # Move shoulders on y axis and also move shoulders head to the center at x=0 , 
-        shoulder_R.head[1] = arms_bones_y_pos
-        shoulder_R.head[0] = 0
-        shoulder_R.tail[1] = arms_bones_y_pos
-        shoulder_L.head[1] = arms_bones_y_pos
-        shoulder_L.head[0] = 0
-        shoulder_L.tail[1] = arms_bones_y_pos
+    # Set the upperarm bones length based on the keep symmetry parameter
+    upper_arm_R_length   = avg_upper_arm_length if keep_symmetry else virtual_bones['upper_arm.R']['median']
+    upper_arm_L_length   = avg_upper_arm_length if keep_symmetry else virtual_bones['upper_arm.L']['median']
 
-        # Move upper_arm and forearm
-        upper_arm_R.head[1] = arms_bones_y_pos
-        upper_arm_R.tail[1] = arms_bones_y_pos
-        upper_arm_L.head[1] = arms_bones_y_pos
-        upper_arm_L.tail[1] = arms_bones_y_pos
+    # Move the upper_arm tail in the x axis
+    upper_arm_R.tail[0] = upper_arm_R.head[0] - upper_arm_R_length
+    upper_arm_L.tail[0] = upper_arm_L.head[0] + upper_arm_L_length
 
-        # Calculate hand head y offset to arms_bones_y_pos to move the whole hand
-        hand_y_offset = arms_bones_y_pos - hand_R.head[1]
+    # Get average forearm length
+    avg_forearm_length = (virtual_bones['forearm.R']['median'] + virtual_bones['forearm.L']['median']) / 2
 
-        # Move hands and its children by the y offset (forearm tail is moved by hand head)
-        hand_R.head[1] += hand_y_offset
-        hand_R.tail[1] += hand_y_offset
-        for bone in hand_R.children_recursive:
-            if not bone.use_connect:
-                bone.head[1] += hand_y_offset
-                bone.tail[1] += hand_y_offset
-            else:
-                bone.tail[1] += hand_y_offset
-                
-        hand_L.head[1] += hand_y_offset
-        hand_L.tail[1] += hand_y_offset
-        for bone in hand_L.children_recursive:
-            if not bone.use_connect:
-                bone.head[1] += hand_y_offset
-                bone.tail[1] += hand_y_offset
-            else:
-                bone.tail[1] += hand_y_offset
+    # Set the forearm bones length based on the keep symmetry parameter
+    forearm_R_length   = avg_forearm_length if keep_symmetry else virtual_bones['forearm.R']['median']
+    forearm_L_length   = avg_forearm_length if keep_symmetry else virtual_bones['forearm.L']['median']
 
-        # Change to Pose Mode to rotate the arms and make a T Pose for posterior retargeting
-        bpy.ops.object.mode_set(mode='POSE')
-        pose_upper_arm_R = rig.pose.bones['upper_arm.R']
-        pose_upper_arm_R.rotation_mode  = 'XYZ'
-        pose_upper_arm_R.rotation_euler = (0,0,m.radians(-29))
-        pose_upper_arm_R.rotation_mode  = 'QUATERNION'
-        pose_upper_arm_L = rig.pose.bones['upper_arm.L']
-        pose_upper_arm_L.rotation_mode  = 'XYZ'
-        pose_upper_arm_L.rotation_euler = (0,0,m.radians(29))
-        pose_upper_arm_L.rotation_mode  = 'QUATERNION'
-        pose_forearm_R = rig.pose.bones['forearm.R']
-        pose_forearm_R.rotation_mode    = 'XYZ'
-        pose_forearm_R.rotation_euler   = (0,0,m.radians(-4))
-        pose_forearm_R.rotation_mode    = 'QUATERNION'
-        pose_forearm_L = rig.pose.bones['forearm.L']
-        pose_forearm_L.rotation_mode    = 'XYZ'
-        pose_forearm_L.rotation_euler   = (0,0,m.radians(4))
-        pose_forearm_L.rotation_mode    = 'QUATERNION'
-        pose_thigh_R = rig.pose.bones['thigh.R']
-        pose_thigh_R.rotation_mode    = 'XYZ'
-        pose_thigh_R.rotation_euler   = (0,0,m.radians(3))
-        pose_thigh_R.rotation_mode    = 'QUATERNION'
-        pose_foot_R = rig.pose.bones['foot.R']
-        pose_foot_R.rotation_mode    = 'XYZ'
-        pose_foot_R.rotation_euler   = (0,0,m.radians(4))
-        pose_foot_R.rotation_mode    = 'QUATERNION'
-        pose_thigh_L = rig.pose.bones['thigh.L']
-        pose_thigh_L.rotation_mode    = 'XYZ'
-        pose_thigh_L.rotation_euler   = (0,0,m.radians(-3))
-        pose_thigh_L.rotation_mode    = 'QUATERNION'
-        pose_foot_L = rig.pose.bones['foot.L']
-        pose_foot_L.rotation_mode    = 'XYZ'
-        pose_foot_L.rotation_euler   = (0,0,m.radians(-4))
-        pose_foot_L.rotation_mode    = 'QUATERNION'
+    # Calculate the x axis offset of the current forearm tail x position and the forearm head x position plus the calculated forearm length
+    # This is to move the forearm tail and all the hand bones
+    forearm_R_tail_x_offset = (forearm_R.head[0] - forearm_R_length) - forearm_R.tail[0]
+    forearm_L_tail_x_offset = (forearm_L.head[0] + forearm_L_length) - forearm_L.tail[0]
 
-        # Apply the actual pose to the rest pose
-        bpy.ops.pose.select_all(action='SELECT')
-        bpy.ops.pose.armature_apply(selected=False)
+    # Move forearms tail and its children by the x offset
+    forearm_R.tail[0] += forearm_R_tail_x_offset
+    for bone in forearm_R.children_recursive:
+        if not bone.use_connect:
+            bone.head[0] += forearm_R_tail_x_offset
+            bone.tail[0] += forearm_R_tail_x_offset
+        else:
+            bone.tail[0] += forearm_R_tail_x_offset
+            
+    forearm_L.tail[0] += forearm_L_tail_x_offset
+    for bone in forearm_L.children_recursive:
+        if not bone.use_connect:
+            bone.head[0] += forearm_L_tail_x_offset
+            bone.tail[0] += forearm_L_tail_x_offset
+        else:
+            bone.tail[0] += forearm_L_tail_x_offset
 
-        # Change mode to edit mode
-        bpy.ops.object.mode_set(mode='EDIT')
-        
-        upper_arm_R     = rig.data.edit_bones['upper_arm.R']
-        upper_arm_L     = rig.data.edit_bones['upper_arm.L']
-        forearm_R       = rig.data.edit_bones['forearm.R']
-        forearm_L       = rig.data.edit_bones['forearm.L']
-        
-        # Calculate the length of the upper_arms as the average distance between the shoulder and elbow empties
-        # Get global position of elbow empties
-        right_elbow_glob_pos = bpy.data.objects['right_elbow'].matrix_world.translation
-        left_elbow_glob_pos  = bpy.data.objects['left_elbow'].matrix_world.translation
-        # Get average distance
-        upper_arm_length = (m.dist(right_shoulder_glob_pos, right_elbow_glob_pos) + m.dist(left_shoulder_glob_pos, left_elbow_glob_pos)) / 2
-        # Move the upper_arm tail in the x axis
-        upper_arm_R.tail[0] = upper_arm_R.head[0] - upper_arm_length
-        upper_arm_L.tail[0] = upper_arm_L.head[0] + upper_arm_length
-        
-        # Calculate the length of the forearms as the average distance between the elbow and wrist empties
-        # Get global position of wrist empties
-        right_wrist_glob_pos = bpy.data.objects['right_wrist'].matrix_world.translation
-        left_wrist_glob_pos  = bpy.data.objects['left_wrist'].matrix_world.translation
-        # Get average distance
-        forearm_length = (m.dist(right_elbow_glob_pos, right_wrist_glob_pos) + m.dist(left_elbow_glob_pos, left_wrist_glob_pos)) / 2
-        
-        # Calculate the x axis offset of the current forearm tail x position and the forearm head x position plus the calculated forearm length
-        # This is to move the forearm tail and all the hand bones
-        forearm_tail_x_offset = (forearm_R.head[0] - forearm_length) - forearm_R.tail[0]
-        
-        # Move forearms tail and its children by the x offset
-        forearm_R.tail[0] += forearm_tail_x_offset
-        for bone in forearm_R.children_recursive:
-            if not bone.use_connect:
-                bone.head[0] += forearm_tail_x_offset
-                bone.tail[0] += forearm_tail_x_offset
-            else:
-                bone.tail[0] += forearm_tail_x_offset
-                
-        forearm_L.tail[0] -= forearm_tail_x_offset
-        for bone in forearm_L.children_recursive:
-            if not bone.use_connect:
-                bone.head[0] -= forearm_tail_x_offset
-                bone.tail[0] -= forearm_tail_x_offset
-            else:
-                bone.tail[0] -= forearm_tail_x_offset
+    #############################################################
+    ### DEBUG ###
+    if False:
+        # Add an auxiliary bone to the side of the upperarms and forearms to check their rotation
+        upper_arm_R_Rot             = rig.data.edit_bones.new('uppe_rarm.R.Rot')
+        upper_arm_R_Rot.head        = (upper_arm_R.head[0] - upper_arm_R_length/2, upper_arm_R.head[1], upper_arm_R.head[2])
+        upper_arm_R_Rot.tail        = (upper_arm_R_Rot.head[0], upper_arm_R_Rot.head[1], upper_arm_R_Rot.head[2] + 0.1)
+        upper_arm_R_Rot.parent      = upper_arm_R
+        upper_arm_R_Rot.use_connect = False
+        upper_arm_L_Rot             = rig.data.edit_bones.new('uppe_rarm.L.Rot')
+        upper_arm_L_Rot.head        = (upper_arm_L.head[0] + upper_arm_L_length/2, upper_arm_L.head[1], upper_arm_L.head[2])
+        upper_arm_L_Rot.tail        = (upper_arm_L_Rot.head[0], upper_arm_L_Rot.head[1], upper_arm_L_Rot.head[2] + 0.1)
+        upper_arm_L_Rot.parent      = upper_arm_L
+        upper_arm_L_Rot.use_connect = False
+        forearm_R_Rot               = rig.data.edit_bones.new('uppe_rarm.R.Rot')
+        forearm_R_Rot.head          = (forearm_R.head[0] - forearm_R_length/2, forearm_R.head[1], forearm_R.head[2])
+        forearm_R_Rot.tail          = (forearm_R_Rot.head[0], forearm_R_Rot.head[1], forearm_R_Rot.head[2] + 0.1)
+        forearm_R_Rot.parent        = forearm_R
+        forearm_R_Rot.use_connect   = False
+        forearm_L_Rot               = rig.data.edit_bones.new('uppe_rarm.L.Rot')
+        forearm_L_Rot.head          = (forearm_L.head[0] + forearm_L_length/2, forearm_L.head[1], forearm_L.head[2])
+        forearm_L_Rot.tail          = (forearm_L_Rot.head[0], forearm_L_Rot.head[1], forearm_L_Rot.head[2] + 0.1)
+        forearm_L_Rot.parent        = forearm_L
+        forearm_L_Rot.use_connect   = False
+    #############################################################
 
-        ### Adjust the position of the neck, head and face bones ###
-        spine_001   = rig.data.edit_bones['spine.001']
-        spine_004   = rig.data.edit_bones['spine.004']
-        nose        = rig.data.edit_bones['nose']
+    # Get average hand length
+    avg_hand_length = (virtual_bones['hand.R']['median'] + virtual_bones['hand.L']['median']) / 2
 
-        # Set spine.004 bone head position equal to the spine.001 tail
-        spine_004.head = (spine_001.tail[0], spine_001.tail[1], spine_001.tail[2])
-        
-        # Calculate the distance between the neck_center empty and the head_center empty
-        # This distance will be the length of the spine.004 (neck) bone
-        # Get head_center global position
-        head_center_glob_pos = bpy.data.objects['head_center'].matrix_world.translation
-        # Get distance to trunk_center empty
-        spine_004_length = m.dist(head_center_glob_pos, neck_center_glob_pos)
-        
-        # Change spine.004 tail position values
-        spine_004.tail[1] = spine_004.head[1]
-        spine_004.tail[2] = spine_004.head[2] + spine_004_length
+    # Set the forearm bones length based on the keep symmetry parameter
+    hand_R_length   = avg_hand_length if keep_symmetry else virtual_bones['hand.R']['median']
+    hand_L_length   = avg_hand_length if keep_symmetry else virtual_bones['hand.L']['median']
 
-        # Change the parent of the face bone for the spine.004 bone
-        face = rig.data.edit_bones['face']
-        face.parent = spine_004
-        face.use_connect = False
+    # Move hands tail to match the average length
+    hand_R.tail[0] = hand_R.head[0] - hand_R_length
+    hand_L.tail[0] = hand_L.head[0] + hand_L_length
 
-        # Remove spine.005 and spine.006 bones
-        rig.data.edit_bones.remove(rig.data.edit_bones['spine.005'])
-        rig.data.edit_bones.remove(rig.data.edit_bones['spine.006'])
+    ### Adjust the position of the neck, head and face bones ###
+    spine_001   = rig.data.edit_bones['spine.001']
+    spine_004   = rig.data.edit_bones['spine.004']
+    nose        = rig.data.edit_bones['nose']
+    nose_001    = rig.data.edit_bones['nose.001']
 
-        # Calculate the y and z offset of the nose bone tail to the spine.004 bone tail
-        # Get nose empty global position
-        nose_glob_pos = bpy.data.objects['nose'].matrix_world.translation
-        # Get the distance between nose empty and head_center empty
-        nose_to_head_center = m.dist(nose_glob_pos, head_center_glob_pos)
+    # Set spine.004 bone head position equal to the spine.001 tail
+    spine_004.head = (spine_001.tail[0], spine_001.tail[1], spine_001.tail[2])
 
-        nose_y_offset = (spine_004.tail[1] - nose_to_head_center) - nose.tail[1]
-        nose_z_offset = nose_glob_pos[2] - nose.tail[2]
+    # Change spine.004 tail position values
+    spine_004.tail = (spine_004.head[0], spine_004.head[1], spine_004.head[2] + virtual_bones['neck']['median'])
 
-        # Move the face bone on the z axis using the calculated offset
-        face.head[2] += nose_z_offset
-        face.tail[2] += nose_z_offset
+    # Change the parent of the face bone for the spine.004 bone
+    face = rig.data.edit_bones['face']
+    face.parent = spine_004
+    face.use_connect = False
 
-        # Move on the y and z axis the children bones from the face bone using the calculated offsets
-        for bone in face.children_recursive:
-            if not bone.use_connect:
-                bone.head[1] += nose_y_offset
-                bone.tail[1] += nose_y_offset
-                bone.head[2] += nose_z_offset
-                bone.tail[2] += nose_z_offset
-            else:
-                bone.tail[1] += nose_y_offset
-                bone.tail[2] += nose_z_offset
-                
-        # Move the face bone head to align it horizontally
-        face.head[1] = spine_004.tail[1]
-        face.head[2] = face.tail[2]
-        face.tail[1] = face.head[1] - nose_to_head_center / 2
+    # Remove spine.005 and spine.006 bones
+    rig.data.edit_bones.remove(rig.data.edit_bones['spine.005'])
+    rig.data.edit_bones.remove(rig.data.edit_bones['spine.006'])
 
-        # Rename spine.004 to neck
-        rig.data.edit_bones['spine.004'].name = "neck"
+    # Calculate the y and z offset of the nose.001 bone tail using the imaginary head_nose bone. Assume a 18º of declination angle
+    nose_y_offset = -virtual_bones['head_nose']['median'] * m.cos(m.radians(18)) - nose_001.tail[1]
+    nose_z_offset = (spine_004.tail[2] - virtual_bones['head_nose']['median'] * m.sin(m.radians(18))) - nose_001.tail[2]
+    
+    # Move the face bone on the z axis using the calculated offset
+    face.head[2] += nose_z_offset
+    face.tail[2] += nose_z_offset
 
-        # Rotate the spine and neck bones to complete the TPOSE
-        bpy.ops.object.mode_set(mode='POSE')
+    # Move on the y and z axis the children bones from the face bone using the calculated offsets
+    for bone in face.children_recursive:
+        if not bone.use_connect:
+            bone.head[1] += nose_y_offset
+            bone.tail[1] += nose_y_offset
+            bone.head[2] += nose_z_offset
+            bone.tail[2] += nose_z_offset
+        else:
+            bone.tail[1] += nose_y_offset
+            bone.tail[2] += nose_z_offset
+            
+    # Move the face bone head to align it horizontally
+    face.head[1] = spine_004.tail[1]
+    face.head[2] = face.tail[2]
+    face.tail[1] = face.head[1] - (virtual_bones['head_nose']['median'] * m.cos(m.radians(18)) / 2)
 
-        pose_spine = rig.pose.bones['spine']
-        pose_spine.rotation_mode    = 'XYZ'
-        pose_spine.rotation_euler   = (m.radians(4), 0, 0)
-        pose_spine.rotation_mode    = 'QUATERNION'
-        pose_spine_001 = rig.pose.bones['spine.001']
-        pose_spine_001.rotation_mode    = 'XYZ'
-        pose_spine_001.rotation_euler   = (m.radians(-12), 0, 0)
-        pose_spine_001.rotation_mode    = 'QUATERNION'
-        pose_neck = rig.pose.bones['neck']
-        pose_neck.rotation_mode    = 'XYZ'
-        pose_neck.rotation_euler   = (m.radians(7), 0, 0)
-        pose_neck.rotation_mode    = 'QUATERNION'
+    # Rename spine.004 to neck
+    rig.data.edit_bones['spine.004'].name = "neck"
 
-        # Apply the actual pose to the rest pose
-        bpy.ops.pose.select_all(action='SELECT')
-        bpy.ops.pose.armature_apply(selected=False)
+    # Rotate the spine and neck bones to complete the TPOSE
+    bpy.ops.object.mode_set(mode='POSE')
 
-        # Change mode to object mode
-        bpy.ops.object.mode_set(mode='OBJECT')
+    pose_spine = rig.pose.bones['spine']
+    pose_spine.rotation_mode    = 'XYZ'
+    pose_spine.rotation_euler   = (m.radians(3), 0, 0)
+    pose_spine.rotation_mode    = 'QUATERNION'
+    pose_spine_001 = rig.pose.bones['spine.001']
+    pose_spine_001.rotation_mode    = 'XYZ'
+    pose_spine_001.rotation_euler   = (m.radians(-10), 0, 0)
+    pose_spine_001.rotation_mode    = 'QUATERNION'
+    pose_neck = rig.pose.bones['neck']
+    pose_neck.rotation_mode    = 'XYZ'
+    pose_neck.rotation_euler   = (m.radians(6), 0, 0)
+    pose_neck.rotation_mode    = 'QUATERNION'
 
+    # Apply the actual pose to the rest pose
+    bpy.ops.pose.select_all(action='SELECT')
+    bpy.ops.pose.armature_apply(selected=False)
+
+    # Adjust the fingers
+
+    # Change mode to edit mode
+    bpy.ops.object.mode_set(mode='EDIT')
+
+    # Get new bone references
+    hand_R          = rig.data.edit_bones['hand.R']
+    hand_L          = rig.data.edit_bones['hand.L']
+    palm_01_R       = rig.data.edit_bones['palm.01.R']
+    palm_01_L       = rig.data.edit_bones['palm.01.L']
+    palm_02_R       = rig.data.edit_bones['palm.02.R']
+    palm_02_L       = rig.data.edit_bones['palm.02.L']
+    palm_03_R       = rig.data.edit_bones['palm.03.R']
+    palm_03_L       = rig.data.edit_bones['palm.03.L']
+    palm_04_R       = rig.data.edit_bones['palm.04.R']
+    palm_04_L       = rig.data.edit_bones['palm.04.L']
+    thumb_01_R      = rig.data.edit_bones['thumb.01.R']
+    thumb_01_L      = rig.data.edit_bones['thumb.01.L']
+    thumb_02_R      = rig.data.edit_bones['thumb.02.R']
+    thumb_02_L      = rig.data.edit_bones['thumb.02.L']
+    thumb_03_R      = rig.data.edit_bones['thumb.03.R']
+    thumb_03_L      = rig.data.edit_bones['thumb.03.L']
+    f_index_01_R    = rig.data.edit_bones['f_index.01.R']
+    f_index_01_L    = rig.data.edit_bones['f_index.01.L']
+    f_index_02_R    = rig.data.edit_bones['f_index.02.R']
+    f_index_02_L    = rig.data.edit_bones['f_index.02.L']
+    f_index_03_R    = rig.data.edit_bones['f_index.03.R']
+    f_index_03_L    = rig.data.edit_bones['f_index.03.L']
+    f_middle_01_R    = rig.data.edit_bones['f_middle.01.R']
+    f_middle_01_L    = rig.data.edit_bones['f_middle.01.L']
+    f_middle_02_R    = rig.data.edit_bones['f_middle.02.R']
+    f_middle_02_L    = rig.data.edit_bones['f_middle.02.L']
+    f_middle_03_R    = rig.data.edit_bones['f_middle.03.R']
+    f_middle_03_L    = rig.data.edit_bones['f_middle.03.L']
+    f_ring_01_R    = rig.data.edit_bones['f_ring.01.R']
+    f_ring_01_L    = rig.data.edit_bones['f_ring.01.L']
+    f_ring_02_R    = rig.data.edit_bones['f_ring.02.R']
+    f_ring_02_L    = rig.data.edit_bones['f_ring.02.L']
+    f_ring_03_R    = rig.data.edit_bones['f_ring.03.R']
+    f_ring_03_L    = rig.data.edit_bones['f_ring.03.L']
+    f_pinky_01_R    = rig.data.edit_bones['f_pinky.01.R']
+    f_pinky_01_L    = rig.data.edit_bones['f_pinky.01.L']
+    f_pinky_02_R    = rig.data.edit_bones['f_pinky.02.R']
+    f_pinky_02_L    = rig.data.edit_bones['f_pinky.02.L']
+    f_pinky_03_R    = rig.data.edit_bones['f_pinky.03.R']
+    f_pinky_03_L    = rig.data.edit_bones['f_pinky.03.L']
+
+    # Add the thumb carpals
+    thumb_carpal_R = rig.data.edit_bones.new('thumb.carpal.R')
+    thumb_carpal_R.head = hand_R.head
+    thumb_carpal_R.tail = thumb_carpal_R.head + mathutils.Vector([0, -virtual_bones['thumb.carpal.R']['median'], 0])
+    thumb_carpal_L = rig.data.edit_bones.new('thumb.carpal.L')
+    thumb_carpal_L.head = hand_L.head
+    thumb_carpal_L.tail = thumb_carpal_L.head + mathutils.Vector([0, -virtual_bones['thumb.carpal.L']['median'], 0])
+    
+    # Asign the parent to thumb carpals
+    thumb_carpal_R.parent       = hand_R
+    thumb_carpal_R.use_connect  = False
+    thumb_carpal_L.parent       = hand_L
+    thumb_carpal_L.use_connect  = False
+
+    # Change the parent of thumb.01 to thumb.carpal
+    thumb_01_R.parent   = thumb_carpal_R
+    thumb_01_L.parent   = thumb_carpal_L
+
+    # Create a palm bones list and phalanges dictionary to continue the finger adjustment
+    palm_bones  = [thumb_carpal_R, thumb_carpal_L, palm_01_R, palm_01_L, palm_02_R, palm_02_L, palm_03_R, palm_03_L, palm_04_R, palm_04_L]
+    phalanges   = {
+        'thumb.carpal.R'    : [thumb_01_R, thumb_02_R, thumb_03_R],
+        'thumb.carpal.L'    : [thumb_01_L, thumb_02_L, thumb_03_L],
+        'palm.01.R'         : [f_index_01_R, f_index_02_R, f_index_03_R],
+        'palm.01.L'         : [f_index_01_L, f_index_02_L, f_index_03_L],
+        'palm.02.R'         : [f_middle_01_R, f_middle_02_R, f_middle_03_R],
+        'palm.02.L'         : [f_middle_01_L, f_middle_02_L, f_middle_03_L],
+        'palm.03.R'         : [f_ring_01_R, f_ring_02_R, f_ring_03_R],
+        'palm.03.L'         : [f_ring_01_L, f_ring_02_L, f_ring_03_L],
+        'palm.04.R'         : [f_pinky_01_R, f_pinky_02_R, f_pinky_03_R],
+        'palm.04.L'         : [f_pinky_01_L, f_pinky_02_L, f_pinky_03_L],
+    }
+
+    # Iterate through the palm bones to adjust several properties
+    for palm_bone in palm_bones:
+        # Change the first phalange connect setting to True
+        phalanges[palm_bone.name][0].use_connect  = True
+        # Move the head of the metacarpal bones to match the hand bone head
+        palm_bone.head = palm_bone.parent.head
+        # Move the tail of the metacarpal bones so they are aligned horizontally
+        palm_bone.tail[2] = palm_bone.head[2]
+        # Change metacarpal bones lengths
+        palm_bone.length = virtual_bones[palm_bone.name]['median']
+    
+    # Align the phalanges to the x axis (set bones head and tail y position equal to yz position of metacarpals bone tail)
+    for palm_bone in palm_bones:
+        for phalange in phalanges[palm_bone.name]:
+            phalange.head = phalange.parent.tail
+            # Calculate the sign to multiply the length of the phalange
+            length_sign = -1 if ".R" in phalange.name else 1
+            # Set the length by moving the bone tail along the x axis. Using this instead of just setting bone.length because that causes some bone inversions
+            phalange.tail = (phalange.head[0] + length_sign * virtual_bones[phalange.name]['median'], phalange.head[1], phalange.head[2])
+            # Reset the phalange bone roll to 0
+            phalange.roll = 0
+
+
+    # Rotate the thumb bones to form a natural pose
+    bpy.ops.object.mode_set(mode='POSE')
+
+    pose_thumb_carpal_R                 = rig.pose.bones['thumb.carpal.R']
+    pose_thumb_carpal_R.rotation_mode   = 'XYZ'
+    pose_thumb_carpal_R.rotation_euler  = (m.radians(-28.048091), m.radians(7.536737), m.radians(-40.142189))
+    pose_thumb_carpal_R.rotation_mode   = 'QUATERNION'
+    pose_thumb_01_R                     = rig.pose.bones['thumb.01.R']
+    pose_thumb_01_R.rotation_mode       = 'XYZ'
+    # pose_thumb_01_R.rotation_euler      = (m.radians(20), m.radians(0), m.radians(80))
+    pose_thumb_01_R.rotation_euler      = (m.radians(0), m.radians(0), m.radians(90))
+    pose_thumb_01_R.rotation_mode       = 'QUATERNION'
+    # pose_thumb_02_R                     = rig.pose.bones['thumb.02.R']
+    # pose_thumb_02_R.rotation_mode       = 'XYZ'
+    # pose_thumb_02_R.rotation_euler      = (m.radians(0), m.radians(0), m.radians(-25))
+    # pose_thumb_02_R.rotation_mode       = 'QUATERNION'
+    # pose_thumb_03_R                     = rig.pose.bones['thumb.03.R']
+    # pose_thumb_03_R.rotation_mode       = 'XYZ'
+    # pose_thumb_03_R.rotation_euler      = (m.radians(0), m.radians(0), m.radians(-10))
+    # pose_thumb_03_R.rotation_mode       = 'QUATERNION'
+    pose_thumb_carpal_L                 = rig.pose.bones['thumb.carpal.L']
+    pose_thumb_carpal_L.rotation_mode   = 'XYZ'
+    pose_thumb_carpal_L.rotation_euler  = (m.radians(-28.048091), m.radians(-7.536737), m.radians(40.142189))
+    pose_thumb_carpal_L.rotation_mode   = 'QUATERNION'
+    pose_thumb_01_L                     = rig.pose.bones['thumb.01.L']
+    pose_thumb_01_L.rotation_mode       = 'XYZ'
+    # pose_thumb_01_L.rotation_euler      = (m.radians(20), m.radians(0), m.radians(-80))
+    pose_thumb_01_L.rotation_euler      = (m.radians(0), m.radians(0), m.radians(-90))
+    pose_thumb_01_L.rotation_mode       = 'QUATERNION'
+    # pose_thumb_02_L                     = rig.pose.bones['thumb.02.L']
+    # pose_thumb_02_L.rotation_mode       = 'XYZ'
+    # pose_thumb_02_L.rotation_euler      = (m.radians(0), m.radians(0), m.radians(25))
+    # pose_thumb_02_L.rotation_mode       = 'QUATERNION'
+    # pose_thumb_03_L                     = rig.pose.bones['thumb.03.L']
+    # pose_thumb_03_L.rotation_mode       = 'XYZ'
+    # pose_thumb_03_L.rotation_euler      = (m.radians(0), m.radians(0), m.radians(10))
+    # pose_thumb_03_L.rotation_mode       = 'QUATERNION'
+
+    # Rotate the forearms on the z axis to bend the elbows a little bit and avoid incorrect rotations
+    pose_forearm_R                  = rig.pose.bones['forearm.R']
+    pose_forearm_R.rotation_mode    = 'XYZ'
+    pose_forearm_R.rotation_euler   = (m.radians(1), m.radians(0), m.radians(0))
+    pose_forearm_R.rotation_mode    = 'QUATERNION'
+    pose_forearm_L                  = rig.pose.bones['forearm.L']
+    pose_forearm_L.rotation_mode    = 'XYZ'
+    pose_forearm_L.rotation_euler   = (m.radians(1), m.radians(0), m.radians(0))
+    pose_forearm_L.rotation_mode    = 'QUATERNION'
+
+    # Apply the actual pose to the rest pose
+    bpy.ops.pose.select_all(action='SELECT')
+    bpy.ops.pose.armature_apply(selected=False)
+
+    # Change mode to object mode
+    bpy.ops.object.mode_set(mode='OBJECT')
+    
     ### Add bone constrains ###
     print('Adding bone constraints...')
 
@@ -2449,7 +2134,7 @@ def add_rig(bone_length_method: str='median_length',
 ######################################################################
 ######################## ADD MESH TO ARMATURE ########################
 ######################################################################
-def add_mesh_to_rig(body_mesh_mode: str="custom"):
+def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
     
     if body_mesh_mode == "file":
         
@@ -2494,8 +2179,19 @@ def add_mesh_to_rig(body_mesh_mode: str="custom"):
         
     elif body_mesh_mode == "custom":
     
+        # Change to edit mode
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Deselect all objects
+        for object in bpy.data.objects:
+            object.select_set(False)
+
         # Get reference to armature
         rig = bpy.data.objects['root']
+
+        # Select the rig
+        rig.select_set(True)
+        bpy.context.view_layer.objects.active = rig
 
         # Change to edit mode
         bpy.ops.object.mode_set(mode='EDIT')
@@ -2519,8 +2215,8 @@ def add_mesh_to_rig(body_mesh_mode: str="custom"):
 
         # Calculate parameters of the different body meshes
         trunk_mesh_radius           = shoulder_R.length
-        trunk_mesh_depth            = spine_001.tail[2] - spine.head[2] + 0.02
-        trunk_mesh_location         = (spine.head[0], spine.head[1], spine.head[2] + trunk_mesh_depth / 2)
+        trunk_mesh_depth            = spine_001.tail[2] - spine.head[2] + 0.05 * body_height
+        trunk_mesh_location         = (spine.head[0], spine.head[1], spine.head[2] + trunk_mesh_depth / 2 - 0.025 * body_height)
         neck_mesh_depth             = neck.length
         neck_mesh_location          = (neck.head[0], neck.head[1], neck.head[2] + neck.length / 2)
         head_mesh_location          = (neck.tail[0], neck.tail[1], neck.tail[2])
@@ -2568,7 +2264,8 @@ def add_mesh_to_rig(body_mesh_mode: str="custom"):
             enter_editmode  = False,
             align           = 'WORLD',
             location        = trunk_mesh_location,
-            rotation        = (0.0, 0.0, 0.0)
+            rotation        = (0.0, 0.0, 0.0),
+            scale           = (1, 0.5, 1)
         )
         body_meshes.append(bpy.context.active_object)
         # Add subdivisions to the mesh so it bends properly
@@ -2713,7 +2410,7 @@ def add_mesh_to_rig(body_mesh_mode: str="custom"):
         # Right Leg
         bpy.ops.mesh.primitive_cylinder_add(
             vertices        = vertices,
-            radius          = 0.05,
+            radius          = 0.08,
             depth           = right_leg_mesh_depth,
             end_fill_type   = 'NGON',
             calc_uvs        = True,
@@ -2731,7 +2428,7 @@ def add_mesh_to_rig(body_mesh_mode: str="custom"):
         # Left Leg
         bpy.ops.mesh.primitive_cylinder_add(
             vertices        = vertices,
-            radius          = 0.05,
+            radius          = 0.08,
             depth           = left_leg_mesh_depth,
             end_fill_type   = 'NGON',
             calc_uvs        = True,
@@ -3435,8 +3132,9 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
     interval_variable: bpy.props.EnumProperty(
         name        = '',
         description = 'Variable used to define the new length dispersion interval',
-        items       = [('median', 'Median', 'Defines the new dispersion interval as [median*(1-interval_factor),median*(1+interval_factor)]'),
-                       ('stdev', 'Standard Deviation', 'Defines the new dispersion interval as [median-interval_factor*stdev,median+interval_factor*stdev]')]
+        items       = [ ('standard_lenght', 'Standard Lenght', 'Use the standard lenghts based on the total body (rig) height. Defines the new dispersion interval as [lenght*(1-interval_factor),lenght*(1+interval_factor)]'),
+                        ('capture_median', 'Capture Median', 'Use the bones median lenght from the capture. Defines the new dispersion interval as [median*(1-interval_factor),median*(1+interval_factor)]'),
+                        ('capture_stdev', 'Capture Std Dev', 'Use the bones lenght standard deviation from the capture. Defines the new dispersion interval as [median-interval_factor*stdev,median+interval_factor*stdev]')]
     )
     interval_factor: bpy.props.FloatProperty(
         name        = '',
@@ -3446,6 +3144,13 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         description = 'Factor to multiply the variable and form the limits of the dispersion interval like [median-factor*variable,median+factor*variable]. ' +
                       'If variable is median, the factor will be limited to values inside [0, 1].' + 
                       'If variable is stdev, the factor will be limited to values inside [0, median/stdev]'
+    )
+    body_height: bpy.props.FloatProperty(
+        name        = '',
+        default     = 1.75,
+        min         = 0,
+        precision   = 3,
+        description = 'Body height in meters. This value is used when the interval variable is set to standard lenght. If a rig is added after using Reduce Dispersion with standard length, it will have this value as height and the bones lenght will be proporions of this height'
     )
 
     # Reduce Shakiness Options
@@ -3543,6 +3248,10 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         split.column().label(text='Dispersion Interval Factor')
         split.split().column().prop(fmc_adapter_tool, 'interval_factor')
 
+        split = box.column().row().split(factor=0.6)
+        split.column().label(text='Body (Rig) Height [m]')
+        split.split().column().prop(fmc_adapter_tool, 'body_height')
+
         box.operator('fmc_adapter.reduce_bone_length_dispersion', text='2. Reduce Bone Length Dispersion')
 
         # Reduce Shakiness Options
@@ -3558,11 +3267,6 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         # Add Rig Options
         box = layout.box()
         #box.label(text='Add Rig Options')
-        
-        split = box.column().row().split(factor=0.6)
-        split.column().label(text='Bone Length Method')
-        split.split().column().prop(fmc_adapter_tool, 'bone_length_method')
-        
         split = box.column().row().split(factor=0.6)
         split.column().label(text='Keep right/left symmetry')
         split.split().column().prop(fmc_adapter_tool, 'keep_symmetry')
@@ -3635,7 +3339,8 @@ class FMC_ADAPTER_OT_reduce_bone_length_dispersion(Operator):
         print('Executing Reduce Bone Length Dispersion...')
 
         reduce_bone_length_dispersion(interval_variable=fmc_adapter_tool.interval_variable,
-                                      interval_factor=fmc_adapter_tool.interval_factor)
+                                      interval_factor=fmc_adapter_tool.interval_factor,
+                                      body_height=fmc_adapter_tool.body_height)
 
         # Get end time and print execution time
         end = time.time()
@@ -3694,8 +3399,7 @@ class FMC_ADAPTER_OT_add_rig(Operator):
         
         print('Executing Add Rig...')
 
-        add_rig(bone_length_method=fmc_adapter_tool.bone_length_method,
-                keep_symmetry=fmc_adapter_tool.keep_symmetry,
+        add_rig(keep_symmetry=fmc_adapter_tool.keep_symmetry,
                 add_fingers_constraints=fmc_adapter_tool.add_fingers_constraints,
                 use_limit_rotation=fmc_adapter_tool.use_limit_rotation)
 
@@ -3736,10 +3440,13 @@ class FMC_ADAPTER_OT_add_body_mesh(Operator):
             root = bpy.data.objects['root']
         except:
             print('Executing Add Rig to have a rig for the mesh...')
-            add_rig(use_limit_rotation=fmc_adapter_tool.use_limit_rotation)
+            add_rig(keep_symmetry=fmc_adapter_tool.keep_symmetry,
+                    add_fingers_constraints=fmc_adapter_tool.add_fingers_constraints,
+                    use_limit_rotation=fmc_adapter_tool.use_limit_rotation)
         
         print('Executing Add Body Mesh...')
-        add_mesh_to_rig(body_mesh_mode=fmc_adapter_tool.body_mesh_mode)
+        add_mesh_to_rig(body_mesh_mode=fmc_adapter_tool.body_mesh_mode,
+                        body_height=fmc_adapter_tool.body_height)
 
         # Get end time and print execution time
         end = time.time()
