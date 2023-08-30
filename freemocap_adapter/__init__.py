@@ -1,9 +1,6 @@
 import logging
 
-import bpy
-
 from freemocap_adapter.system.configure_logging import configure_logging
-from freemocap_adapter.user_interface import USER_INTERFACE_CLASSES, FMC_ADAPTER_PROPERTIES
 
 configure_logging()
 
@@ -35,6 +32,9 @@ bl_info = {
 
 
 def unregister():
+    import bpy
+    from freemocap_adapter.user_interface import USER_INTERFACE_CLASSES
+
     logger.info(f"Unregistering {__file__} as add-on")
     for cls in USER_INTERFACE_CLASSES:
         logger.info(f"Unregistering class {cls.__name__}")
@@ -45,6 +45,9 @@ def unregister():
 
 
 def register():
+    import bpy
+    from freemocap_adapter.user_interface import USER_INTERFACE_CLASSES, FMC_ADAPTER_PROPERTIES
+
     logger.info(f"Registering {__file__} as add-on")
     for cls in USER_INTERFACE_CLASSES:
         logger.info(f"Registering class {cls.__name__}")

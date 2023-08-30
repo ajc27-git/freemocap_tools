@@ -4,11 +4,11 @@ import time
 import bpy
 from bpy.types import Operator
 
-from freemocap_adapter.core_functions.empties.adjust_empties import adjust_empties
+from freemocap_adapter.core_functions.empties.reorient_empties import reorient_empties
 from freemocap_adapter.core_functions.rig.add_rig import add_rig
 from freemocap_adapter.core_functions.rig.attach_mesh import add_mesh_to_rig
 
-ADJUST_EMPTIES_EXECUTED = True
+REORIENT_EMPTIES_EXECUTED = True
 
 
 class FMC_ADAPTER_OT_add_body_mesh(Operator):
@@ -27,15 +27,15 @@ class FMC_ADAPTER_OT_add_body_mesh(Operator):
         # Reset the scene frame to the start
         scene.frame_set(scene.frame_start)
 
-        if not ADJUST_EMPTIES_EXECUTED:
+        if not REORIENT_EMPTIES_EXECUTED:
             print('Executing First Adjust Empties...')
 
             # Execute Adjust Empties first
-            adjust_empties(z_align_ref_empty=fmc_adapter_tool.vertical_align_reference,
-                           z_align_angle_offset=fmc_adapter_tool.vertical_align_angle_offset,
-                           ground_ref_empty=fmc_adapter_tool.ground_align_reference,
-                           z_translation_offset=fmc_adapter_tool.vertical_align_position_offset
-                           )
+            reorient_empties(z_align_ref_empty=fmc_adapter_tool.vertical_align_reference,
+                             z_align_angle_offset=fmc_adapter_tool.vertical_align_angle_offset,
+                             ground_ref_empty=fmc_adapter_tool.ground_align_reference,
+                             z_translation_offset=fmc_adapter_tool.vertical_align_position_offset
+                             )
 
         # Execute Add Rig if there is no rig in the scene
         try:

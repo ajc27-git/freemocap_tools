@@ -6,8 +6,7 @@ Data/
 .vscode/
 *.py[cod]
 *$py.class
-FreeMoCap_Data/
-freemocap\user_preferences.yaml
+
 
 # C extensions
 *.so

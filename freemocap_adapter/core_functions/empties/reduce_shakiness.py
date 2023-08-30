@@ -1,13 +1,13 @@
 import math as m
 
-from freemocap_adapter.core_functions.empties.update_empty_positions import update_empty_positions, update_empty_velocities, \
+from freemocap_adapter.core_functions.empties.update_empty_positions import get_empty_positions, update_empty_velocities, \
     EMPTY_POSITIONS, EMPTY_VELOCITIES
 
 
 def reduce_shakiness(recording_fps: float = 30):
     print('fps: ' + str(recording_fps))
     # Update the empty positions dictionary
-    update_empty_positions()
+    get_empty_positions()
 
     # Update the empty speeds dictionary
     update_empty_velocities(recording_fps)

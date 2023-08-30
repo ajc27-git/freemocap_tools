@@ -1,23 +1,24 @@
+import logging
 from typing import List, Dict
 
-import numpy as np
 import bpy
+import numpy as np
 
-import logging
-
-from freemocap_adapter.core_functions.load_data.load_freemocap_data import logger, create_virtual_trajectories, \
-    BODY_EMPTY_SCALE
-from freemocap_adapter.data_models.freemocap_data import FreemocapData
+from freemocap_adapter.core_functions.empties.create_virtual_markers import create_virtual_trajectories
+from freemocap_adapter.data_models.freemocap_data.freemocap_data import FreemocapData
 
 logger = logging.getLogger(__name__)
 
+BODY_EMPTY_SCALE = 0.03
+
+
 def create_keyframed_empty_from_3d_trajectory_data(
-    trajectory_fr_xyz: np.ndarray,
-    trajectory_name: str,
-    parent_origin: List[float] = [0, 0, 0],
-    empty_scale: float = 0.1,
-    empty_type: str = "PLAIN_AXES",
-):
+        trajectory_fr_xyz: np.ndarray,
+        trajectory_name: str,
+        parent_origin: List[float] = [0, 0, 0],
+        empty_scale: float = 0.1,
+        empty_type: str = "PLAIN_AXES",
+) -> bpy.types.Object:
     """
     Create a key framed empty from 3d trajectory data
     """
@@ -39,60 +40,62 @@ def create_keyframed_empty_from_3d_trajectory_data(
 
         empty_object.keyframe_insert(data_path="location", frame=frame_number)
 
+    return empty_object
+
 
 def create_keyframed_empties(freemocap_data: FreemocapData,
                              parent_object: bpy.types.Object,
                              names: Dict[str, List[str]],
-                             body_empty_scale: float, ):
-    ############################
-    ### Load mocap freemocap_data as empty markers
-
+                             body_empty_scale: float = BODY_EMPTY_SCALE, ):
     hand_empty_scale = body_empty_scale * 0.5
     logger.info(
-        "__________________________\n"
-        "Loading freemocap trajectory freemocap_data as empty markers..."
-        "_________________________\n"
+        "__\n"
+        "Loading freemocap trajectory freemocap data as empty markers..."
+        "__\n"
     )
-    right_hand_trajectory_names = [f"right_hand_{empty_name}" for empty_name in names["hand"]]
-    left_hand_trajectory_names = [f"left_hand_{empty_name}" for empty_name in names["hand"]]
-    # mediapipe_face_trajectory_names = [f"face_{number}:{empty_name}" for number, empty_name in
-    #                                    face_contour_marker_indices]
-    try:  # load as much of the freemocap_data as you can, but if there's an error keep going
-        # create empty markers for body
-        for marker_number in range(freemocap_data.body_fr_mar_xyz.shape[1]):
-            trajectory_name = names["body"][marker_number]
-            trajectory_fr_xyz = freemocap_data.body_fr_mar_xyz[:, marker_number, :]
-            create_keyframed_empty_from_3d_trajectory_data(
+
+    def create_empties(trajectory_frame_marker_xyz: np.ndarray,
+                       names_list: List[str],
+                       empty_scale: float,
+                       empty_type: str) -> Dict[str, bpy.types.Object]:
+        empties = {}
+        for marker_number in range(trajectory_frame_marker_xyz.shape[1]):
+            trajectory_name = names_list[marker_number]
+            trajectory_fr_xyz = trajectory_frame_marker_xyz[:, marker_number, :]
+            empties[trajectory_name] = create_keyframed_empty_from_3d_trajectory_data(
                 trajectory_fr_xyz=trajectory_fr_xyz,
                 trajectory_name=trajectory_name,
                 parent_origin=parent_object,
-                empty_scale=body_empty_scale,
-                empty_type="SPHERE",
+                empty_scale=empty_scale,
+                empty_type=empty_type,
             )
 
-        for marker_number in range(freemocap_data.right_hand_fr_mar_xyz.shape[1]):
-            trajectory_name = right_hand_trajectory_names[marker_number]
-            trajectory_fr_xyz = freemocap_data.right_hand_fr_mar_xyz[:, marker_number, :]
-            create_keyframed_empty_from_3d_trajectory_data(
-                trajectory_fr_xyz=trajectory_fr_xyz,
-                trajectory_name=trajectory_name,
-                parent_origin=parent_object,
-                empty_scale=hand_empty_scale,
-                empty_type="PLAIN_AXES",
-            )
+        return empties
 
-        # create empty markers for left hand
-        for marker_number in range(freemocap_data.left_hand_fr_mar_xyz.shape[1]):
-            trajectory_name = left_hand_trajectory_names[marker_number]
-            trajectory_fr_xyz = freemocap_data.left_hand_fr_mar_xyz[:, marker_number, :]
-            create_keyframed_empty_from_3d_trajectory_data(
-                trajectory_fr_xyz=trajectory_fr_xyz,
-                trajectory_name=trajectory_name,
-                parent_origin=parent_object,
-                empty_scale=hand_empty_scale,
-                empty_type="PLAIN_AXES",
-            )
+    right_hand_trajectory_names = [f"righthand{empty_name}" for empty_name in names["hand"]]
+    left_hand_trajectory_names = [f"lefthand{empty_name}" for empty_name in names["hand"]]
 
+    empties = {}
+    try:
+        # body trajectories
+        empties["body"] = create_empties(trajectory_frame_marker_xyz=freemocap_data.body_fr_mar_xyz,
+                                         names_list=names["body"],
+                                         empty_scale=body_empty_scale,
+                                         empty_type="SPHERE")
+
+        # right hand trajectories
+        empties["hands"]["right"] = create_empties(trajectory_frame_marker_xyz=freemocap_data.right_hand_fr_mar_xyz,
+                                                   names_list=right_hand_trajectory_names,
+                                                   empty_scale=hand_empty_scale,
+                                                   empty_type="PLAIN_AXES")
+
+        # left hand trajectories
+        empties["hands"]["left"] = create_empties(trajectory_frame_marker_xyz=freemocap_data.left_hand_fr_mar_xyz,
+                                                  names_list=left_hand_trajectory_names,
+                                                  empty_scale=hand_empty_scale,
+                                                  empty_type="PLAIN_AXES")
+
+        # create virtual markers
         virtual_marker_names = create_virtual_trajectories(freemocap_data=freemocap_data,
                                                            parent_object=parent_object,
                                                            names=names,
@@ -100,9 +103,7 @@ def create_keyframed_empties(freemocap_data: FreemocapData,
                                                            )
 
         logger.info(f"Adding virtual marker names to body trajectory names  - {virtual_marker_names}")
-        names["body"].extend(virtual_marker_names)
         logger.info("Done creating virtual markers")
-
 
     except Exception as e:
         logger.error(f"Error loading empty markers: {e}!")

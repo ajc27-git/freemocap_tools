@@ -1,10 +1,10 @@
 import logging
 
 from freemocap_adapter.core_functions.bones.reduce_bone_length_dispersion import reduce_bone_length_dispersion
-from freemocap_adapter.core_functions.empties.adjust_empties import adjust_empties
+from freemocap_adapter.core_functions.empties.reorient_empties import reorient_empties
 from freemocap_adapter.core_functions.export.fbx import export_fbx
 from freemocap_adapter.core_functions.load_data.clear_scene import clear_scene
-from freemocap_adapter.core_functions.load_data.download_sample_data import get_or_download_sample_data
+from freemocap_adapter.core_functions.load_data.get_path_to_sample_data import get_or_download_sample_data
 from freemocap_adapter.core_functions.load_data.load_freemocap_data import load_freemocap_data
 from freemocap_adapter.core_functions.rig.add_rig import add_rig
 from freemocap_adapter.core_functions.rig.attach_mesh import add_mesh_to_rig
@@ -19,7 +19,7 @@ def main():
     load_freemocap_data()
 
     logger.info("Adjusting empties...")
-    adjust_empties()
+    reorient_empties()
 
     logger.info("Reducing bone length dispersion...")
     reduce_bone_length_dispersion()
