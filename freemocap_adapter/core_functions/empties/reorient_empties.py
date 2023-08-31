@@ -1,23 +1,25 @@
 import math as m
+from typing import Dict
 
 import bpy
 import mathutils
 
-from freemocap_adapter.core_functions.empties.update_empty_positions import update_empty_positions
 from freemocap_adapter.core_functions.empties.hands import add_hands_middle_empties
-from freemocap_adapter.core_functions.empties.translate_empty import translate_empty
+from freemocap_adapter.core_functions.empties.translate_empty import translate_empty_and_its_children
+from freemocap_adapter.core_functions.empties.update_empty_positions import get_empty_positions
 from freemocap_adapter.data_models.mediapipe_names.empties_heirarchy import EMPTIES_HEIRARCHY
 
 
-def adjust_empties(z_align_ref_empty: str = 'left_knee',
-                   z_align_angle_offset: float = 0,
-                   ground_ref_empty: str = 'left_foot_index',
-                   z_translation_offset: float = -0.01,
-                   correct_fingers_empties: bool = True,
-                   add_hand_middle_empty: bool = True,
-                   ):
+def reorient_empties(empties: Dict[str, bpy.types.Object],
+                     z_align_ref_empty: str = 'left_knee',
+                     z_align_angle_offset: float = 0,
+                     ground_ref_empty: str = 'left_foot_index',
+                     z_translation_offset: float = -0.01,
+                     correct_fingers_empties: bool = True,
+                     # add_hand_middle_empty: bool = True,
+                     parent_object_name='freemocap_origin_axes'):
     # Reference to the global adjust_empties_executed variable
-    global ADJUST_EMPTIES_EXECUTED
+    global REORIENT_EMPTIES_EXECUTED
     # Reference to the global origin location and rotation pre reset variables
     global ORIGIN_LOCATION_PRE_RESET
     global ORIGIN_ROTATION_PRE_RESET
@@ -29,22 +31,14 @@ def adjust_empties(z_align_ref_empty: str = 'left_knee',
     bpy.ops.screen.animation_play()
     bpy.ops.screen.animation_cancel()
 
-    ### Delete sphere meshes ###
-    for object in bpy.data.objects:
-        if "sphere" in object.name:
-            bpy.data.objects.remove(object, do_unlink=True)
-
-    ### Unparent empties from freemocap_origin_axes ###
-    for object in bpy.data.objects:
-        if object.type == "EMPTY" and object.name != "freemocap_origin_axes" and object.name != "world_origin":
-            object.parent = None
+    clean_existing_freemocap_stuff()
 
     ### Move freemocap_origin_axes to the hips_center empty and rotate it so the ###
     ### z axis intersects the trunk_center empty and the x axis intersects the left_hip empty ###
-    origin = bpy.data.objects['freemocap_origin_axes']
-    hips_center = bpy.data.objects['hips_center']
+    origin = bpy.data.objects[parent_object_name]
+    hips_center = empties['hips_center']
 
-    left_hip = bpy.data.objects['left_hip']
+    left_hip = empties['left_hip']
 
     # Move origin to hips_center
     origin.location = hips_center.location
@@ -52,18 +46,22 @@ def adjust_empties(z_align_ref_empty: str = 'left_knee',
     # Rotate origin in the xy plane so its x axis crosses the vertical projection of left_hip
     # Obtain left_hip location
     left_hip_location = left_hip.location
+
     # Calculate left_hip xy coordinates from origin location
     left_hip_x_from_origin = left_hip_location[0] - origin.location[0]
     left_hip_y_from_origin = left_hip_location[1] - origin.location[1]
+
     # Calculate angle from origin x axis to projection of left_hip on xy plane. It will depend if left_hip_x_from_origin is positive or negative
     left_hip_xy_angle_prev = m.atan(left_hip_y_from_origin / left_hip_x_from_origin)
     left_hip_xy_angle = left_hip_xy_angle_prev if left_hip_x_from_origin >= 0 else m.radians(
         180) + left_hip_xy_angle_prev
+
     # Rotate origin around the z axis to point at left_hip
     origin.rotation_euler[2] = left_hip_xy_angle
 
     # Calculate left_hip z position from origin
     left_hip_z_from_origin = left_hip_location[2] - origin.location[2]
+
     # left_hip_z_from_origin = abs(left_hip_location[2]) - abs(origin.location[2])
     # Calculate angle from origin local x axis to the position of left_hip on origin xz plane
     left_hip_xz_angle = m.atan(
@@ -75,7 +73,7 @@ def adjust_empties(z_align_ref_empty: str = 'left_knee',
     ### Calculate angle in the local yz plane to rotate origin so its z axis crosses the z_align_empty ###
     ### Preferably the trunk_center or left_knee ###
     # Get the z_align_empty object
-    z_align_empty = bpy.data.objects[z_align_ref_empty]
+    z_align_empty = empties[z_align_ref_empty]
     # Get z_align_empty location from origin
     z_align_empty_loc_from_origin = z_align_empty.location - origin.location
     # Get the vector distance
@@ -97,7 +95,7 @@ def adjust_empties(z_align_ref_empty: str = 'left_knee',
     ### Move the origin along its local z axis to place it at an imaginary "capture ground plane" ###
     ### Preferable be placed at a heel or foot_index level ###
     # Get the ground reference empty object
-    ground_empty = bpy.data.objects[ground_ref_empty]
+    ground_empty = empties[ground_ref_empty]
     # Get ground_empty location from origin
     ground_empty_loc_from_origin = ground_empty.location - origin.location
     # Get the vector distance
@@ -166,21 +164,34 @@ def adjust_empties(z_align_ref_empty: str = 'left_knee',
                     side + '_hand_wrist'].location
 
                 # Translate the hand_wrist empty and its children by the position delta
-                translate_empty(EMPTIES_HEIRARCHY, side + '_hand_wrist', frame, position_delta)
+                translate_empty_and_its_children(EMPTIES_HEIRARCHY, side + '_hand_wrist', frame, position_delta)
 
         # Reset the scene frame to the start
         scene.frame_set(scene.frame_start)
 
-    # Add the hand middle empties if the option is enabled
-    if add_hand_middle_empty:
-        # Update the empty positions dictionary
-        update_empty_positions()
-
-        add_hands_middle_empties()
+    # # Add the hand middle empties if the option is enabled
+    # if add_hand_middle_empty:
+    #     # Update the empty positions dictionary
+    #     update_empty_positions()
+    #
+    #     add_hands_middle_empties()
 
     # Deselect all objects
     bpy.ops.object.select_all(action='DESELECT')
-    bpy.data.objects['freemocap_origin_axes'].select_set(True)
+    bpy.data.objects[parent_object_name].select_set(True)
 
     # Change the adjust_empties_executed variable
-    ADJUST_EMPTIES_EXECUTED = True
+    REORIENT_EMPTIES_EXECUTED = True
+
+    return empties
+
+
+def clean_existing_freemocap_stuff():
+    ### Delete sphere meshes ###
+    for object in bpy.data.objects:
+        if "sphere" in object.name:
+            bpy.data.objects.remove(object, do_unlink=True)
+    ### Unparent empties from freemocap_origin_axes ###
+    for object in bpy.data.objects:
+        if object.type == "EMPTY" and object.name != "freemocap_origin_axes" and object.name != "world_origin":
+            object.parent = None

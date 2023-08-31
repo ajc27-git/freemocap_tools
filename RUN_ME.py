@@ -1,37 +1,28 @@
 import logging
 
 from freemocap_adapter.core_functions.bones.reduce_bone_length_dispersion import reduce_bone_length_dispersion
-from freemocap_adapter.core_functions.empties.create_keyframed_empties import create_keyframed_empties
 from freemocap_adapter.core_functions.empties.reorient_empties import reorient_empties
 from freemocap_adapter.core_functions.export.fbx import export_fbx
 from freemocap_adapter.core_functions.load_data.clear_scene import clear_scene
 from freemocap_adapter.core_functions.load_data.get_path_to_sample_data import get_or_download_sample_data
+from freemocap_adapter.core_functions.load_data.load_freemocap_data import load_freemocap_data
 from freemocap_adapter.core_functions.rig.add_rig import add_rig
 from freemocap_adapter.core_functions.rig.attach_mesh import add_mesh_to_rig
-from freemocap_adapter.data_models.bones.bone_definitions import VIRTUAL_BONES
-from freemocap_adapter.data_models.freemocap_data.freemocap_data import FreemocapData
 
 logger = logging.getLogger(__name__)
 
-
-def main(recording_path: str):
+def main():
+    logger.info("Running RUN_ME.py...")
     logger.info("Clearing scene...")
     clear_scene()
-
     logger.info("Loading FreeMoCap data...")
-    freemocap_data = FreemocapData.from_recording_path(recording_path=recording_path)
+    load_freemocap_data()
 
-
-
-    logger.info("Create keyframed empties...")
-    raw_empties = create_keyframed_empties(freemocap_data=freemocap_data)
-
-    logger.info("Re orient empties so the skeleton data aligns with gravity with the feet on the ground (Z=0) plane...")
-    oriented_empties = reorient_empties(empties=raw_empties)
+    logger.info("Adjusting empties...")
+    reorient_empties()
 
     logger.info("Reducing bone length dispersion...")
-    bones = reduce_bone_length_dispersion(empties=oriented_empties,
-                                          bones=VIRTUAL_BONES, )
+    reduce_bone_length_dispersion()
 
     logger.info("Adding rig...")
     add_rig()
