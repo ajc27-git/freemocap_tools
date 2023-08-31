@@ -1,13 +1,17 @@
 from bpy.types import Panel
 
+import logging
+logger = logging.getLogger(__name__)
 
 class VIEW3D_PT_freemocap_adapter(Panel):
+    logger.info(f'Initializing {__name__}...')
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Freemocap Adapter"
     bl_label = "Freemocap Adapter"
 
     def draw(self, context):
+        logger.trace('Drawing panel...')
         layout = self.layout
         scene = context.scene
         fmc_adapter_tool = scene.fmc_adapter_tool

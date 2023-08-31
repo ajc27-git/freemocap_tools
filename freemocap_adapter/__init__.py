@@ -2,10 +2,13 @@ import logging
 
 import bpy
 
-from freemocap_adapter.system.configure_logging import configure_logging
+from freemocap_adapter.system.configure_logging import configure_logging, LogLevel
 from freemocap_adapter.user_interface import USER_INTERFACE_CLASSES, FMC_ADAPTER_PROPERTIES
 
-configure_logging()
+# configure_logging(LogLevel.TRACE)
+configure_logging(LogLevel.DEBUG)
+# configure_logging(LogLevel.INFO)
+# configure_logging(LogLevel.WARNING)
 
 logger = logging.getLogger(__name__)
 

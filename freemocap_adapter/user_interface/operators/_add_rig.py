@@ -6,7 +6,8 @@ from bpy.types import Operator
 from freemocap_adapter.core_functions.empties.adjust_empties import adjust_empties
 from freemocap_adapter.core_functions.rig.add_rig import add_rig
 from freemocap_adapter.user_interface.operators._add_body_mesh import ADJUST_EMPTIES_EXECUTED
-
+import logging
+logger = logging.getLogger(__name__)
 
 class FMC_ADAPTER_OT_add_rig(Operator):
     bl_idname = 'fmc_adapter.add_rig'
@@ -15,6 +16,7 @@ class FMC_ADAPTER_OT_add_rig(Operator):
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
+        logger.info(f"Executing {__name__}...")
         scene = context.scene
         fmc_adapter_tool = scene.fmc_adapter_tool
 
@@ -25,7 +27,7 @@ class FMC_ADAPTER_OT_add_rig(Operator):
         scene.frame_set(scene.frame_start)
 
         if not ADJUST_EMPTIES_EXECUTED:
-            print('Executing First Adjust Empties...')
+            logger.debug('Executing First Adjust Empties...')
 
             # Execute Adjust Empties first
             adjust_empties(z_align_ref_empty=fmc_adapter_tool.vertical_align_reference,
@@ -35,7 +37,7 @@ class FMC_ADAPTER_OT_add_rig(Operator):
                            add_hand_middle_empty=fmc_adapter_tool.add_hand_middle_empty,
                            )
 
-        print('Executing Add Rig...')
+        logger.debug('Executing Add Rig...')
 
         add_rig(bone_length_method=fmc_adapter_tool.bone_length_method,
                 keep_symmetry=fmc_adapter_tool.keep_symmetry,
@@ -44,6 +46,6 @@ class FMC_ADAPTER_OT_add_rig(Operator):
 
         # Get end time and print execution time
         end = time.time()
-        print('Finished. Execution time (s): ' + str(m.trunc((end - start) * 1000) / 1000))
+        logger.debug('Finished. Execution time (s): ' + str(m.trunc((end - start) * 1000) / 1000))
 
         return {'FINISHED'}

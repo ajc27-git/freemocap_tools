@@ -4,6 +4,8 @@ import time
 from bpy.types import Operator
 
 from freemocap_adapter.core_functions.export.fbx import export_fbx
+import logging
+logger = logging.getLogger(__name__)
 
 
 class FMC_ADAPTER_OT_export_fbx(Operator):
@@ -16,13 +18,13 @@ class FMC_ADAPTER_OT_export_fbx(Operator):
         # Get start time
         start = time.time()
 
-        print('Executing Export FBX...')
+        logger.info('Executing Export FBX...')
 
         # Execute export fbx function
         export_fbx(self)
 
         # Get end time and print execution time
         end = time.time()
-        print('Finished. Execution time (s): ' + str(m.trunc((end - start) * 1000) / 1000))
+        logger.debug('Finished. Execution time (s): ' + str(m.trunc((end - start) * 1000) / 1000))
 
         return {'FINISHED'}

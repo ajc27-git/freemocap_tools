@@ -5,8 +5,11 @@ from bpy.types import Operator
 
 from freemocap_adapter.core_functions.empties.reduce_shakiness import reduce_shakiness
 
+import logging
+logger = logging.getLogger(__name__)
 
 class FMC_ADAPTER_OT_reduce_shakiness(Operator):
+
     bl_idname = 'fmc_adapter.reduce_shakiness'
     bl_label = 'Freemocap Adapter - Reduce Shakiness'
     bl_description = 'Reduce the shakiness of the capture empties by restricting their acceleration to a defined threshold'
@@ -18,12 +21,12 @@ class FMC_ADAPTER_OT_reduce_shakiness(Operator):
 
         # Get start time
         start = time.time()
-        print('Executing Reduce Shakiness...')
+        logger.info('Executing Reduce Shakiness...')
 
         reduce_shakiness(recording_fps=fmc_adapter_tool.recording_fps)
 
         # Get end time and print execution time
         end = time.time()
-        print('Finished. Execution time (s): ' + str(m.trunc((end - start) * 1000) / 1000))
+        logger.debug('Finished. Execution time (s): ' + str(m.trunc((end - start) * 1000) / 1000))
 
         return {'FINISHED'}

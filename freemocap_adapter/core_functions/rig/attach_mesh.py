@@ -9,7 +9,7 @@ def add_mesh_to_rig(body_mesh_mode: str = "custom"):
             bpy.ops.import_mesh.ply(filepath="body_mesh.ply")
 
         except:
-            print("\nCould not find body_mesh file.")
+            log.error("\nCould not find body_mesh file.")
             return
 
         # Get reference to the rig
