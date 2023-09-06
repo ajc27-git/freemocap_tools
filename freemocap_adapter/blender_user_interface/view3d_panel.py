@@ -7,7 +7,6 @@ from freemocap_adapter import DEBUG_UI
 logger = logging.getLogger(__name__)
 
 class VIEW3D_PT_freemocap_adapter(Panel):
-    logger.info(f'Initializing {__name__}...')
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "Freemocap Adapter"
@@ -20,9 +19,12 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         scene = context.scene
         fmc_adapter_tool = scene.fmc_adapter_tool
 
+
         # Clear scene button
         layout.operator('fmc_adapter.clear_scene', text='Clear Scene')
 
+        # Load videos Options
+        layout.operator('fmc_adapter.load_videos', text='Load Videos as Planes')
         # Load empties Options
         load_freemocap_box = layout.box()
 

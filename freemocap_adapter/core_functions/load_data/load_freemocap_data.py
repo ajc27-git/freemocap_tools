@@ -50,3 +50,11 @@ def create_freemocap_origin_axes():
     freemocap_origin_axes.name = "freemocap_origin_axes"
 
     return freemocap_origin_axes
+
+def create_world_origin_axes():
+    logger.info("Creating world origin axes...")
+    bpy.ops.object.empty_add(type="sphere")
+    world_origin_axes = bpy.context.editable_objects[-1]
+    world_origin_axes.name = "world_origin_axes"
+
+    return world_origin_axes

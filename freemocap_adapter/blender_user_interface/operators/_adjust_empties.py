@@ -9,7 +9,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 class FMC_ADAPTER_OT_adjust_empties(Operator):
-    logger.debug(f"Initializing {__name__}...")
     bl_idname = 'fmc_adapter.adjust_empties'
     bl_label = 'Freemocap Adapter - Adjust Empties'
     bl_description = "Change the position of the freemocap_origin_axes empty to so it is placed in an imaginary ground plane of the capture between the actor's feet"

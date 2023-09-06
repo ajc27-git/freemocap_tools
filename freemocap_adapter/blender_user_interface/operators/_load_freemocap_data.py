@@ -1,7 +1,7 @@
 import logging
 import bpy
 
-from freemocap_adapter.core_functions.empties.create.create_freemocap_empties import create_freemocap_empties
+from freemocap_adapter.core_functions.empties.creation.create_freemocap_empties import create_freemocap_empties
 from freemocap_adapter.core_functions.load_data.load_freemocap_data import load_freemocap_data, \
     create_freemocap_origin_axes, set_start_end_frame
 

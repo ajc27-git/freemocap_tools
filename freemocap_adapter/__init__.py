@@ -1,7 +1,6 @@
 import logging
 
-
-from freemocap_adapter.system.configure_logging import configure_logging, LogLevel
+from freemocap_adapter.system.configure_logging.configure_logging import configure_logging, LogLevel
 
 DEBUG_UI = False
 

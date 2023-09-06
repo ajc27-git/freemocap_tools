@@ -4,9 +4,9 @@ from typing import List, Dict
 import bpy
 import numpy as np
 
-from freemocap_adapter.core_functions.empties.create.create_empy_from_trajectory import \
+from freemocap_adapter.core_functions.empties.creation.create_empy_from_trajectory import \
     create_keyframed_empty_from_3d_trajectory_data
-from freemocap_adapter.core_functions.empties.create.create_virtual_markers import calculate_virtual_trajectories
+from freemocap_adapter.core_functions.empties.creation.create_virtual_markers import calculate_virtual_trajectories
 from freemocap_adapter.data_models.freemocap_data.freemocap_data import FreemocapData
 
 logger = logging.getLogger(__name__)
@@ -67,7 +67,7 @@ def create_freemocap_empties(freemocap_data: FreemocapData,
                                                   empty_scale=hand_empty_scale,
                                                   empty_type="PLAIN_AXES")
 
-        # create virtual markers
+        # creation virtual markers
         calculate_virtual_trajectories(freemocap_data=freemocap_data,
                                        parent_object=parent_object,
                                        body_empty_scale=BODY_EMPTY_SCALE,

@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 class FMC_ADAPTER_OT_add_body_mesh(Operator):
-    logger.debug(f"Initializing {__name__}...")
 
     bl_idname = 'fmc_adapter.add_body_mesh'
     bl_label = 'Freemocap Adapter - Add Body Mesh'

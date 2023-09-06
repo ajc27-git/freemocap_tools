@@ -3,7 +3,7 @@ from typing import List, Dict
 
 import numpy as np
 
-from freemocap_adapter.core_functions.empties.create.create_empy_from_trajectory import \
+from freemocap_adapter.core_functions.empties.creation.create_empy_from_trajectory import \
     create_keyframed_empty_from_3d_trajectory_data
 from freemocap_adapter.core_functions.load_data.load_freemocap_data import logger
 from freemocap_adapter.data_models.freemocap_data.freemocap_data import FreemocapData
@@ -58,13 +58,13 @@ def calculate_virtual_marker_trajectory(
     return virtual_marker_xyz
 
 
-#TODO - disentagle "calculate" from "create empty" responsibilities
+#TODO - disentagle "calculate" from "creation empty" responsibilities
 def calculate_virtual_trajectories(body_empty_scale: float,
                                    freemocap_data: FreemocapData,
                                     parent_object: bpy.types.Object,
                                    )->None:
     #######################################################################
-    # %% create virtual markers
+    # %% creation virtual markers
     logger.info("_________________________\n" 
                 "Creating virtual markers...\n"
                 "-------------------------\n")

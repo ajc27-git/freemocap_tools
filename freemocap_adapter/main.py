@@ -1,7 +1,7 @@
 import logging
 
 from freemocap_adapter.core_functions.bones.reduce_bone_length_dispersion import reduce_bone_length_dispersion
-from freemocap_adapter.core_functions.empties.create.create_freemocap_empties import create_freemocap_empties
+from freemocap_adapter.core_functions.empties.creation.create_freemocap_empties import create_freemocap_empties
 from freemocap_adapter.core_functions.empties.reorient_empties import reorient_empties
 from freemocap_adapter.core_functions.export.fbx import export_fbx
 from freemocap_adapter.core_functions.load_data.clear_scene import clear_scene
