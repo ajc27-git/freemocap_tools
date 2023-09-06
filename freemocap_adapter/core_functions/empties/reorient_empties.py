@@ -4,9 +4,7 @@ from typing import Dict
 import bpy
 import mathutils
 
-from freemocap_adapter.core_functions.empties.hands import add_hands_middle_empties
 from freemocap_adapter.core_functions.empties.translate_empty import translate_empty_and_its_children
-from freemocap_adapter.core_functions.empties.update_empty_positions import get_empty_positions
 from freemocap_adapter.data_models.mediapipe_names.empties_heirarchy import EMPTIES_HEIRARCHY
 
 
@@ -61,6 +59,7 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
 
     # Calculate left_hip z position from origin
     left_hip_z_from_origin = left_hip_location[2] - origin.location[2]
+
 
     # left_hip_z_from_origin = abs(left_hip_location[2]) - abs(origin.location[2])
     # Calculate angle from origin local x axis to the position of left_hip on origin xz plane

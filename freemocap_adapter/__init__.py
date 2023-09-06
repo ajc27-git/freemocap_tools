@@ -37,11 +37,11 @@ bl_info = {
 
 def unregister():
     import bpy
-    from freemocap_adapter.user_interface import USER_INTERFACE_CLASSES
+    from freemocap_adapter.blender_user_interface import USER_INTERFACE_CLASSES
 
     logger.info(f"Unregistering {__file__} as add-on")
     for cls in USER_INTERFACE_CLASSES:
-        logger.info(f"Unregistering class {cls.__name__}")
+        logger.trace(f"Unregistering class {cls.__name__}")
         bpy.utils.unregister_class(cls)
 
     logger.info(f"Unregistering property group FMC_ADAPTER_PROPERTIES")
@@ -50,20 +50,22 @@ def unregister():
 
 def register():
     import bpy
-    from freemocap_adapter.user_interface import USER_INTERFACE_CLASSES, FMC_ADAPTER_PROPERTIES
+    from freemocap_adapter.blender_user_interface import USER_INTERFACE_CLASSES, FMC_ADAPTER_PROPERTIES
 
     logger.info(f"Registering {__file__} as add-on")
+    logger.debug(f"Registering classes {USER_INTERFACE_CLASSES}")
     for cls in USER_INTERFACE_CLASSES:
-        logger.info(f"Registering class {cls.__name__}")
+        logger.trace(f"Registering class {cls.__name__}")
         bpy.utils.register_class(cls)
 
     logger.info(f"Registering property group FMC_ADAPTER_PROPERTIES")
     bpy.types.Scene.fmc_adapter_tool = bpy.props.PointerProperty(type=FMC_ADAPTER_PROPERTIES)
 
-    logger.info(f"Finished registering {__file__} as add-on!")
+    logger.success(f"Finished registering {__file__} as add-on!")
 
 
 if __name__ == "__main__":
     print("HHHHEEEEE")
     logger.info(f"Running {__file__} as main file ")
     register()
+    logger.success(f"Finished running {__file__} as main file!")

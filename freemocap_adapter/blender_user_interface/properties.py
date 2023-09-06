@@ -6,6 +6,7 @@ logger = logging.getLogger(__name__)
 
 class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
     logger.info("Initializing FMC_ADAPTER_PROPERTIES class...")
+    
     recording_path: StringProperty(
         name="FreeMoCap recording path",
         description="Path to a freemocap recording",

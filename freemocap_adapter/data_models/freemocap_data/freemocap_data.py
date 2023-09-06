@@ -6,6 +6,8 @@ import numpy as np
 
 from freemocap_adapter.data_models.freemocap_data.freemocap_data_stats import FreemocapDataStats
 
+import logging
+logger = logging.getLogger(__name__)
 
 
 
@@ -72,15 +74,17 @@ class FreemocapData:
                             recording_path: str,
                             **kwargs):
         data_paths = DataPaths.from_recording_folder(recording_path)
+        logger.info(f"Loading data from paths {data_paths}")
         return cls.from_data_paths(data_paths=data_paths, **kwargs)
 
-    def mark_processing_stage(self, name: str):
+    def mark_processing_stage(self, name: str, overwrite: bool = True):
         """
         Mark the current state of the data as a processing stage (e.g. "raw", "reoriented", etc.)
         """
         if self._intermediate_stages is None:
             self._intermediate_stages = {}
-
+        if name in self._intermediate_stages.keys() and not overwrite:
+            raise ValueError(f"Processing stage {name} already exists. Set overwrite=True to overwrite.")
         self._intermediate_stages[name] = deepcopy(self.__dict__)
 
     def get_processing_stage(self, name: str) -> "FreemocapData":

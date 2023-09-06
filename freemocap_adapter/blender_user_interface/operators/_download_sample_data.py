@@ -3,8 +3,6 @@ import logging
 import bpy
 import bpy_extras
 
-from freemocap_adapter.core_functions.load_data.get_path_to_sample_data import download_sample_data
-
 import logging
 logger = logging.getLogger(__name__)
 
