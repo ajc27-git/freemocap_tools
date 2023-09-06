@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 
 def load_freemocap_data(
         recording_path: str,
-        mediapipe_names: Dict[str, List[str]] = MEDIAPIPE_TRAJECTORY_NAMES,
 ):
 
     logger.info("Loading freemocap_data....")

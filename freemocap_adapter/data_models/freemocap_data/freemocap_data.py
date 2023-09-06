@@ -46,6 +46,42 @@ class FreemocapData:
 
     _intermediate_stages = None
 
+    @property
+    def number_of_frames(self):
+        return self.body_fr_mar_xyz.shape[0]
+
+    @property
+    def number_of_body_markers(self):
+        return self.body_fr_mar_xyz.shape[1]
+
+    @property
+    def number_of_right_hand_markers(self):
+        return self.right_hand_fr_mar_xyz.shape[1]
+
+    @property
+    def number_of_left_hand_markers(self):
+        return self.left_hand_fr_mar_xyz.shape[1]
+
+    @property
+    def number_of_face_markers(self):
+        return self.face_fr_mar_xyz.shape[1]
+
+    @property
+    def number_of_hand_markers(self):
+        if not self.number_of_right_hand_markers == self.number_of_left_hand_markers:
+            logger.warning(f"Number of right hand markers ({self.number_of_right_hand_markers}) "
+                           f"does not match number of left hand markers ({self.number_of_left_hand_markers}).")
+        return self.number_of_right_hand_markers + self.number_of_left_hand_markers
+
+    @property
+    def number_of_markers(self):
+        return (self.number_of_body_markers +
+                self.number_of_right_hand_markers +
+                self.number_of_left_hand_markers +
+                self.number_of_face_markers)
+
+
+
     @classmethod
     def from_data(cls,
                   body_fr_mar_xyz: np.ndarray,

@@ -54,6 +54,7 @@ def create_freemocap_empties(freemocap_data: FreemocapData,
                                          empty_scale=body_empty_scale,
                                          empty_type="SPHERE")
 
+        empties["hands"] = {}
         # right hand trajectories
         empties["hands"]["right"] = create_empties(trajectory_frame_marker_xyz=freemocap_data.right_hand_fr_mar_xyz,
                                                    names_list=freemocap_data.right_hand_names,
@@ -77,5 +78,5 @@ def create_freemocap_empties(freemocap_data: FreemocapData,
         return empties
 
     except Exception as e:
-        logger.error(f"Error loading empty markers: {e}!")
+        logger.exception(f"Error loading empty markers: {e}!")
         raise
