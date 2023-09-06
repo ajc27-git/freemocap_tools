@@ -21,8 +21,8 @@ def get_video_paths(path_to_video_folder: Path) -> list:
 
 def add_videos_to_scene(videos_path: Union[Path, str],
                         parent_object: bpy.types.Object,
-                        video_location_scale: float = 3,
-                        video_size_scale: float = 3,
+                        video_location_scale: float = 4,
+                        video_size_scale: float = 2,
                         ):
 
     logger.info(f"Adding videos to scene...")
@@ -59,18 +59,13 @@ def add_videos_to_scene(videos_path: Union[Path, str],
 
 
 def load_videos(recording_path:str,
-                world_origin_axes: bpy.types.Object = None,):
+                world_origin_axes: bpy.types.Object,):
     """
     ############################
     Load videos into scene using `videos_as_planes` addon
     """
 
     recording_path = Path(recording_path)
-    if world_origin_axes is None:
-        try :
-            world_origin_axes = bpy.context.scene.objects["world_origin_axes"]
-        except Exception as e:
-            logger.warning(f"Could not find `world_origin_axes` object in scene, creating new one")
 
 
     if Path(recording_path / "annotated_videos").is_dir():
