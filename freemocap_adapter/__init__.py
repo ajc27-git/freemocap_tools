@@ -3,13 +3,14 @@ import logging
 
 from freemocap_adapter.system.configure_logging import configure_logging, LogLevel
 
-# configure_logging(LogLevel.TRACE)
-configure_logging(LogLevel.DEBUG)
+DEBUG_UI = False
+
+configure_logging(LogLevel.TRACE)
+# configure_logging(LogLevel.DEBUG)
 # configure_logging(LogLevel.INFO)
 # configure_logging(LogLevel.WARNING)
 
 logger = logging.getLogger(__name__)
-
 
 
 #######################################################################

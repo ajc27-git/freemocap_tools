@@ -1,14 +1,14 @@
+import logging
 from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
+from typing import List
 
 import numpy as np
 
 from freemocap_adapter.data_models.freemocap_data.freemocap_data_stats import FreemocapDataStats
 
-import logging
 logger = logging.getLogger(__name__)
-
 
 
 @dataclass
@@ -30,13 +30,19 @@ class DataPaths:
         )
 
 
-#TODO - need to break this up into a simple data class and a class that handles the operations.
+# TODO - need to break this up into a simple data class and a class that handles the operations.
 @dataclass
 class FreemocapData:
     body_fr_mar_xyz: np.ndarray
     right_hand_fr_mar_xyz: np.ndarray
     left_hand_fr_mar_xyz: np.ndarray
     face_fr_mar_xyz: np.ndarray
+
+    data_source: str
+    body_names: List[str]
+    right_hand_names: List[str]
+    left_hand_names: List[str]
+    face_names: List[str]
 
     _intermediate_stages = None
 
@@ -46,15 +52,55 @@ class FreemocapData:
                   right_hand_fr_mar_xyz: np.ndarray,
                   left_hand_fr_mar_xyz: np.ndarray,
                   face_fr_mar_xyz: np.ndarray,
-                  type: str = "original_from_file",
+                  data_source: str = "mediapipe",
+                  processing_stage: str = "original_from_file",
                   **kwargs) -> "FreemocapData":
+
+        (body_names,
+         face_names,
+         left_hand_names,
+         right_hand_names) = cls._create_trajecory_name_lists(body_fr_mar_xyz,
+                                                              data_source,
+                                                              face_fr_mar_xyz,
+                                                              left_hand_fr_mar_xyz,
+                                                              right_hand_fr_mar_xyz)
+
         instance = cls(
             body_fr_mar_xyz=body_fr_mar_xyz,
             right_hand_fr_mar_xyz=right_hand_fr_mar_xyz,
             left_hand_fr_mar_xyz=left_hand_fr_mar_xyz,
-            face_fr_mar_xyz=face_fr_mar_xyz)
-        instance.mark_processing_stage(type)
+            face_fr_mar_xyz=face_fr_mar_xyz,
+            data_source=data_source,
+            body_names=body_names,
+            right_hand_names=right_hand_names,
+            left_hand_names=left_hand_names,
+            face_names=face_names,
+        )
+        instance.mark_processing_stage(processing_stage)
         return instance
+
+    @classmethod
+    def _create_trajecory_name_lists(cls, body_fr_mar_xyz, data_source, face_fr_mar_xyz, left_hand_fr_mar_xyz,
+                                     right_hand_fr_mar_xyz):
+        if data_source == "mediapipe":
+            from freemocap_adapter.data_models.mediapipe_names.trajectory_names import MEDIAPIPE_TRAJECTORY_NAMES
+            body_names = MEDIAPIPE_TRAJECTORY_NAMES["body"]
+            right_hand_names = [f"right_hand_{name}" for name in MEDIAPIPE_TRAJECTORY_NAMES["hand"]]
+            left_hand_names = [f"left_hand_{name}" for name in MEDIAPIPE_TRAJECTORY_NAMES["hand"]]
+            face_names = []
+            for index in range(face_fr_mar_xyz.shape[1]):
+                if index < len(MEDIAPIPE_TRAJECTORY_NAMES["face"]):
+                    face_names.append(f"face_{MEDIAPIPE_TRAJECTORY_NAMES['face'][index]}")
+                else:
+                    face_names.append(f"face_{index}")
+        else:
+            logger.error(f"Data source {data_source} not recognized.")
+            body_names = [f"body_{index}" for index in range(body_fr_mar_xyz.shape[1])]
+            right_hand_names = [f"right_hand_{index}" for index in range(right_hand_fr_mar_xyz.shape[1])]
+            left_hand_names = [f"left_hand_{index}" for index in range(left_hand_fr_mar_xyz.shape[1])]
+            face_names = [f"face_{index}" for index in range(face_fr_mar_xyz.shape[1])]
+            pass
+        return body_names, face_names, left_hand_names, right_hand_names
 
     @classmethod
     def from_data_paths(cls,
@@ -105,21 +151,21 @@ class FreemocapData:
 
         return "\n".join(return_strings)
 
-    def __add__(self, other:float):
+    def __add__(self, other: float):
         self.body_fr_mar_xyz += other
         self.right_hand_fr_mar_xyz += other
         self.left_hand_fr_mar_xyz += other
         self.face_fr_mar_xyz += other
         return self
 
-    def __sub__(self, other:float):
+    def __sub__(self, other: float):
         self.body_fr_mar_xyz -= other
         self.right_hand_fr_mar_xyz -= other
         self.left_hand_fr_mar_xyz -= other
         self.face_fr_mar_xyz -= other
         return self
 
-    def __mul__(self, other:float):
+    def __mul__(self, other: float):
         self.body_fr_mar_xyz *= other
         self.right_hand_fr_mar_xyz *= other
         self.left_hand_fr_mar_xyz *= other
@@ -136,7 +182,16 @@ class FreemocapData:
             face_fr_mar_xyz = self.face_fr_mar_xyz / number
 
             # Create a new FreemocapData instance with the divided matrices and return
-            return FreemocapData(body_fr_mar_xyz, right_hand_fr_mar_xyz, left_hand_fr_mar_xyz, face_fr_mar_xyz)
+            return FreemocapData(body_fr_mar_xyz=body_fr_mar_xyz,
+                                 right_hand_fr_mar_xyz=right_hand_fr_mar_xyz,
+                                 left_hand_fr_mar_xyz=left_hand_fr_mar_xyz,
+                                 face_fr_mar_xyz=face_fr_mar_xyz,
+                                 data_source=self.data_source,
+                                 body_names=self.body_names,
+                                 right_hand_names=self.right_hand_names,
+                                 left_hand_names=self.left_hand_names,
+                                 face_names=self.face_names,
+                                 )
 
         else:
             print("Error: Division by zero.")

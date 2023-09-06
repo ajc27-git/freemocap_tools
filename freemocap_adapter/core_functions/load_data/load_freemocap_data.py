@@ -5,16 +5,15 @@ import bpy
 
 from freemocap_adapter.core_functions.load_data.clear_scene import clear_scene
 from freemocap_adapter.data_models.freemocap_data.freemocap_data import FreemocapData
-from freemocap_adapter.data_models.mediapipe_names.point_names import MEDIAPIPE_POINT_NAMES
+from freemocap_adapter.data_models.mediapipe_names.trajectory_names import MEDIAPIPE_TRAJECTORY_NAMES
 
 logger = logging.getLogger(__name__)
 
 
 def load_freemocap_data(
         recording_path: str,
-        mediapipe_names: Dict[str, List[str]] = MEDIAPIPE_POINT_NAMES,
+        mediapipe_names: Dict[str, List[str]] = MEDIAPIPE_TRAJECTORY_NAMES,
 ):
-    clear_scene()
 
     logger.info("Loading freemocap_data....")
 
@@ -22,7 +21,6 @@ def load_freemocap_data(
         freemocap_data = FreemocapData.from_recording_path(recording_path=recording_path)
         freemocap_data.mark_processing_stage("original_from_file")
         logger.info(f"Loaded freemocap_data from {recording_path} successfully: \n{freemocap_data}")
-        print(str(freemocap_data))
         logger.debug(str(freemocap_data))
         return freemocap_data
     except Exception as e:

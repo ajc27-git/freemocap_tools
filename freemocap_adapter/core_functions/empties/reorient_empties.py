@@ -5,7 +5,7 @@ import bpy
 import mathutils
 
 from freemocap_adapter.core_functions.empties.translate_empty import translate_empty_and_its_children
-from freemocap_adapter.data_models.mediapipe_names.empties_heirarchy import EMPTIES_HEIRARCHY
+from freemocap_adapter.data_models.mediapipe_names.empties_heirarchy import MEDIAPIPE_EMPTIES_HEIRARCHY
 
 
 def reorient_empties(empties: Dict[str, bpy.types.Object],
@@ -163,7 +163,7 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
                     side + '_hand_wrist'].location
 
                 # Translate the hand_wrist empty and its children by the position delta
-                translate_empty_and_its_children(EMPTIES_HEIRARCHY, side + '_hand_wrist', frame, position_delta)
+                translate_empty_and_its_children(MEDIAPIPE_EMPTIES_HEIRARCHY, side + '_hand_wrist', frame, position_delta)
 
         # Reset the scene frame to the start
         scene.frame_set(scene.frame_start)

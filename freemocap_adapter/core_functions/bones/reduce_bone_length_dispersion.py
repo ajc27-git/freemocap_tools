@@ -7,7 +7,7 @@ import mathutils
 from freemocap_adapter.core_functions.bones.calculate_bone_length_statistics import calculate_bone_length_statistics
 from freemocap_adapter.core_functions.empties.translate_empty import translate_empty_and_its_children
 from freemocap_adapter.core_functions.empties.update_empty_positions import get_empty_positions
-from freemocap_adapter.data_models.mediapipe_names.empties_heirarchy import EMPTIES_HEIRARCHY
+from freemocap_adapter.data_models.mediapipe_names.empties_heirarchy import MEDIAPIPE_EMPTIES_HEIRARCHY
 
 import logging
 logger = logging.getLogger(__name__)
@@ -81,7 +81,7 @@ def reduce_bone_length_dispersion(empties: Dict[str, bpy.types.Object],
                 position_delta = bone_vector_norm * (new_length - original_length)
 
                 # Translate the tail empty and its children by the position delta.
-                translate_empty_and_its_children(empties_hierarchy=EMPTIES_HEIRARCHY,
+                translate_empty_and_its_children(empties_hierarchy=MEDIAPIPE_EMPTIES_HEIRARCHY,
                                                  empty_name=tail,
                                                  frame_index=frame_index,
                                                  delta=position_delta)

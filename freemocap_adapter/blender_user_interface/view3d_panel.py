@@ -1,6 +1,9 @@
 from bpy.types import Panel
 
 import logging
+
+from freemocap_adapter import DEBUG_UI
+
 logger = logging.getLogger(__name__)
 
 class VIEW3D_PT_freemocap_adapter(Panel):
@@ -11,10 +14,14 @@ class VIEW3D_PT_freemocap_adapter(Panel):
     bl_label = "Freemocap Adapter"
 
     def draw(self, context):
-        logger.trace('Drawing panel...')
+        if DEBUG_UI:
+            logger.trace('Drawing panel...')
         layout = self.layout
         scene = context.scene
         fmc_adapter_tool = scene.fmc_adapter_tool
+
+        # Clear scene button
+        layout.operator('fmc_adapter.clear_scene', text='Clear Scene')
 
         # Load empties Options
         load_freemocap_box = layout.box()

@@ -1,7 +1,7 @@
 # Dictionary containing the empty children for each of the capture empties.
 # This will be used to correct the position of the empties (and its children) that are outside the bone length interval defined by x*stdev
 
-EMPTIES_HEIRARCHY = {
+MEDIAPIPE_EMPTIES_HEIRARCHY = {
     'hips_center': {
         'children': ['right_hip',
                      'left_hip',
