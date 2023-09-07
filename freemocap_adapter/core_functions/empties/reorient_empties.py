@@ -10,12 +10,12 @@ from freemocap_adapter.data_models.mediapipe_names.empties_heirarchy import MEDI
 
 
 def reorient_empties(empties: Dict[str, bpy.types.Object],
-                     z_align_ref_empty: str = 'left_knee',
-                     z_align_angle_offset: float = 0,
-                     ground_ref_empty: str = 'left_foot_index',
-                     z_translation_offset: float = -0.01,
-                     correct_fingers_empties: bool = True,
-                     parent_object_name='freemocap_origin_axes'):
+                     z_align_ref_empty: str,
+                     z_align_angle_offset: float,
+                     ground_ref_empty: str,
+                     z_translation_offset: float, 
+                     correct_fingers_empties: bool,
+                     parent_object: bpy.types.Object,):
     # Reference to the global adjust_empties_executed variable
     global REORIENT_EMPTIES_EXECUTED
     # Reference to the global origin location and rotation pre reset variables
@@ -29,25 +29,30 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
     bpy.ops.screen.animation_play()
     bpy.ops.screen.animation_cancel()
 
-    clean_existing_freemocap_stuff()
+    # unparent empties
+    for empty in empties.values():
+        empty.parent = None
 
     ### Move freemocap_origin_axes to the hips_center empty and rotate it so the ###
     ### z axis intersects the trunk_center empty and the x axis intersects the left_hip empty ###
-    origin = bpy.data.objects[parent_object_name]
+    body_origin = parent_object.copy()
+    body_origin.name = f"{parent_object.name}_body"
+    # Link the new object to the collection
+    bpy.context.collection.objects.link(body_origin)
     hips_center = empties['hips_center']
 
     left_hip = empties['left_hip']
 
     # Move origin to hips_center
-    origin.location = hips_center.location
+    body_origin.location = hips_center.location
 
     # Rotate origin in the xy plane so its x axis crosses the vertical projection of left_hip
     # Obtain left_hip location
     left_hip_location = left_hip.location
 
     # Calculate left_hip xy coordinates from origin location
-    left_hip_x_from_origin = left_hip_location[0] - origin.location[0]
-    left_hip_y_from_origin = left_hip_location[1] - origin.location[1]
+    left_hip_x_from_origin = left_hip_location[0] - body_origin.location[0]
+    left_hip_y_from_origin = left_hip_location[1] - body_origin.location[1]
 
     # Calculate angle from origin x axis to projection of left_hip on xy plane. It will depend if left_hip_x_from_origin is positive or negative
     left_hip_xy_angle_prev = m.atan(left_hip_y_from_origin / left_hip_x_from_origin)
@@ -55,10 +60,10 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
         180) + left_hip_xy_angle_prev
 
     # Rotate origin around the z axis to point at left_hip
-    origin.rotation_euler[2] = left_hip_xy_angle
+    body_origin.rotation_euler[2] = left_hip_xy_angle
 
     # Calculate left_hip z position from origin
-    left_hip_z_from_origin = left_hip_location[2] - origin.location[2]
+    left_hip_z_from_origin = left_hip_location[2] - body_origin.location[2]
 
 
     # left_hip_z_from_origin = abs(left_hip_location[2]) - abs(origin.location[2])
@@ -67,21 +72,21 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
         left_hip_z_from_origin / m.sqrt(m.pow(left_hip_x_from_origin, 2) + m.pow(left_hip_y_from_origin, 2)))
 
     # Rotate origin around the local y axis to point at left_hip. The angle is multiplied by -1 because is the origin that is rotating
-    origin.rotation_euler.rotate_axis("Y", left_hip_xz_angle * -1)
+    body_origin.rotation_euler.rotate_axis("Y", left_hip_xz_angle * -1)
 
     ### Calculate angle in the local yz plane to rotate origin so its z axis crosses the z_align_empty ###
     ### Preferably the trunk_center or left_knee ###
     # Get the z_align_empty object
     z_align_empty = empties[z_align_ref_empty]
     # Get z_align_empty location from origin
-    z_align_empty_loc_from_origin = z_align_empty.location - origin.location
+    z_align_empty_loc_from_origin = z_align_empty.location - body_origin.location
     # Get the vector distance
     z_align_empty_from_origin_dist = z_align_empty_loc_from_origin.length
     # Get the location vector normalized
     z_align_empty_loc_from_origin_norm = z_align_empty_loc_from_origin.normalized()
     # Rotate the normalized vector with the current origin rotation
     # Get the matrix of origin euler rotation
-    origin_rot_matrix = origin.rotation_euler.to_matrix()
+    origin_rot_matrix = body_origin.rotation_euler.to_matrix()
     # Rotate the trunk center location normalized vector by the origin rotation matrix
     z_align_empty_loc_from_origin_norm_rot = z_align_empty_loc_from_origin_norm @ origin_rot_matrix
     # Calculate rotation angle of the trunk center on the origin local yz plane using the rotated normalized vector
@@ -89,14 +94,14 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
         z_align_empty_loc_from_origin_norm_rot[1] / z_align_empty_loc_from_origin_norm_rot[2])
 
     # Rotate the origin on its local yz plane. The angle is multiply by -1 because its the origin that is rotating
-    origin.rotation_euler.rotate_axis("X", (z_align_empty_yz_rot_angle + m.radians(z_align_angle_offset)) * -1)
+    body_origin.rotation_euler.rotate_axis("X", (z_align_empty_yz_rot_angle + m.radians(z_align_angle_offset)) * -1)
 
     ### Move the origin along its local z axis to place it at an imaginary "capture ground plane" ###
     ### Preferable be placed at a heel or foot_index level ###
     # Get the ground reference empty object
     ground_empty = empties[ground_ref_empty]
     # Get ground_empty location from origin
-    ground_empty_loc_from_origin = ground_empty.location - origin.location
+    ground_empty_loc_from_origin = ground_empty.location - body_origin.location
     # Get the vector distance
     ground_empty_from_origin_dist = ground_empty_loc_from_origin.length
 
@@ -104,7 +109,7 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
     ground_empty_loc_from_origin_norm = ground_empty_loc_from_origin.normalized()
     # Rotate the normalized vector with the current origin rotation
     # Get the matrix of origin euler rotation
-    origin_rot_matrix = origin.rotation_euler.to_matrix()
+    origin_rot_matrix = body_origin.rotation_euler.to_matrix()
     # Rotate the ground empty location normalized vector by the origin rotation matrix
     ground_empty_loc_from_origin_norm_rot = ground_empty_loc_from_origin_norm @ origin_rot_matrix
 
@@ -121,28 +126,31 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
     origin_translation_vector_global = origin_translation_vector @ origin_rot_matrix
 
     # Translate the origin using the translation_vector_global
-    origin.location += origin_translation_vector_global
+    body_origin.location += origin_translation_vector_global
+
+    # Save the body_origin world matrix
+    ORIGIN_LOCATION_PRE_RESET = (body_origin.location[0], body_origin.location[1], body_origin.location[2])
+    ORIGIN_ROTATION_PRE_RESET = (body_origin.rotation_euler[0], body_origin.rotation_euler[1], body_origin.rotation_euler[2])
 
     # Deselect all
     bpy.ops.object.select_all(action='DESELECT')
 
-    ### Reparent all the capture empties to the origin (freemocap_origin_axes) ###
-    for object in bpy.data.objects:
-        if object.type == "EMPTY" and object.name != "freemocap_origin_axes" and object.name != "world_origin":
-            # Select empty
-            object.select_set(True)
+    # ### Reparent all the capture empties to the origin  ###
+    for empties in empties.values():
+        empties.select_set(True)
 
-    # Save the origin world matrix
-    ORIGIN_LOCATION_PRE_RESET = (origin.location[0], origin.location[1], origin.location[2])
-    ORIGIN_ROTATION_PRE_RESET = (origin.rotation_euler[0], origin.rotation_euler[1], origin.rotation_euler[2])
+    parent_object.select_set(True)
 
     # Set the origin active in 3Dview
-    bpy.context.view_layer.objects.active = origin
+    bpy.context.view_layer.objects.active = body_origin
     # Parent selected empties to origin keeping transforms
     bpy.ops.object.parent_set(type='OBJECT', keep_transform=True)
     # Reset origin transformation to world origin
-    origin.location = mathutils.Vector([0, 0, 0])
-    origin.rotation_euler = mathutils.Vector([0, 0, 0])
+    body_origin.location = mathutils.Vector([0, 0, 0])
+    body_origin.rotation_euler = mathutils.Vector([0, 0, 0])
+
+    parent_object.parent = None
+    body_origin.parent = parent_object
 
     # Deselect all objects
     for object in bpy.data.objects:
@@ -177,7 +185,7 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
 
     # Deselect all objects
     bpy.ops.object.select_all(action='DESELECT')
-    bpy.data.objects[parent_object_name].select_set(True)
+    parent_object.select_set(True)
 
     # Change the adjust_empties_executed variable
     REORIENT_EMPTIES_EXECUTED = True

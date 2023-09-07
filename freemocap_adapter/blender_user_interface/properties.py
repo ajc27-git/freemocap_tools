@@ -1,19 +1,20 @@
+import logging
+
 import bpy
 from bpy.props import StringProperty, BoolProperty
 
-import logging
 logger = logging.getLogger(__name__)
+
 
 class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
     logger.info("Initializing FMC_ADAPTER_PROPERTIES class...")
 
-    freemocap_parent_empty: bpy.props.PointerProperty(
-        name="FreeMoCap parent empty",
+    data_parent_empty: bpy.props.PointerProperty(
+        name="FreeMoCap data parent empty",
         description="Empty that serves as parent for all the freemocap empties",
         type=bpy.types.Object,
         poll=lambda self, object: object.type == 'EMPTY',
     )
-
 
     recording_path: StringProperty(
         name="FreeMoCap recording path",
@@ -38,7 +39,6 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         description="Show/hide the options for the Add Rig operator",
         default=False,
     )
-
 
     vertical_align_reference: bpy.props.EnumProperty(
         name='',

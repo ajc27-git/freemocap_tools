@@ -8,7 +8,7 @@ import bpy
 
 import logging
 
-from freemocap_adapter.core_functions.load_data.load_freemocap_data import create_world_origin_axes
+from freemocap_adapter.core_functions.load_data.load_freemocap_data import create_video_parent_empty
 
 logger  = logging.getLogger(__name__)
 
@@ -25,11 +25,14 @@ class FMC_ADAPTER_load_videos(bpy.types.Operator):
         logger.info("Loading videos as planes...")
         scene = context.scene
         fmc_adapter_tool = scene.fmc_adapter_tool
+        fmc_adapter_tool.recording_path
 
-        world_origin_axes = create_world_origin_axes()
+
+
+        video_parent_empty = create_video_parent_empty(name=f"{Path(fmc_adapter_tool.recording_path).stem}_anchor_empty")
         try:
             load_videos(recording_path=fmc_adapter_tool.recording_path,
-                        world_origin_axes=world_origin_axes,)
+                        parent_empty=video_parent_empty, )
         except Exception as e:
             logger.error(e)
             logger.exception(e)

@@ -41,7 +41,9 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         # row.label(text="Download sample data?")
         # row.operator('fmc_adapter.download_sample_data', text='Download')
 
-        load_freemocap_box.prop(fmc_adapter_tool, "freemocap_parent_empty", text="Data Parent Empty")
+        load_freemocap_box.prop(fmc_adapter_tool,
+                                "data_parent_empty",
+                                text="Data Parent Empty")
 
         # adjust_empties_box.operator('fmc_adapter.adjust_empties', text='1. Adjust Empties')
 

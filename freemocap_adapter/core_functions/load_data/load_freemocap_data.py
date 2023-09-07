@@ -1,11 +1,8 @@
 import logging
-from typing import List, Dict
 
 import bpy
 
-from freemocap_adapter.core_functions.load_data.clear_scene import clear_scene
 from freemocap_adapter.data_models.freemocap_data.freemocap_data import FreemocapData
-from freemocap_adapter.data_models.mediapipe_names.trajectory_names import MEDIAPIPE_TRAJECTORY_NAMES
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +10,6 @@ logger = logging.getLogger(__name__)
 def load_freemocap_data(
         recording_path: str,
 ):
-
     logger.info("Loading freemocap_data....")
 
     try:
@@ -27,15 +23,7 @@ def load_freemocap_data(
         raise e
 
 
-
-    set_start_end_frame(number_of_frames)
-
-
-
-
-
-
-def set_start_end_frame(number_of_frames:int):
+def set_start_end_frame(number_of_frames: int):
     # %% Set start and end frames
     start_frame = 0
     end_frame = number_of_frames
@@ -43,18 +31,19 @@ def set_start_end_frame(number_of_frames:int):
     bpy.context.scene.frame_end = end_frame
 
 
-def create_freemocap_origin_axes(name: str = "freemocap_origin_axes"):
-    logger.info("Creating freemocap origin axes...")
+def create_freemocap_parent_empty(name: str = "freemocap_data_parent_empty"):
+    logger.info("Creating freemocap parent empty...")
     bpy.ops.object.empty_add(type="ARROWS")
-    freemocap_origin_axes = bpy.context.editable_objects[-1]
-    freemocap_origin_axes.name = name
+    parent_empty = bpy.context.editable_objects[-1]
+    parent_empty.name = name
 
-    return freemocap_origin_axes
+    return parent_empty
 
-def create_world_origin_axes(name: str = "world_origin_axes"):
-    logger.info("Creating world origin axes...")
-    bpy.ops.object.empty_add()
-    world_origin_axes = bpy.context.editable_objects[-1]
-    world_origin_axes.name = name
 
-    return world_origin_axes
+def create_video_parent_empty(name: str = "video_parent_empty"):
+    logger.info("Creating video parent empty...")
+    bpy.ops.object.empty_add(type="SPHERE")
+    parent_empty = bpy.context.editable_objects[-1]
+    parent_empty.name = name
+    parent_empty.scale = (0.25, 0.25, 0.25)
+    return parent_empty
