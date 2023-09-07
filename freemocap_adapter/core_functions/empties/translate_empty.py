@@ -10,7 +10,6 @@ def translate_empty_and_its_children(empties_hierarchy: Dict[str, Dict[str, List
                                      empty_name: str,
                                      frame_index: int,
                                      delta: float):
-    logger.debug(f"Translating empty {empty_name} and its children by {delta} on frame {frame_index}...")
     try:
         # Translate the empty in the animation location curve
         actual_x = bpy.data.objects[empty_name].animation_data.action.fcurves[0].keyframe_points[frame_index].co[1]

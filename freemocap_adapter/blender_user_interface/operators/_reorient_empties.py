@@ -35,8 +35,7 @@ class FMC_ADAPTER_OT_reorient_empties(Operator):
 
             # Get end time and print execution time
             end = time.time()
-            logger.debug('Finished reorienting empties! Execution time (s): ' + str(m.trunc((end - start) * 1000) / 1000))
+            logger.success('Finished reorienting empties! Execution time (s): ' + str(m.trunc((end - start) * 1000) / 1000))
             return {'FINISHED'}
         except Exception as e:
             logger.exception('Error while reorienting empties! {e}')
-            return {'CANCELLED'}
