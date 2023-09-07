@@ -8,13 +8,13 @@ from freemocap_adapter.core_functions.empties.translate_empty import translate_e
 from freemocap_adapter.data_models.mediapipe_names.empties_heirarchy import MEDIAPIPE_EMPTIES_HEIRARCHY
 
 
+
 def reorient_empties(empties: Dict[str, bpy.types.Object],
                      z_align_ref_empty: str = 'left_knee',
                      z_align_angle_offset: float = 0,
                      ground_ref_empty: str = 'left_foot_index',
                      z_translation_offset: float = -0.01,
                      correct_fingers_empties: bool = True,
-                     # add_hand_middle_empty: bool = True,
                      parent_object_name='freemocap_origin_axes'):
     # Reference to the global adjust_empties_executed variable
     global REORIENT_EMPTIES_EXECUTED

@@ -1,4 +1,5 @@
 import logging
+import time
 from typing import List, Dict
 
 import bpy
@@ -28,9 +29,13 @@ def create_freemocap_empties(freemocap_data: FreemocapData,
     def create_empties(trajectory_frame_marker_xyz: np.ndarray,
                        names_list: List[str],
                        empty_scale: float,
-                       empty_type: str) -> Dict[str, bpy.types.Object]:
+                       empty_type: str,
+                       ) -> Dict[str, bpy.types.Object]:
+
         empties = {}
-        for marker_number in range(trajectory_frame_marker_xyz.shape[1]):
+
+        number_of_trajectories = trajectory_frame_marker_xyz.shape[1]
+        for marker_number in range(number_of_trajectories):
             trajectory_name = names_list[marker_number]
             trajectory_fr_xyz = trajectory_frame_marker_xyz[:, marker_number, :]
             empties[trajectory_name] = create_keyframed_empty_from_3d_trajectory_data(
@@ -40,6 +45,7 @@ def create_freemocap_empties(freemocap_data: FreemocapData,
                 empty_scale=empty_scale,
                 empty_type=empty_type,
             )
+            logger.trace(f"Created empty {trajectory_name}")
 
         return empties
 
@@ -48,11 +54,15 @@ def create_freemocap_empties(freemocap_data: FreemocapData,
 
     empties = {}
     try:
+        number_of_trajectories = freemocap_data.number_of_body_markers + 2* freemocap_data.number_of_hand_markers +10 #add 10 so it doesnt end before calculating virtual markers
+        wm = bpy.context.window_manager
+        wm.progress_begin(0, number_of_trajectories)
         # body trajectories
         empties["body"] = create_empties(trajectory_frame_marker_xyz=freemocap_data.body_fr_mar_xyz,
                                          names_list=freemocap_data.body_names,
                                          empty_scale=body_empty_scale,
-                                         empty_type="SPHERE")
+                                         empty_type="SPHERE",)
+        wm.progress_update(freemocap_data.number_of_body_markers)
 
         empties["hands"] = {}
         # right hand trajectories
@@ -60,19 +70,20 @@ def create_freemocap_empties(freemocap_data: FreemocapData,
                                                    names_list=freemocap_data.right_hand_names,
                                                    empty_scale=hand_empty_scale,
                                                    empty_type="PLAIN_AXES")
-
+        wm.progress_update(freemocap_data.number_of_body_markers + freemocap_data.number_of_hand_markers)
         # left hand trajectories
         empties["hands"]["left"] = create_empties(trajectory_frame_marker_xyz=freemocap_data.left_hand_fr_mar_xyz,
                                                   names_list=freemocap_data.left_hand_names,
                                                   empty_scale=hand_empty_scale,
                                                   empty_type="PLAIN_AXES")
-
+        wm.progress_update(freemocap_data.number_of_body_markers + 2*freemocap_data.number_of_hand_markers)
         # creation virtual markers
         calculate_virtual_trajectories(freemocap_data=freemocap_data,
                                        parent_object=parent_object,
                                        body_empty_scale=BODY_EMPTY_SCALE,
                                        )
 
+        wm.progress_end()
         logger.info(f"Adding virtual marker names to body trajectory names")
         logger.info("Done creating virtual markers")
         return empties

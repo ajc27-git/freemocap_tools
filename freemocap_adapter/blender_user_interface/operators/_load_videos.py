@@ -19,6 +19,7 @@ from freemocap_adapter.core_functions.load_data.load_videos import load_videos
 class FMC_ADAPTER_load_videos(bpy.types.Operator):
     bl_idname = 'fmc_adapter.load_videos'
     bl_label = "Load Videos as planes"
+    bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
         logger.info("Loading videos as planes...")

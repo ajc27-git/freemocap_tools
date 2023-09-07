@@ -1,6 +1,6 @@
 from freemocap_adapter.blender_user_interface.operators._add_body_mesh import FMC_ADAPTER_OT_add_body_mesh
 from freemocap_adapter.blender_user_interface.operators._add_rig import FMC_ADAPTER_OT_add_rig
-from freemocap_adapter.blender_user_interface.operators._adjust_empties import FMC_ADAPTER_OT_adjust_empties
+from freemocap_adapter.blender_user_interface.operators._reorient_empties import FMC_ADAPTER_OT_reorient_empties
 from freemocap_adapter.blender_user_interface.operators._clear_scene import FMC_ADAPTER_clear_scene
 from freemocap_adapter.blender_user_interface.operators._download_sample_data import FMC_ADAPTER_download_sample_data
 from freemocap_adapter.blender_user_interface.operators._export_fbx import FMC_ADAPTER_OT_export_fbx
@@ -14,7 +14,7 @@ BLENDER_OPERATORS = [  # FMC_ADAPTER_download_sample_data,
     FMC_ADAPTER_clear_scene,
     FMC_ADAPTER_load_videos,
     FMC_ADAPTER_load_freemocap_data,
-    FMC_ADAPTER_OT_adjust_empties,
+    FMC_ADAPTER_OT_reorient_empties,
     FMC_ADAPTER_OT_reduce_bone_length_dispersion,
     FMC_ADAPTER_OT_reduce_shakiness,
     FMC_ADAPTER_OT_add_rig,
