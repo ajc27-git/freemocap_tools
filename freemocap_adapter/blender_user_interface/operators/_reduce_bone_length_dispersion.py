@@ -1,12 +1,11 @@
+import logging
 import math as m
 import time
 
 from bpy.types import Operator
 
-
-import logging
-
 from freemocap_adapter.core_functions.bones.reduce_bone_length_dispersion import reduce_bone_length_dispersion
+from freemocap_adapter.data_models.bones.bone_definitions import BONE_DEFINITIONS
 
 logger = logging.getLogger(__name__)
 
@@ -18,19 +17,22 @@ class FMC_ADAPTER_OT_reduce_bone_length_dispersion(Operator):
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
-        logger.info("Reducing bone length dispersion....")
         scene = context.scene
         fmc_adapter_tool = scene.fmc_adapter_tool
-
+        parent_empty = fmc_adapter_tool.data_parent_empty
+        empties = {empty.name: empty for empty in parent_empty.children}
         # Get start time
         start = time.time()
-        print('Executing Reduce Bone Length Dispersion...')
+        logger.info('Executing Reduce Bone Length Dispersion...')
 
-        reduce_bone_length_dispersion(interval_variable=fmc_adapter_tool.interval_variable,
-                                      interval_factor=fmc_adapter_tool.interval_factor)
+        reduce_bone_length_dispersion(empties=empties,
+                                      bones=BONE_DEFINITIONS,
+                                      interval_variable=fmc_adapter_tool.interval_variable,
+                                      interval_factor=fmc_adapter_tool.interval_factor,
+                                      )
 
         # Get end time and print execution time
         end = time.time()
-        print('Finished. Execution time (s): ' + str(m.trunc((end - start) * 1000) / 1000))
+        logger.success('Finished! Execution time (s): ' + str(m.trunc((end - start) * 1000) / 1000))
 
         return {'FINISHED'}

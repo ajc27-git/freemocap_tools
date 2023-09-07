@@ -22,7 +22,7 @@ def get_video_paths(path_to_video_folder: Path) -> list:
 def add_videos_to_scene(videos_path: Union[Path, str],
                         parent_object: bpy.types.Object,
                         video_location_scale: float = 4,
-                        video_size_scale: float = 2,
+                        video_size_scale: float = 5,
                         ):
 
     logger.info(f"Adding videos to scene...")

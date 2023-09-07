@@ -8,7 +8,7 @@ from freemocap_adapter.core_functions.load_data.clear_scene import clear_scene
 from freemocap_adapter.core_functions.load_data.get_path_to_sample_data import get_or_download_sample_data
 from freemocap_adapter.core_functions.rig.add_rig import add_rig
 from freemocap_adapter.core_functions.rig.attach_mesh import add_mesh_to_rig
-from freemocap_adapter.data_models.bones.bone_definitions import VIRTUAL_BONES
+from freemocap_adapter.data_models.bones.bone_definitions import BONE_DEFINITIONS
 from freemocap_adapter.data_models.freemocap_data.freemocap_data import FreemocapData
 
 logger = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ def main(recording_path: str):
 
     logger.info("Reducing bone length dispersion...")
     bones = reduce_bone_length_dispersion(empties=oriented_empties,
-                                          bones=VIRTUAL_BONES, )
+                                          bones=BONE_DEFINITIONS, )
 
     logger.info("Adding rig...")
     add_rig()

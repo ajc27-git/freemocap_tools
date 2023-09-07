@@ -33,12 +33,10 @@ def get_empty_positions(empties: Dict[str, bpy.types.Object], ) -> dict[str, dic
         # Set scene frame
         scene.frame_set(frame)
         # Iterate through each object
-        for object in bpy.data.objects:
-            if object.type == 'EMPTY' and object.name != 'freemocap_origin_axes' and object.name != 'world_origin' and object.name != '_full_body_center_of_mass':
-                # Save the x, y, z position of the empty
-                empty_positions[object.name]['x'].append(bpy.data.objects[object.name].location[0])
-                empty_positions[object.name]['y'].append(bpy.data.objects[object.name].location[1])
-                empty_positions[object.name]['z'].append(bpy.data.objects[object.name].location[2])
+        for name, empty in empties.items():
+            empty_positions[name]['x'].append(empty.location[0])
+            empty_positions[name]['y'].append(empty.location[1])
+            empty_positions[name]['z'].append(empty.location[2])
 
     # Reset the scene frame to the start
     scene.frame_set(scene.frame_start)

@@ -5,7 +5,7 @@ import mathutils
 
 from freemocap_adapter.core_functions.bones.calculate_bone_length_statistics import calculate_bone_length_statistics
 from freemocap_adapter.core_functions.empties.update_empty_positions import get_empty_positions
-from freemocap_adapter.data_models.bones.bone_definitions import VIRTUAL_BONES
+from freemocap_adapter.data_models.bones.bone_definitions import BONE_DEFINITIONS
 from freemocap_adapter.data_models.bones.bone_constraints import BONES_CONSTRAINTS
 
 
@@ -53,13 +53,13 @@ def add_rig(bone_length_method: str = 'median_length',
         rig.select_set(True)
 
         # Get rig height as the sum of the major bones length in a standing position. Assume foot declination angle of 23º
-        avg_ankle_projection_length = (m.sin(m.radians(23)) * VIRTUAL_BONES['foot.R']['median'] + m.sin(m.radians(23)) *
-                                       VIRTUAL_BONES['foot.L']['median']) / 2
-        avg_shin_length = (VIRTUAL_BONES['shin.R']['median'] + VIRTUAL_BONES['shin.L']['median']) / 2
-        avg_thigh_length = (VIRTUAL_BONES['thigh.R']['median'] + VIRTUAL_BONES['thigh.L']['median']) / 2
+        avg_ankle_projection_length = (m.sin(m.radians(23)) * BONE_DEFINITIONS['foot.R']['median'] + m.sin(m.radians(23)) *
+                                       BONE_DEFINITIONS['foot.L']['median']) / 2
+        avg_shin_length = (BONE_DEFINITIONS['shin.R']['median'] + BONE_DEFINITIONS['shin.L']['median']) / 2
+        avg_thigh_length = (BONE_DEFINITIONS['thigh.R']['median'] + BONE_DEFINITIONS['thigh.L']['median']) / 2
 
-        rig_height = avg_ankle_projection_length + avg_shin_length + avg_thigh_length + VIRTUAL_BONES['spine'][
-            'median'] + VIRTUAL_BONES['spine.001']['median'] + VIRTUAL_BONES['neck']['median']
+        rig_height = avg_ankle_projection_length + avg_shin_length + avg_thigh_length + BONE_DEFINITIONS['spine'][
+            'median'] + BONE_DEFINITIONS['spine.001']['median'] + BONE_DEFINITIONS['neck']['median']
 
         # Calculate new rig proportion
         rig_new_proportion = rig_height / rig.dimensions.z
@@ -112,11 +112,11 @@ def add_rig(bone_length_method: str = 'median_length',
         pelvis_L.head = (0, 0, hips_center_z_pos)
 
         # Calculate the average length of the pelvis bones
-        avg_pelvis_length = (VIRTUAL_BONES['pelvis.R']['median'] + VIRTUAL_BONES['pelvis.L']['median']) / 2
+        avg_pelvis_length = (BONE_DEFINITIONS['pelvis.R']['median'] + BONE_DEFINITIONS['pelvis.L']['median']) / 2
 
         # Set the pelvis bones length based on the keep symmetry parameter
-        pelvis_R_length = avg_pelvis_length if keep_symmetry else VIRTUAL_BONES['pelvis.R']['median']
-        pelvis_L_length = avg_pelvis_length if keep_symmetry else VIRTUAL_BONES['pelvis.L']['median']
+        pelvis_R_length = avg_pelvis_length if keep_symmetry else BONE_DEFINITIONS['pelvis.R']['median']
+        pelvis_L_length = avg_pelvis_length if keep_symmetry else BONE_DEFINITIONS['pelvis.L']['median']
 
         # Align the pelvis bone tails to the hips center
         pelvis_R.tail = (-pelvis_R_length, 0, hips_center_z_pos)
@@ -130,16 +130,16 @@ def add_rig(bone_length_method: str = 'median_length',
         thigh_L.head = (pelvis_L_length, 0, hips_center_z_pos)
 
         # Set the thigh bones length based on the keep symmetry parameter
-        thigh_R_length = avg_thigh_length if keep_symmetry else VIRTUAL_BONES['thigh.R']['median']
-        thigh_L_length = avg_thigh_length if keep_symmetry else VIRTUAL_BONES['thigh.L']['median']
+        thigh_R_length = avg_thigh_length if keep_symmetry else BONE_DEFINITIONS['thigh.R']['median']
+        thigh_L_length = avg_thigh_length if keep_symmetry else BONE_DEFINITIONS['thigh.L']['median']
 
         # Align the thighs bone tail to the bone head
         thigh_R.tail = (-pelvis_R_length, 0, hips_center_z_pos - thigh_R_length)
         thigh_L.tail = (pelvis_L_length, 0, hips_center_z_pos - thigh_L_length)
 
         # Set the shin bones length based on the keep symmetry parameter
-        shin_R_length = avg_shin_length if keep_symmetry else VIRTUAL_BONES['shin.R']['median']
-        shin_L_length = avg_shin_length if keep_symmetry else VIRTUAL_BONES['shin.L']['median']
+        shin_R_length = avg_shin_length if keep_symmetry else BONE_DEFINITIONS['shin.R']['median']
+        shin_L_length = avg_shin_length if keep_symmetry else BONE_DEFINITIONS['shin.L']['median']
 
         # Align the shin bones to the thigh bones
         shin_R.tail = (-pelvis_R_length, 0, hips_center_z_pos - thigh_R_length - shin_R_length)
@@ -150,11 +150,11 @@ def add_rig(bone_length_method: str = 'median_length',
         rig.data.edit_bones.remove(rig.data.edit_bones['toe.L'])
 
         # Move the foot bones tail to adjust their length depending on keep symmetry and also form a 23º degree with the horizontal plane
-        avg_foot_length = (VIRTUAL_BONES['foot.R']['median'] + VIRTUAL_BONES['foot.L']['median']) / 2
+        avg_foot_length = (BONE_DEFINITIONS['foot.R']['median'] + BONE_DEFINITIONS['foot.L']['median']) / 2
 
         # Set the foot bones length based on the keep symmetry parameter
-        foot_R_length = avg_foot_length if keep_symmetry else VIRTUAL_BONES['foot.R']['median']
-        foot_L_length = avg_foot_length if keep_symmetry else VIRTUAL_BONES['foot.L']['median']
+        foot_R_length = avg_foot_length if keep_symmetry else BONE_DEFINITIONS['foot.R']['median']
+        foot_L_length = avg_foot_length if keep_symmetry else BONE_DEFINITIONS['foot.L']['median']
 
         foot_R.tail = (
         -pelvis_R_length, -foot_R_length * m.cos(m.radians(23)), foot_R.head[2] - foot_R_length * m.sin(m.radians(23)))
@@ -162,11 +162,11 @@ def add_rig(bone_length_method: str = 'median_length',
         pelvis_L_length, -foot_L_length * m.cos(m.radians(23)), foot_L.head[2] - foot_L_length * m.sin(m.radians(23)))
 
         # Move the heel bones so their head is aligned with the ankle on the x axis
-        avg_heel_length = (VIRTUAL_BONES['heel.02.R']['median'] + VIRTUAL_BONES['heel.02.L']['median']) / 2
+        avg_heel_length = (BONE_DEFINITIONS['heel.02.R']['median'] + BONE_DEFINITIONS['heel.02.L']['median']) / 2
 
         # Set the heel bones length based on the keep symmetry parameter
-        heel_02_R_length = avg_heel_length if keep_symmetry else VIRTUAL_BONES['heel.02.R']['median']
-        heel_02_L_length = avg_heel_length if keep_symmetry else VIRTUAL_BONES['heel.02.L']['median']
+        heel_02_R_length = avg_heel_length if keep_symmetry else BONE_DEFINITIONS['heel.02.R']['median']
+        heel_02_L_length = avg_heel_length if keep_symmetry else BONE_DEFINITIONS['heel.02.L']['median']
 
         heel_02_R.head = (-pelvis_R_length, heel_02_R.head[1], heel_02_R.head[2])
         heel_02_R.length = heel_02_R_length
@@ -208,11 +208,11 @@ def add_rig(bone_length_method: str = 'median_length',
         spine_001 = rig.data.edit_bones['spine.001']
 
         # Adjust the spine bone length and align it vertically
-        spine.tail = (spine.head[0], spine.head[1], spine.head[2] + VIRTUAL_BONES['spine']['median'])
+        spine.tail = (spine.head[0], spine.head[1], spine.head[2] + BONE_DEFINITIONS['spine']['median'])
 
         # Adjust the spine.001 bone length and align it vertically
         spine_001.tail = (
-        spine_001.head[0], spine_001.head[1], spine_001.head[2] + VIRTUAL_BONES['spine.001']['median'])
+            spine_001.head[0], spine_001.head[1], spine_001.head[2] + BONE_DEFINITIONS['spine.001']['median'])
 
         # Calculate the shoulders head z offset from the spine.001 tail. This to raise the shoulders and breasts by that offset
         shoulder_z_offset = spine_001.tail[2] - shoulder_R.head[2]
@@ -228,11 +228,11 @@ def add_rig(bone_length_method: str = 'median_length',
         shoulder_L.tail[2] += shoulder_z_offset
 
         # Get average shoulder length
-        avg_shoulder_length = (VIRTUAL_BONES['shoulder.R']['median'] + VIRTUAL_BONES['shoulder.L']['median']) / 2
+        avg_shoulder_length = (BONE_DEFINITIONS['shoulder.R']['median'] + BONE_DEFINITIONS['shoulder.L']['median']) / 2
 
         # Set the shoulder bones length based on the keep symmetry parameter
-        shoulder_R_length = avg_shoulder_length if keep_symmetry else VIRTUAL_BONES['shoulder.R']['median']
-        shoulder_L_length = avg_shoulder_length if keep_symmetry else VIRTUAL_BONES['shoulder.L']['median']
+        shoulder_R_length = avg_shoulder_length if keep_symmetry else BONE_DEFINITIONS['shoulder.R']['median']
+        shoulder_L_length = avg_shoulder_length if keep_symmetry else BONE_DEFINITIONS['shoulder.L']['median']
 
         # Move the shoulder tail in the x axis
         shoulder_R.tail[0] = spine_001.tail[0] - shoulder_R_length
@@ -383,22 +383,22 @@ def add_rig(bone_length_method: str = 'median_length',
         hand_L = rig.data.edit_bones['hand.L']
 
         # Get average upperarm length
-        avg_upper_arm_length = (VIRTUAL_BONES['upper_arm.R']['median'] + VIRTUAL_BONES['upper_arm.L']['median']) / 2
+        avg_upper_arm_length = (BONE_DEFINITIONS['upper_arm.R']['median'] + BONE_DEFINITIONS['upper_arm.L']['median']) / 2
 
         # Set the upperarm bones length based on the keep symmetry parameter
-        upper_arm_R_length = avg_upper_arm_length if keep_symmetry else VIRTUAL_BONES['upper_arm.R']['median']
-        upper_arm_L_length = avg_upper_arm_length if keep_symmetry else VIRTUAL_BONES['upper_arm.L']['median']
+        upper_arm_R_length = avg_upper_arm_length if keep_symmetry else BONE_DEFINITIONS['upper_arm.R']['median']
+        upper_arm_L_length = avg_upper_arm_length if keep_symmetry else BONE_DEFINITIONS['upper_arm.L']['median']
 
         # Move the upper_arm tail in the x axis
         upper_arm_R.tail[0] = upper_arm_R.head[0] - upper_arm_R_length
         upper_arm_L.tail[0] = upper_arm_L.head[0] + upper_arm_L_length
 
         # Get average forearm length
-        avg_forearm_length = (VIRTUAL_BONES['forearm.R']['median'] + VIRTUAL_BONES['forearm.L']['median']) / 2
+        avg_forearm_length = (BONE_DEFINITIONS['forearm.R']['median'] + BONE_DEFINITIONS['forearm.L']['median']) / 2
 
         # Set the forearm bones length based on the keep symmetry parameter
-        forearm_R_length = avg_forearm_length if keep_symmetry else VIRTUAL_BONES['forearm.R']['median']
-        forearm_L_length = avg_forearm_length if keep_symmetry else VIRTUAL_BONES['forearm.L']['median']
+        forearm_R_length = avg_forearm_length if keep_symmetry else BONE_DEFINITIONS['forearm.R']['median']
+        forearm_L_length = avg_forearm_length if keep_symmetry else BONE_DEFINITIONS['forearm.L']['median']
 
         # Calculate the x axis offset of the current forearm tail x position and the forearm head x position plus the calculated forearm length
         # This is to move the forearm tail and all the hand bones
@@ -451,11 +451,11 @@ def add_rig(bone_length_method: str = 'median_length',
         #############################################################
 
         # Get average hand length
-        avg_hand_length = (VIRTUAL_BONES['hand.R']['median'] + VIRTUAL_BONES['hand.L']['median']) / 2
+        avg_hand_length = (BONE_DEFINITIONS['hand.R']['median'] + BONE_DEFINITIONS['hand.L']['median']) / 2
 
         # Set the forearm bones length based on the keep symmetry parameter
-        hand_R_length = avg_hand_length if keep_symmetry else VIRTUAL_BONES['hand.R']['median']
-        hand_L_length = avg_hand_length if keep_symmetry else VIRTUAL_BONES['hand.L']['median']
+        hand_R_length = avg_hand_length if keep_symmetry else BONE_DEFINITIONS['hand.R']['median']
+        hand_L_length = avg_hand_length if keep_symmetry else BONE_DEFINITIONS['hand.L']['median']
 
         # Move hands tail to match the average length
         hand_R.tail[0] = hand_R.head[0] - hand_R_length
@@ -471,7 +471,7 @@ def add_rig(bone_length_method: str = 'median_length',
         spine_004.head = (spine_001.tail[0], spine_001.tail[1], spine_001.tail[2])
 
         # Change spine.004 tail position values
-        spine_004.tail = (spine_004.head[0], spine_004.head[1], spine_004.head[2] + VIRTUAL_BONES['neck']['median'])
+        spine_004.tail = (spine_004.head[0], spine_004.head[1], spine_004.head[2] + BONE_DEFINITIONS['neck']['median'])
 
         # Change the parent of the face bone for the spine.004 bone
         face = rig.data.edit_bones['face']
@@ -483,8 +483,8 @@ def add_rig(bone_length_method: str = 'median_length',
         rig.data.edit_bones.remove(rig.data.edit_bones['spine.006'])
 
         # Calculate the y and z offset of the nose.001 bone tail using the imaginary head_nose bone. Assume a 18º of declination angle
-        nose_y_offset = -VIRTUAL_BONES['head_nose']['median'] * m.cos(m.radians(18)) - nose_001.tail[1]
-        nose_z_offset = (spine_004.tail[2] - VIRTUAL_BONES['head_nose']['median'] * m.sin(m.radians(18))) - \
+        nose_y_offset = -BONE_DEFINITIONS['head_nose']['median'] * m.cos(m.radians(18)) - nose_001.tail[1]
+        nose_z_offset = (spine_004.tail[2] - BONE_DEFINITIONS['head_nose']['median'] * m.sin(m.radians(18))) - \
                         nose_001.tail[2]
 
         # Move the face bone on the z axis using the calculated offset
@@ -505,7 +505,7 @@ def add_rig(bone_length_method: str = 'median_length',
         # Move the face bone head to align it horizontally
         face.head[1] = spine_004.tail[1]
         face.head[2] = face.tail[2]
-        face.tail[1] = face.head[1] - (VIRTUAL_BONES['head_nose']['median'] * m.cos(m.radians(18)) / 2)
+        face.tail[1] = face.head[1] - (BONE_DEFINITIONS['head_nose']['median'] * m.cos(m.radians(18)) / 2)
 
         # Rename spine.004 to neck
         rig.data.edit_bones['spine.004'].name = "neck"
@@ -580,10 +580,10 @@ def add_rig(bone_length_method: str = 'median_length',
         # Add the thumb carpals
         thumb_carpal_R = rig.data.edit_bones.new('thumb.carpal.R')
         thumb_carpal_R.head = hand_R.head
-        thumb_carpal_R.tail = thumb_carpal_R.head + mathutils.Vector([0, -VIRTUAL_BONES['thumb.carpal.R']['median'], 0])
+        thumb_carpal_R.tail = thumb_carpal_R.head + mathutils.Vector([0, -BONE_DEFINITIONS['thumb.carpal.R']['median'], 0])
         thumb_carpal_L = rig.data.edit_bones.new('thumb.carpal.L')
         thumb_carpal_L.head = hand_L.head
-        thumb_carpal_L.tail = thumb_carpal_L.head + mathutils.Vector([0, -VIRTUAL_BONES['thumb.carpal.L']['median'], 0])
+        thumb_carpal_L.tail = thumb_carpal_L.head + mathutils.Vector([0, -BONE_DEFINITIONS['thumb.carpal.L']['median'], 0])
 
         # Asign the parent to thumb carpals
         thumb_carpal_R.parent = hand_R
@@ -620,7 +620,7 @@ def add_rig(bone_length_method: str = 'median_length',
             # Move the tail of the metacarpal bones so they are aligned horizontally
             palm_bone.tail[2] = palm_bone.head[2]
             # Change metacarpal bones lengths
-            palm_bone.length = VIRTUAL_BONES[palm_bone.name]['median']
+            palm_bone.length = BONE_DEFINITIONS[palm_bone.name]['median']
 
         # Align the phalanges to the x axis (set bones head and tail y position equal to yz position of metacarpals bone tail)
         for palm_bone in palm_bones:
@@ -630,8 +630,8 @@ def add_rig(bone_length_method: str = 'median_length',
                 length_sign = -1 if ".R" in phalange.name else 1
                 # Set the length by moving the bone tail along the x axis. Using this instead of just setting bone.length because that causes some bone inversions
                 phalange.tail = (
-                phalange.head[0] + length_sign * VIRTUAL_BONES[phalange.name]['median'], phalange.head[1],
-                phalange.head[2])
+                    phalange.head[0] + length_sign * BONE_DEFINITIONS[phalange.name]['median'], phalange.head[1],
+                    phalange.head[2])
                 # Reset the phalange bone roll to 0
                 phalange.roll = 0
 

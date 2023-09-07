@@ -35,10 +35,7 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
 
     ### Move freemocap_origin_axes to the hips_center empty and rotate it so the ###
     ### z axis intersects the trunk_center empty and the x axis intersects the left_hip empty ###
-    body_origin = parent_object.copy()
-    body_origin.name = f"{parent_object.name}_body"
-    # Link the new object to the collection
-    bpy.context.collection.objects.link(body_origin)
+    body_origin = parent_object
     hips_center = empties['hips_center']
 
     left_hip = empties['left_hip']
@@ -139,7 +136,6 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
     for empties in empties.values():
         empties.select_set(True)
 
-    parent_object.select_set(True)
 
     # Set the origin active in 3Dview
     bpy.context.view_layer.objects.active = body_origin
@@ -149,8 +145,7 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
     body_origin.location = mathutils.Vector([0, 0, 0])
     body_origin.rotation_euler = mathutils.Vector([0, 0, 0])
 
-    parent_object.parent = None
-    body_origin.parent = parent_object
+
 
     # Deselect all objects
     for object in bpy.data.objects:
