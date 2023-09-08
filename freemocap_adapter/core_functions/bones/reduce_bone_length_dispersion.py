@@ -92,7 +92,7 @@ def reduce_bone_length_dispersion(empties: Dict[str, bpy.types.Object],
     empties_positions_corrected = get_empty_positions(empties=empties)
 
     # Update the information of the virtual bones
-    calculate_bone_length_statistics(empty_positions=empty_positions, bones=bones)
+    calculate_bone_length_statistics(empty_positions=empties_positions_corrected, bones=bones)
 
     # Print the new bones length median, standard deviation and coefficient of variation
     print('New Virtual Bone Information:')
