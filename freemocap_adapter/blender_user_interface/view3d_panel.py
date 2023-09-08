@@ -1,10 +1,11 @@
-from bpy.types import Panel
-
 import logging
+
+from bpy.types import Panel
 
 from freemocap_adapter import DEBUG_UI
 
 logger = logging.getLogger(__name__)
+
 
 class VIEW3D_PT_freemocap_adapter(Panel):
     bl_space_type = "VIEW_3D"
@@ -23,19 +24,18 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         clear_scene_box = layout.box()
         clear_scene_box.operator('fmc_adapter.clear_scene', text='Clear Scene')
 
-
         # Load empties Options
         load_freemocap_box = layout.box()
-        load_freemocap_box.operator('fmc_adapter.load_freemocap_data', text='0. Load FreeMoCap Data')
         row = load_freemocap_box.row()
         row.label(text="FreeMoCap Recording:")
         row.prop(fmc_adapter_tool, "recording_path", text="")
+        load_freemocap_box.operator('fmc_adapter.load_freemocap_data', text='0. Load FreeMoCap Data')
 
-        load_freemocap_box.operator('fmc_adapter.load_videos',
-                                    text='Load Videos as Planes',
-                                    icon='FILE_MOVIE',
-                                    )
-
+        row = load_freemocap_box.row()
+        row.label(icon='FILE_MOVIE', )
+        row.operator('fmc_adapter.load_videos',
+                     text="Load videos as planes",
+                     )
 
         # row = load_freemocap_box.row()
         # row.label(text="Download sample data?")
@@ -57,7 +57,6 @@ class VIEW3D_PT_freemocap_adapter(Panel):
                  emboss=False)
 
         if fmc_adapter_tool.show_reorient_empties_options:
-
             split = reorient_empties_box.column().row().split(factor=0.6)
             split.column().label(text='Align Reference')
             split.split().column().prop(fmc_adapter_tool, 'vertical_align_reference')
@@ -82,7 +81,6 @@ class VIEW3D_PT_freemocap_adapter(Panel):
             split.column().label(text='Add hand middle empty')
             split.split().column().prop(fmc_adapter_tool, 'add_hand_middle_empty')
 
-
         # Reduce Bone Length Dispersion Options
         bone_length_box = layout.box()
         bone_length_box.operator('fmc_adapter.reduce_bone_length_dispersion', text='2. Reduce Bone Length Dispersion')
@@ -101,7 +99,6 @@ class VIEW3D_PT_freemocap_adapter(Panel):
             split.column().label(text='Dispersion Interval Factor')
             split.split().column().prop(fmc_adapter_tool, 'interval_factor')
 
-
         # Reduce Shakiness Options
         # box = layout.box()
         # #box.label(text='Reduce Shakiness Options')
@@ -117,9 +114,9 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         add_rig_box.operator('fmc_adapter.add_rig', text='3. Add Rig')
         row = add_rig_box.row()
         row.prop(fmc_adapter_tool,
-                    'show_add_rig_options',
-                    icon='TRIA_DOWN' if fmc_adapter_tool.show_add_rig_options else 'TRIA_RIGHT',
-                    emboss=False)
+                 'show_add_rig_options',
+                 icon='TRIA_DOWN' if fmc_adapter_tool.show_add_rig_options else 'TRIA_RIGHT',
+                 emboss=False)
 
         if fmc_adapter_tool.show_add_rig_options:
             split = add_rig_box.column().row().split(factor=0.6)
@@ -137,7 +134,6 @@ class VIEW3D_PT_freemocap_adapter(Panel):
             split = add_rig_box.column().row().split(factor=0.6)
             split.column().label(text='Add rotation limits')
             split.split().column().prop(fmc_adapter_tool, 'use_limit_rotation')
-
 
         # Add Body Mesh Options
         body_mesh_box = layout.box()

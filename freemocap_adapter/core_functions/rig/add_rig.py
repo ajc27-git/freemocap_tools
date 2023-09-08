@@ -1,4 +1,5 @@
 import math as m
+from typing import Dict
 
 import bpy
 import mathutils
@@ -9,43 +10,46 @@ from freemocap_adapter.data_models.bones.bone_definitions import BONE_DEFINITION
 from freemocap_adapter.data_models.bones.bone_constraints import BONES_CONSTRAINTS
 
 
-def add_rig(bone_length_method: str = 'median_length',
+def add_rig(empties: Dict[str, bpy.types.Object],
+            bone_length_method: str = 'median_length',
             keep_symmetry: bool = False,
             add_fingers_constraints: bool = False,
-            use_limit_rotation: bool = False):
+            use_limit_rotation: bool = False,
+            rig_name: str = 'root',
+            ):
     # Deselect all objects
     for object in bpy.data.objects:
         object.select_set(False)
 
-    # If there is an existing metarig, delete it
-    try:
-        print('Deleting previous metarigs...')
-        for object in bpy.data.objects:
-            if object.type == "ARMATURE":
-                bpy.data.objects.remove(object, do_unlink=True)
-    except:
-        print('No existing metarigs to delete')
+    # # If there is an existing metarig, delete it
+    # try:
+    #     print('Deleting previous metarigs...')
+    #     for object in bpy.data.objects:
+    #         if object.type == "ARMATURE":
+    #             bpy.data.objects.remove(object, do_unlink=True)
+    # except:
+    #     print('No existing metarigs to delete')
 
     # Add normal human armature
     bpy.ops.object.armature_human_metarig_add()
-    # Rename metarig armature to "root"
-    bpy.data.armatures[0].name = "root"
+    # Rename metarig armature to rig_name
+    bpy.data.armatures[0].name = rig_name
     # Get reference to armature
     rig = bpy.data.objects['metarig']
     # Rename the rig object to root
-    rig.name = "root"
+    rig.name = rig_name
     # Get reference to the renamed armature
-    rig = bpy.data.objects['root']
+    rig = bpy.data.objects[rig_name]
 
     if bone_length_method == 'median_length':
 
         print('Adding rig with median length method...')
 
         # Update the empty positions dictionary
-        get_empty_positions()
+        empty_positions =  get_empty_positions(empties=empties)
 
         # Update the information of the virtual bones
-        calculate_bone_length_statistics()
+        calculate_bone_length_statistics(empty_positions=empty_positions, bones=BONE_DEFINITIONS)
 
         # Deselect all objects
         bpy.ops.object.select_all(action='DESELECT')
@@ -1228,3 +1232,5 @@ def add_rig(bone_length_method: str = 'median_length',
 
     # Deselect all objects
     bpy.ops.object.select_all(action='DESELECT')
+
+    return  rig

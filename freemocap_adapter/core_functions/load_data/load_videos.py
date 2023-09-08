@@ -51,8 +51,8 @@ def add_videos_to_scene(videos_path: Union[Path, str],
         video_as_plane.location = [
             vid_x,
             video_location_scale,
-            1,
-        ]
+            video_size_scale*.6
+            ]
         video_as_plane.rotation_euler = [np.pi / 2, 0, 0]
         video_as_plane.scale = [video_size_scale] * 3
         video_as_plane.parent = parent_object

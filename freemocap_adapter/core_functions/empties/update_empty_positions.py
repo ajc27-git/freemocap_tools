@@ -29,7 +29,7 @@ def get_empty_positions(empties: Dict[str, bpy.types.Object], ) -> dict[str, dic
         empty_positions[empty_name] = {'x': [], 'y': [], 'z': []}
 
     # Iterate through each scene frame and save the coordinates of each empty in the dictionary. Frame is displaced by -1 to match animation curves.
-    for frame in range(scene.frame_start - 1, scene.frame_end):
+    for frame in range(scene.frame_start, scene.frame_end):
         # Set scene frame
         scene.frame_set(frame)
         # Iterate through each object
