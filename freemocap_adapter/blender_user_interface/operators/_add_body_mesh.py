@@ -6,7 +6,7 @@ from bpy.types import Operator
 
 from freemocap_adapter.core_functions.empties.reorient_empties import reorient_empties
 from freemocap_adapter.core_functions.rig.add_rig import add_rig
-from freemocap_adapter.core_functions.rig.attach_mesh import add_mesh_to_rig
+from freemocap_adapter.core_functions.create_mesh.attach_mesh_to_rig import attach_mesh_to_rig
 
 REORIENT_EMPTIES_EXECUTED = True
 
@@ -53,7 +53,7 @@ class FMC_ADAPTER_OT_add_body_mesh(Operator):
 
         try:
             logger.debug('Executing Add Body Mesh...')
-            add_mesh_to_rig(body_mesh_mode=fmc_adapter_tool.body_mesh_mode)
+            attach_mesh_to_rig(body_mesh_mode=fmc_adapter_tool.body_mesh_mode)
         except Exception as e:
             logger.exception(f"Error while adding body mesh: {e}")
             return {'CANCELLED'}

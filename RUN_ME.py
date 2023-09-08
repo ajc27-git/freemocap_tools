@@ -7,7 +7,7 @@ from freemocap_adapter.core_functions.load_data.clear_scene import clear_scene
 from freemocap_adapter.core_functions.load_data.get_path_to_sample_data import get_or_download_sample_data
 from freemocap_adapter.core_functions.load_data.load_freemocap_data import load_freemocap_data
 from freemocap_adapter.core_functions.rig.add_rig import add_rig
-from freemocap_adapter.core_functions.rig.attach_mesh import add_mesh_to_rig
+from freemocap_adapter.core_functions.create_mesh.attach_mesh_to_rig import attach_mesh_to_rig
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ def main():
     add_rig()
 
     logger.info("Adding body mesh...")
-    add_mesh_to_rig()
+    attach_mesh_to_rig()
 
     logger.info("Exporting FBX...")
     export_fbx()

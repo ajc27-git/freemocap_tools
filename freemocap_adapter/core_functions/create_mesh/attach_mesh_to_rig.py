@@ -4,7 +4,7 @@ import bpy
 import logging
 logger = logging.getLogger(__name__)
 
-def add_mesh_to_rig(body_mesh_mode: str = "custom"):
+def attach_mesh_to_rig(body_mesh_mode: str = "custom"):
     if body_mesh_mode == "file":
 
         try:
@@ -73,40 +73,55 @@ def add_mesh_to_rig(body_mesh_mode: str = "custom"):
 
         # Calculate parameters of the different body meshes
         base_cylinder_radius = 0.05
+
         trunk_mesh_radius = base_cylinder_radius
         trunk_mesh_length = spine_001.tail[2] - spine.head[2] + 0.02
         trunk_mesh_location = (spine.head[0], spine.head[1], spine.head[2] + trunk_mesh_length / 2)
+
+        neck_mesh_radius = base_cylinder_radius / 2
         neck_mesh_length = neck.length
         neck_mesh_location = (neck.head[0], neck.head[1], neck.head[2] + neck.length / 2)
+
         head_mesh_location = (neck.tail[0], neck.tail[1], neck.tail[2])
-        head_mesh_radius = base_cylinder_radius
+        head_mesh_radius = base_cylinder_radius*2
+
         right_eye_mesh_location = (neck.tail[0] - 0.04, neck.tail[1] - head_mesh_radius, neck.tail[2] + 0.02)
         right_eye_mesh_radius = head_mesh_radius / 3
+
         left_eye_mesh_location = (neck.tail[0] + 0.04, neck.tail[1] - head_mesh_radius, neck.tail[2] + 0.02)
         left_eye_mesh_radius = head_mesh_radius / 3
+
         nose_mesh_location = (neck.tail[0], neck.tail[1] - head_mesh_radius, neck.tail[2] - 0.02)
         nose_mesh_radius = head_mesh_radius / 3.5
+
         right_arm_mesh_length = shoulder_R.tail[0] - hand_R.head[0]
         right_arm_mesh_location = (
         shoulder_R.tail[0] - right_arm_mesh_length / 2, shoulder_R.tail[1], shoulder_R.tail[2] - 0.02)
         right_arm_mesh_radius = base_cylinder_radius
+
         left_arm_mesh_length = hand_L.head[0] - shoulder_L.tail[0]
         left_arm_mesh_location = (
         shoulder_L.tail[0] + left_arm_mesh_length / 2, shoulder_L.tail[1], shoulder_L.tail[2] - 0.02)
         left_arm_mesh_radius = base_cylinder_radius
+
         right_hand_mesh_location = (hand_R.tail[0], hand_R.tail[1], hand_R.tail[2])
         right_hand_mesh_radius = base_cylinder_radius
         right_thumb_mesh_location = (hand_R.tail[0], hand_R.tail[1] - right_hand_mesh_radius, hand_R.tail[2])
-        right_thumb_mesh_radius = right_hand_mesh_radius / 3
+        right_thumb_mesh_radius = right_hand_mesh_radius / 8
+
         left_hand_mesh_location = (hand_L.tail[0], hand_L.tail[1], hand_L.tail[2])
         left_hand_mesh_radius = left_arm_mesh_length / 8
         left_thumb_mesh_location = (hand_L.tail[0], hand_L.tail[1] - left_hand_mesh_radius, hand_L.tail[2])
         left_thumb_mesh_radius = base_cylinder_radius
+
         right_leg_mesh_radius = thigh_R.head[2] - shin_R.tail[2]
         right_leg_mesh_location = (thigh_R.head[0], thigh_R.head[1], thigh_R.head[2] - right_leg_mesh_radius / 2)
+
         left_leg_mesh_radius = thigh_L.head[2] - shin_L.tail[2]
         left_leg_mesh_location = (thigh_L.head[0], thigh_L.head[1], thigh_L.head[2] - left_leg_mesh_radius / 2)
+
         right_foot_mesh_location = (foot_R.tail[0], foot_R.tail[1], foot_R.tail[2])
+
         left_foot_mesh_location = (foot_L.tail[0], foot_L.tail[1], foot_L.tail[2])
 
         # Create and append the body meshes to the list
@@ -136,7 +151,7 @@ def add_mesh_to_rig(body_mesh_mode: str = "custom"):
         # Neck
         bpy.ops.mesh.primitive_cylinder_add(
             vertices=vertices,
-            radius=0.05,
+            radius=neck_mesh_radius,
             depth=neck_mesh_length,
             end_fill_type='NGON',
             calc_uvs=True,

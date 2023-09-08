@@ -7,7 +7,7 @@ from freemocap_adapter.core_functions.export.fbx import export_fbx
 from freemocap_adapter.core_functions.load_data.clear_scene import clear_scene
 from freemocap_adapter.core_functions.load_data.get_path_to_sample_data import get_or_download_sample_data
 from freemocap_adapter.core_functions.rig.add_rig import add_rig
-from freemocap_adapter.core_functions.rig.attach_mesh import add_mesh_to_rig
+from freemocap_adapter.core_functions.create_mesh.attach_mesh_to_rig import attach_mesh_to_rig
 from freemocap_adapter.data_models.bones.bone_definitions import BONE_DEFINITIONS
 from freemocap_adapter.data_models.freemocap_data.freemocap_data import FreemocapData
 
@@ -37,7 +37,7 @@ def main(recording_path: str):
     add_rig()
 
     logger.info("Adding body mesh...")
-    add_mesh_to_rig()
+    attach_mesh_to_rig()
 
     logger.info("Exporting FBX...")
     export_fbx()

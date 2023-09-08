@@ -1,14 +1,15 @@
-import os
-from importlib.machinery import SourceFileLoader
+import logging
 from pathlib import Path
 
 import bpy
 import mathutils
-from bpy.types import Operator
-import addon_utils
+
+logger = logging.getLogger(__name__)
 
 
-def export_fbx(self: Operator):
+def export_fbx(recording_path: str, ):
+    logger.info("Exporting recording to FBX...")
+
     # Deselect all
     bpy.ops.object.select_all(action='DESELECT')
 
@@ -16,16 +17,16 @@ def export_fbx(self: Operator):
     bpy.data.objects['root'].select_set(True)
     bpy.data.objects['fmc_mesh'].select_set(True)
 
-    # Get the Blender file directory
-    file_directory = os.path.dirname(bpy.data.filepath)
-
-    # Create an FBX directory inside the blender output file folder
-    if not os.path.exists(file_directory + '\\FBX'):
-        os.mkdir(Path(file_directory + '\\FBX'), mode=0o777)
+    recording_path = Path(recording_path)
+    recording_name = recording_path.stem
+    fbx_directory = recording_path.parent / 'fbx'
+    fbx_directory.mkdir(exist_ok=True)
+    fbx_filename = recording_name + '.fbx'
+    fbx_filepath = fbx_directory / fbx_filename
 
     # Define the export parameters dictionary
     export_parameters = {
-        'filepath': file_directory + '\\FBX\\fmc_export.fbx',
+        'filepath': str(fbx_filepath),
         'use_selection': True,
         'use_visible': False,
         'use_active_collection': False,
@@ -67,14 +68,6 @@ def export_fbx(self: Operator):
     }
 
     ################# Use of Blender io_scene_fbx addon + send2UE modifications #############################
-
-    # Load the io_scene_fbx addon
-    addons = {os.path.basename(os.path.dirname(module.__file__)): module.__file__ for module in addon_utils.modules()}
-    addon_folder_path = os.path.dirname(addons.get('io_scene_fbx'))
-    try:
-        SourceFileLoader('io_scene_fbx', os.path.join(addon_folder_path, '__init__.py')).load_module()
-    except RuntimeError as error:
-        print(error)
 
     # Import the export_fbx_bin module and necessary utilities
     import io_scene_fbx.export_fbx_bin as export_fbx_bin
@@ -427,7 +420,7 @@ def export_fbx(self: Operator):
         model.add_string(fbx_name_class(ob_obj.name.encode(), b"Model"))
         model.add_string(obj_type)
 
-        elem_data_single_int32(model, b"Version", FBX_MODELS_VERSION) 
+        elem_data_single_int32(model, b"Version", FBX_MODELS_VERSION)
 
         # Object transform info.
         loc, rot, scale, matrix, matrix_rot = ob_obj.fbx_object_tx(scene_data)

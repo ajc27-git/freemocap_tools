@@ -21,7 +21,8 @@ class FMC_ADAPTER_OT_export_fbx(Operator):
         logger.info('Executing Export FBX...')
 
         # Execute export fbx function
-        export_fbx(self)
+        export_fbx(self, 
+                   recording_path=context.scene.fmc_adapter.recording_path,)
 
         # Get end time and print execution time
         end = time.time()
