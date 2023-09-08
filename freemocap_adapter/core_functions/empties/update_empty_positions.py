@@ -15,7 +15,7 @@ def get_empty_positions(empties: Dict[str, bpy.types.Object], ) -> dict[str, dic
 
     # Get the scene context
     scene = bpy.context.scene
-
+    current_frame = scene.frame_current
     # Change to Object Mode
     bpy.ops.object.mode_set(mode="OBJECT")
 
@@ -38,8 +38,8 @@ def get_empty_positions(empties: Dict[str, bpy.types.Object], ) -> dict[str, dic
             empty_positions[name]['y'].append(empty.location[1])
             empty_positions[name]['z'].append(empty.location[2])
 
-    # Reset the scene frame to the start
-    scene.frame_set(scene.frame_start)
+    # Reset the scene frame to where it was before
+    scene.frame_set(current_frame)
 
     logger.info('Empty Positions Dictionary update completed.')
     return empty_positions
@@ -81,6 +81,6 @@ def update_empty_velocities(recording_fps,
                     m.dist(current_frame_position, previous_frame_position) / seconds_per_frame)
 
     # Reset the scene frame to the start
-    scene.frame_set(scene.frame_start)
+    # scene.frame_set(scene.frame_start)
 
     logger.info('Empty Speeds Dictionary update completed.')

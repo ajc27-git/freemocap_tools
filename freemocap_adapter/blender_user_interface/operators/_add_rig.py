@@ -27,6 +27,7 @@ class FMC_ADAPTER_OT_add_rig(Operator):
         start = time.time()
 
         # Reset the scene frame to the start
+        current_frame = scene.frame_current
         scene.frame_set(scene.frame_start)
 
         if not REORIENT_EMPTIES_EXECUTED:
@@ -53,5 +54,5 @@ class FMC_ADAPTER_OT_add_rig(Operator):
         # Get end time and print execution time
         end = time.time()
         logger.debug('Finished. Execution time (s): ' + str(m.trunc((end - start) * 1000) / 1000))
-
+        scene.frame_set(current_frame)  # set the frame back to what it was before we started
         return {'FINISHED'}

@@ -21,6 +21,7 @@ class FMC_ADAPTER_OT_reduce_bone_length_dispersion(Operator):
         fmc_adapter_tool = scene.fmc_adapter_tool
         parent_empty = fmc_adapter_tool.data_parent_empty
         empties = {empty.name: empty for empty in parent_empty.children}
+        frame_number = scene.frame_current  # grab the current frame number so we can set it back after we're done
         # Get start time
         start = time.time()
         logger.info('Executing Reduce Bone Length Dispersion...')
@@ -34,5 +35,5 @@ class FMC_ADAPTER_OT_reduce_bone_length_dispersion(Operator):
         # Get end time and print execution time
         end = time.time()
         logger.success('Finished! Execution time (s): ' + str(m.trunc((end - start) * 1000) / 1000))
-
+        scene.frame_set(frame_number)  # set the frame back to what it was before we started
         return {'FINISHED'}

@@ -168,8 +168,7 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
                 # Translate the hand_wrist empty and its children by the position delta
                 translate_empty_and_its_children(MEDIAPIPE_EMPTIES_HEIRARCHY, side + '_hand_wrist', frame, position_delta)
 
-        # Reset the scene frame to the start
-        scene.frame_set(scene.frame_start)
+
 
     # # Add the hand middle empties if the option is enabled
     # if add_hand_middle_empty:
