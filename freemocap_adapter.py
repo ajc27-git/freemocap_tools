@@ -667,7 +667,7 @@ def update_empty_positions():
         if object.type == 'EMPTY' and object.name != 'freemocap_origin_axes' and object.name != 'world_origin' and object.name != '_full_body_center_of_mass':
             empty_positions[object.name] = {'x': [], 'y': [], 'z': []}
 
-    # Iterate through each scene frame and save the coordinates of each empty in the dictionary. Frame is displaced by -1 to match animation curves.
+    # Iterate through each scene frame and save the coordinates of each empty in the dictionary.
     for frame in range (scene.frame_start, scene.frame_end):
         # Set scene frame
         scene.frame_set(frame)
