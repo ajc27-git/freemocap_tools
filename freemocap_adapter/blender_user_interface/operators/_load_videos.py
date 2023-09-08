@@ -29,7 +29,7 @@ class FMC_ADAPTER_load_videos(bpy.types.Operator):
 
 
 
-        video_parent_empty = create_video_parent_empty(name=f"{Path(fmc_adapter_tool.recording_path).stem}_anchor_empty")
+        video_parent_empty = create_video_parent_empty(name=f"{Path(fmc_adapter_tool.recording_path).stem}_video_anchor")
         try:
             load_videos(recording_path=fmc_adapter_tool.recording_path,
                         parent_empty=video_parent_empty, )
