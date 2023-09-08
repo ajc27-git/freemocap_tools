@@ -51,8 +51,12 @@ class FMC_ADAPTER_OT_add_body_mesh(Operator):
             logger.debug('Executing Add Rig to have a rig for the mesh...')
             add_rig(use_limit_rotation=fmc_adapter_tool.use_limit_rotation)
 
-        logger.debug('Executing Add Body Mesh...')
-        add_mesh_to_rig(body_mesh_mode=fmc_adapter_tool.body_mesh_mode)
+        try:
+            logger.debug('Executing Add Body Mesh...')
+            add_mesh_to_rig(body_mesh_mode=fmc_adapter_tool.body_mesh_mode)
+        except Exception as e:
+            logger.exception(f"Error while adding body mesh: {e}")
+            return {'CANCELLED'}
 
         # Get end time and print execution time
         end = time.time()
