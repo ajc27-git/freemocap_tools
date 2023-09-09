@@ -1710,10 +1710,12 @@ def add_rig(keep_symmetry: bool=False,
             bone.tail[1] += nose_y_offset
             bone.tail[2] += nose_z_offset
             
-    # Move the face bone head to align it horizontally
+    # Move the face bone head to the spine.004 tail
     face.head[1] = spine_004.tail[1]
-    face.head[2] = face.tail[2]
+    face.head[2] = spine_004.tail[2]
+    # Move the face bone tail to point 18º down (towards nose bone tip)
     face.tail[1] = face.head[1] - (virtual_bones['head_nose']['median'] * m.cos(m.radians(18)) / 2)
+    face.tail[2] = face.head[2] - (virtual_bones['head_nose']['median'] * m.sin(m.radians(18)) / 2)
 
     # Rename spine.004 to neck
     rig.data.edit_bones['spine.004'].name = "neck"
