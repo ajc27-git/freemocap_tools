@@ -2509,15 +2509,14 @@ def export_fbx(self: Operator):
     bpy.data.objects['fmc_mesh'].select_set(True)
 
     # Get the Blender file directory
-    file_directory = os.path.dirname(bpy.data.filepath)
-    
-    # Create an FBX directory inside the blender output file folder
-    if not os.path.exists(file_directory + '\\FBX'):
-        os.mkdir(Path(file_directory + '\\FBX'), mode=0o777)
+    file_directory = Path(bpy.data.filepath).parent
+
+    fbx_folder = file_directory / 'FBX'
+    fbx_folder.mkdir(parents=True, exist_ok=True)
 
     # Define the export parameters dictionary
     export_parameters = {
-        'filepath':file_directory + '\\FBX\\fmc_export.fbx',
+        'filepath':fbx_folder / 'fmc_export.fbx',
         'use_selection':True,
         'use_visible':False,
         'use_active_collection':False,
@@ -3503,4 +3502,3 @@ def unregister():
 # Register the Add-on
 if __name__ == "__main__":
     register()
-
