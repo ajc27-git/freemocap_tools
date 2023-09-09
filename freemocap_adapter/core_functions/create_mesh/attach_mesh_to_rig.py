@@ -110,9 +110,9 @@ def attach_mesh_to_rig(body_mesh_mode: str = "custom"):
         right_thumb_mesh_radius = right_hand_mesh_radius / 8
 
         left_hand_mesh_location = (hand_L.tail[0], hand_L.tail[1], hand_L.tail[2])
-        left_hand_mesh_radius = left_arm_mesh_length / 8
+        left_hand_mesh_radius = base_cylinder_radius
         left_thumb_mesh_location = (hand_L.tail[0], hand_L.tail[1] - left_hand_mesh_radius, hand_L.tail[2])
-        left_thumb_mesh_radius = base_cylinder_radius
+        left_thumb_mesh_radius = right_hand_mesh_radius / 8
 
         right_leg_mesh_radius = thigh_R.head[2] - shin_R.tail[2]
         right_leg_mesh_location = (thigh_R.head[0], thigh_R.head[1], thigh_R.head[2] - right_leg_mesh_radius / 2)

@@ -62,12 +62,13 @@ def register():
     bpy.types.Scene.fmc_adapter_tool = bpy.props.PointerProperty(type=FMC_ADAPTER_PROPERTIES)
 
 
-    # try:
-    #     get_io_scene_fbx_addon()
-    # except Exception as e:
-    #     logger.error(f"Error loading io_scene_fbx addon: {str(e)}")
-    #     raise
-    #
+    try:
+        from freemocap_adapter.core_functions.export.get_io_scene_fbx_addon import get_io_scene_fbx_addon
+        get_io_scene_fbx_addon()
+    except Exception as e:
+        logger.error(f"Error loading io_scene_fbx addon: {str(e)}")
+        raise
+
     logger.success(f"Finished registering {__file__} as add-on!")
 
 

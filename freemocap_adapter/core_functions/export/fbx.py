@@ -9,115 +9,116 @@ logger = logging.getLogger(__name__)
 
 def export_fbx(recording_path: str, ):
     logger.info("Exporting recording to FBX...")
+    try:
+        # Deselect all
+        bpy.ops.object.select_all(action='DESELECT')
 
-    # Deselect all
-    bpy.ops.object.select_all(action='DESELECT')
+        # Select only the rig and the body_mesh
+        bpy.data.objects['root'].select_set(True)
+        bpy.data.objects['fmc_mesh'].select_set(True)
 
-    # Select only the rig and the body_mesh
-    bpy.data.objects['root'].select_set(True)
-    bpy.data.objects['fmc_mesh'].select_set(True)
+        recording_path = Path(recording_path)
+        recording_name = recording_path.stem
+        fbx_filename = recording_name + '.fbx'
+        fbx_filepath = recording_path / fbx_filename
 
-    recording_path = Path(recording_path)
-    recording_name = recording_path.stem
-    fbx_directory = recording_path.parent / 'fbx'
-    fbx_directory.mkdir(exist_ok=True)
-    fbx_filename = recording_name + '.fbx'
-    fbx_filepath = fbx_directory / fbx_filename
+        # Define the export parameters dictionary
+        export_parameters = {
+            'filepath': str(fbx_filepath),
+            'use_selection': True,
+            'use_visible': False,
+            'use_active_collection': False,
+            'global_scale': 1.0,
+            'apply_unit_scale': True,
+            'apply_scale_options': 'FBX_SCALE_NONE',
+            'use_space_transform': True,
+            'bake_space_transform': False,
+            'object_types': {'ARMATURE', 'MESH', 'EMPTY'},
+            'use_mesh_modifiers': True,
+            'use_mesh_modifiers_render': True,
+            'mesh_smooth_type': 'FACE',
+            'colors_type': 'SRGB',
+            'prioritize_active_color': False,
+            'use_subsurf': False,
+            'use_mesh_edges': False,
+            'use_tspace': False,
+            'use_triangles': False,
+            'use_custom_props': False,
+            'add_leaf_bones': False,
+            'primary_bone_axis': 'Y',
+            'secondary_bone_axis': 'X',
+            'use_armature_deform_only': False,
+            'armature_nodetype': 'NULL',
+            'bake_anim': True,
+            'bake_anim_use_all_bones': True,
+            'bake_anim_use_nla_strips': False,
+            'bake_anim_use_all_actions': False,
+            'bake_anim_force_startend_keying': True,
+            'bake_anim_step': 1.0,
+            'bake_anim_simplify_factor': 0.0,
+            'path_mode': 'AUTO',
+            'embed_textures': False,
+            'batch_mode': 'OFF',
+            'use_batch_own_dir': True,
+            'use_metadata': True,
+            'axis_forward': 'Y',
+            'axis_up': 'Z'
+        }
 
-    # Define the export parameters dictionary
-    export_parameters = {
-        'filepath': str(fbx_filepath),
-        'use_selection': True,
-        'use_visible': False,
-        'use_active_collection': False,
-        'global_scale': 1.0,
-        'apply_unit_scale': True,
-        'apply_scale_options': 'FBX_SCALE_NONE',
-        'use_space_transform': True,
-        'bake_space_transform': False,
-        'object_types': {'ARMATURE', 'MESH', 'EMPTY'},
-        'use_mesh_modifiers': True,
-        'use_mesh_modifiers_render': True,
-        'mesh_smooth_type': 'FACE',
-        'colors_type': 'SRGB',
-        'prioritize_active_color': False,
-        'use_subsurf': False,
-        'use_mesh_edges': False,
-        'use_tspace': False,
-        'use_triangles': False,
-        'use_custom_props': False,
-        'add_leaf_bones': False,
-        'primary_bone_axis': 'Y',
-        'secondary_bone_axis': 'X',
-        'use_armature_deform_only': False,
-        'armature_nodetype': 'NULL',
-        'bake_anim': True,
-        'bake_anim_use_all_bones': True,
-        'bake_anim_use_nla_strips': False,
-        'bake_anim_use_all_actions': False,
-        'bake_anim_force_startend_keying': True,
-        'bake_anim_step': 1.0,
-        'bake_anim_simplify_factor': 0.0,
-        'path_mode': 'AUTO',
-        'embed_textures': False,
-        'batch_mode': 'OFF',
-        'use_batch_own_dir': True,
-        'use_metadata': True,
-        'axis_forward': 'Y',
-        'axis_up': 'Z'
-    }
+        ################# Use of Blender io_scene_fbx addon + send2UE modifications #############################
 
-    ################# Use of Blender io_scene_fbx addon + send2UE modifications #############################
+        # Import the export_fbx_bin module and necessary utilities
+        import io_scene_fbx.export_fbx_bin as export_fbx_bin
 
-    # Import the export_fbx_bin module and necessary utilities
-    import io_scene_fbx.export_fbx_bin as export_fbx_bin
+        from io_scene_fbx.export_fbx_bin import (
+            fbx_data_bindpose_element,
+            AnimationCurveNodeWrapper
+        )
+        from bpy_extras.io_utils import axis_conversion
+        from io_scene_fbx.fbx_utils import (
+            FBX_MODELS_VERSION,
+            FBX_POSE_BIND_VERSION,
+            FBX_DEFORMER_SKIN_VERSION,
+            FBX_DEFORMER_CLUSTER_VERSION,
+            BLENDER_OBJECT_TYPES_MESHLIKE,
+            units_convertor_iter,
+            matrix4_to_array,
+            get_fbx_uuid_from_key,
+            get_blenderID_name,
+            get_blender_bindpose_key,
+            get_blender_anim_stack_key,
+            get_blender_anim_layer_key,
+            elem_empty,
+            elem_data_single_bool,
+            elem_data_single_int32,
+            elem_data_single_int64,
+            elem_data_single_float64,
+            elem_data_single_string,
+            elem_data_single_int32_array,
+            elem_data_single_float64_array,
+            elem_properties,
+            elem_props_template_init,
+            elem_props_template_set,
+            elem_props_template_finalize,
+            fbx_name_class
+        )
 
-    from io_scene_fbx.export_fbx_bin import (
-        fbx_data_bindpose_element,
-        AnimationCurveNodeWrapper
-    )
-    from bpy_extras.io_utils import axis_conversion
-    from io_scene_fbx.fbx_utils import (
-        FBX_MODELS_VERSION,
-        FBX_POSE_BIND_VERSION,
-        FBX_DEFORMER_SKIN_VERSION,
-        FBX_DEFORMER_CLUSTER_VERSION,
-        BLENDER_OBJECT_TYPES_MESHLIKE,
-        units_convertor_iter,
-        matrix4_to_array,
-        get_fbx_uuid_from_key,
-        get_blenderID_name,
-        get_blender_bindpose_key,
-        get_blender_anim_stack_key,
-        get_blender_anim_layer_key,
-        elem_empty,
-        elem_data_single_bool,
-        elem_data_single_int32,
-        elem_data_single_int64,
-        elem_data_single_float64,
-        elem_data_single_string,
-        elem_data_single_int32_array,
-        elem_data_single_float64_array,
-        elem_properties,
-        elem_props_template_init,
-        elem_props_template_set,
-        elem_props_template_finalize,
-        fbx_name_class
-    )
+        convert_rad_to_deg_iter = units_convertor_iter("radian", "degree")
 
-    convert_rad_to_deg_iter = units_convertor_iter("radian", "degree")
+        from io_scene_fbx.export_fbx_bin import fbx_data_element_custom_properties
 
-    from io_scene_fbx.export_fbx_bin import fbx_data_element_custom_properties
+        # Backup the method original_fbx_data_armature_elements of export_fbx_bin before it is modified
+        backup_fbx_animations_do = export_fbx_bin.fbx_animations_do
+        backup_fbx_data_armature_elements = export_fbx_bin.fbx_data_armature_elements
+        backup_fbx_data_object_elements = export_fbx_bin.fbx_data_object_elements
+        backup_fbx_data_bindpose_element = export_fbx_bin.fbx_data_bindpose_element
 
-    # Backup the method original_fbx_data_armature_elements of export_fbx_bin before it is modified
-    backup_fbx_animations_do = export_fbx_bin.fbx_animations_do
-    backup_fbx_data_armature_elements = export_fbx_bin.fbx_data_armature_elements
-    backup_fbx_data_object_elements = export_fbx_bin.fbx_data_object_elements
-    backup_fbx_data_bindpose_element = export_fbx_bin.fbx_data_bindpose_element
+        # Modified the functions to adapt the fbx output to UE
 
-    # Modified the functions to adapt the fbx output to UE
-
-    SCALE_FACTOR = 100
+        SCALE_FACTOR = 100
+    except Exception as e:
+        logger.error(e)
+        return {'CANCELLED'}
 
     def fbx_animations_do(scene_data, ref_id, f_start, f_end, start_zero, objects=None, force_keep=False):
         """
