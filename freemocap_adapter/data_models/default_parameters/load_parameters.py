@@ -1,6 +1,8 @@
 import json
 from dataclasses import dataclass
 
+from freemocap_adapter.core_functions.setup_scene.get_path_to_sample_data import get_path_to_sample_data
+
 
 # Define the data classes to represent the JSON structure
 
@@ -40,6 +42,7 @@ class AddBodyMesh:
 
 @dataclass
 class Config:
+    # recording_path: str
     adjust_empties: AdjustEmpties
     reduce_bone_length_dispersion: ReduceBoneLengthDispersion
     reduce_shakiness: ReduceShakiness
@@ -50,9 +53,11 @@ class Config:
 def load_default_parameters_config(filename: str) -> Config:
     with open(filename, "r") as f:
         data = json.load(f)
-
+    # if not 'recording_path' in data:
+    #     data['recording_path'] = get_path_to_sample_data()
     # Parse JSON data into the dataclass structure
     return Config(
+        # recording_path=data['recording_path'],
         adjust_empties=AdjustEmpties(**data['adjust_empties']),
         reduce_bone_length_dispersion=ReduceBoneLengthDispersion(**data['reduce_bone_length_dispersion']),
         reduce_shakiness=ReduceShakiness(**data['reduce_shakiness']),
