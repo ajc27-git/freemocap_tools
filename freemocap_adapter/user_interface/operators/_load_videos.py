@@ -1,18 +1,14 @@
 from pathlib import Path
-from typing import Union
-
-import numpy as np
-
 
 import bpy
 
 import logging
 
-from freemocap_adapter.core_functions.load_data.load_freemocap_data import create_video_parent_empty
+from freemocap_adapter.core_functions.setup_scene.make_parent_empties import create_video_parent_empty
 
 logger  = logging.getLogger(__name__)
 
-from freemocap_adapter.core_functions.load_data.load_videos import load_videos
+from freemocap_adapter.core_functions.load_freemocap_data.load_videos import load_videos
 
 
 

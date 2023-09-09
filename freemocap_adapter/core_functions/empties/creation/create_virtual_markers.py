@@ -5,7 +5,7 @@ import numpy as np
 
 from freemocap_adapter.core_functions.empties.creation.create_empy_from_trajectory import \
     create_keyframed_empty_from_3d_trajectory_data
-from freemocap_adapter.core_functions.load_data.load_freemocap_data import logger
+from freemocap_adapter.core_functions.load_freemocap_data.load_freemocap_data import logger
 from freemocap_adapter.data_models.freemocap_data.freemocap_data import FreemocapData
 from freemocap_adapter.data_models.mediapipe_names.virtual_markers import MEDIAPIPE_VIRTUAL_MARKER_DEFINITIONS
 

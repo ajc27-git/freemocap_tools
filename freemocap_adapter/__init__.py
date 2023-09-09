@@ -37,7 +37,7 @@ bl_info = {
 
 def unregister():
     import bpy
-    from freemocap_adapter.blender_user_interface import USER_INTERFACE_CLASSES
+    from freemocap_adapter.user_interface import USER_INTERFACE_CLASSES
 
     logger.info(f"Unregistering {__file__} as add-on")
     for cls in USER_INTERFACE_CLASSES:
@@ -50,7 +50,7 @@ def unregister():
 
 def register():
     import bpy
-    from freemocap_adapter.blender_user_interface import USER_INTERFACE_CLASSES, FMC_ADAPTER_PROPERTIES
+    from freemocap_adapter.user_interface import USER_INTERFACE_CLASSES, FMC_ADAPTER_PROPERTIES
 
     logger.info(f"Registering {__file__} as add-on")
     logger.debug(f"Registering classes {USER_INTERFACE_CLASSES}")

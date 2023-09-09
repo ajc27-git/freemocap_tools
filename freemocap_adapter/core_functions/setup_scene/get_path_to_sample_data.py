@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 def get_path_to_sample_data():
     sample_data_path = Path().home() / "freemocap_data" / "recording_sessions" / "freemocap_sample_data"
-
+    sample_data_path = sample_data_path.resolve()
     if not sample_data_path.exists():
         logger.error(
             "Sample data not found. To download sample data, in the main FreeMoCap Gui:"
