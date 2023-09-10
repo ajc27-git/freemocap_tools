@@ -6,7 +6,7 @@ import bpy
 import mathutils
 
 from freemocap_adapter.core_functions.bones.calculate_bone_length_statistics import calculate_bone_length_statistics
-from freemocap_adapter.core_functions.empties.translate_empty import translate_empty_and_its_children
+from freemocap_adapter.core_functions.empties.translate_empty_and_its_children import translate_empty_and_its_children
 from freemocap_adapter.core_functions.empties.update_empty_positions import get_empty_positions
 
 logger = logging.getLogger(__name__)
