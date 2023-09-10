@@ -5,7 +5,7 @@ from freemocap_adapter.core_functions.empties.reorient_empties import reorient_e
 from freemocap_adapter.core_functions.export.fbx import export_fbx
 from freemocap_adapter.core_functions.setup_scene.clear_scene import clear_scene
 from freemocap_adapter.core_functions.setup_scene.get_path_to_sample_data import get_or_download_sample_data
-from freemocap_adapter.core_functions.load_freemocap_data.load_freemocap_data import load_freemocap_data
+from freemocap_adapter.core_functions.freemocap_data_operations.load_freemocap_data import load_freemocap_data
 from freemocap_adapter.core_functions.rig.add_rig import add_rig
 from freemocap_adapter.core_functions.create_mesh.attach_mesh_to_rig import attach_mesh_to_rig
 

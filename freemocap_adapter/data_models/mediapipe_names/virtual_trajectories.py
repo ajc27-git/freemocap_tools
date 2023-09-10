@@ -1,5 +1,4 @@
-
-MEDIAPIPE_VIRTUAL_MARKER_DEFINITIONS = {
+MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS = {
     "head_center": {
         "marker_names": ["left_ear", "right_ear"],
         "marker_weights": [0.5, 0.5],

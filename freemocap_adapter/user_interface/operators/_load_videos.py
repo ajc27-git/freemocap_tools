@@ -8,7 +8,7 @@ from freemocap_adapter.core_functions.setup_scene.make_parent_empties import cre
 
 logger  = logging.getLogger(__name__)
 
-from freemocap_adapter.core_functions.load_freemocap_data.load_videos import load_videos
+from freemocap_adapter.core_functions.freemocap_data_operations.load_videos import load_videos
 
 
 

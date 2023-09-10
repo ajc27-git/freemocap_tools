@@ -29,7 +29,7 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         row = load_freemocap_box.row()
         row.label(text="FreeMoCap Recording:")
         row.prop(fmc_adapter_tool, "recording_path", text="")
-        load_freemocap_box.operator('fmc_adapter.load_freemocap_data', text='0. Load FreeMoCap Data')
+        load_freemocap_box.operator('fmc_adapter.freemocap_data_operations', text='0. Load FreeMoCap Data')
 
         row = load_freemocap_box.row()
         row.label(icon='FILE_MOVIE', )

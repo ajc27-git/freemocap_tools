@@ -1,9 +1,33 @@
-from typing import List
+from typing import List, Union, Dict
 import bpy
 import numpy as np
 
 import logging
 logger = logging.getLogger(__name__)
+
+def create_empties(trajectory_frame_marker_xyz: np.ndarray,
+                   names_list: Union[List[str], str],
+                   empty_scale: float,
+                   empty_type: str,
+                   parent_object: bpy.types.Object,
+                   ) -> Dict[str, bpy.types.Object]:
+    if isinstance(names_list, str):
+        names_list = [names_list] * trajectory_frame_marker_xyz.shape[1]
+    empties = {}
+    number_of_trajectories = trajectory_frame_marker_xyz.shape[1]
+    for marker_number in range(number_of_trajectories):
+        trajectory_name = names_list[marker_number]
+        trajectory_fr_xyz = trajectory_frame_marker_xyz[:, marker_number, :]
+        empties[trajectory_name] = create_keyframed_empty_from_3d_trajectory_data(
+            trajectory_fr_xyz=trajectory_fr_xyz,
+            trajectory_name=trajectory_name,
+            parent_origin=parent_object,
+            empty_scale=empty_scale,
+            empty_type=empty_type,
+        )
+        logger.trace(f"Created empty {trajectory_name}")
+
+    return empties
 
 def create_keyframed_empty_from_3d_trajectory_data(
         trajectory_fr_xyz: np.ndarray,

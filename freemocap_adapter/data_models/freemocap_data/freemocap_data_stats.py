@@ -18,10 +18,10 @@ class FreemocapDataStats:
     @classmethod
     def from_freemocap_data(cls, freemocap_data):
         return cls(
-            body_stats=calculate_stats(freemocap_data.body_fr_mar_xyz),
-            right_hand_stats=calculate_stats(freemocap_data.right_hand_fr_mar_xyz),
-            left_hand_stats=calculate_stats(freemocap_data.left_hand_fr_mar_xyz),
-            face_stats=calculate_stats(freemocap_data.face_fr_mar_xyz),
+            body_stats=calculate_stats(freemocap_data.body.data_frame_name_xyz),
+            right_hand_stats=calculate_stats(freemocap_data.hands['right'].data_frame_name_xyz),
+            left_hand_stats=calculate_stats(freemocap_data.hands['left'].data_frame_name_xyz),
+            face_stats=calculate_stats(freemocap_data.face.data_frame_name_xyz),
         )
 
     def __str__(self):

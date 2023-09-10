@@ -1,15 +1,16 @@
 from copy import copy
-from typing import List, Dict
+from typing import List
 
+import bpy
 import numpy as np
 
 from freemocap_adapter.core_functions.empties.creation.create_empy_from_trajectory import \
     create_keyframed_empty_from_3d_trajectory_data
-from freemocap_adapter.core_functions.load_freemocap_data.load_freemocap_data import logger
-from freemocap_adapter.data_models.freemocap_data.freemocap_data import FreemocapData
-from freemocap_adapter.data_models.mediapipe_names.virtual_markers import MEDIAPIPE_VIRTUAL_MARKER_DEFINITIONS
+from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.freemocap_data_handler import \
+    FreemocapDataHandler
+from freemocap_adapter.core_functions.freemocap_data_operations.load_freemocap_data import logger
+from freemocap_adapter.data_models.mediapipe_names.virtual_trajectories import MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS
 
-import bpy
 
 def test_virtual_marker_definitions(virtual_marker_definitions: dict):
     """
@@ -58,25 +59,23 @@ def calculate_virtual_marker_trajectory(
     return virtual_marker_xyz
 
 
-#TODO - disentagle "calculate" from "creation empty" responsibilities
-def calculate_virtual_trajectories(body_empty_scale: float,
-                                   freemocap_data: FreemocapData,
-                                    parent_object: bpy.types.Object,
-                                   )->None:
+# TODO - disentagle "calculate" from "creation empty" responsibilities
+def calculate_virtual_trajectories(freemocap_data_handler: FreemocapDataHandler,
+                                   body_empty_scale: float,
+                                   parent_object: bpy.types.Object,
+                                   ) -> None:
     #######################################################################
     # %% creation virtual markers
-    logger.info("_________________________\n" 
+    logger.info("_________________________\n"
                 "Creating virtual markers...\n"
                 "-------------------------\n")
 
+    test_virtual_marker_definitions(MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS)
 
-    test_virtual_marker_definitions(MEDIAPIPE_VIRTUAL_MARKER_DEFINITIONS)
-
-    virtual_marker_names = list(MEDIAPIPE_VIRTUAL_MARKER_DEFINITIONS.keys())
-    virtual_markers = {}
+    virtual_marker_names = list(MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS.keys())
     for virtual_marker_name in virtual_marker_names:
-        component_trajectory_names = MEDIAPIPE_VIRTUAL_MARKER_DEFINITIONS[virtual_marker_name]["marker_names"]
-        trajectory_weights = MEDIAPIPE_VIRTUAL_MARKER_DEFINITIONS[virtual_marker_name]["marker_weights"]
+        component_trajectory_names = MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS[virtual_marker_name]["marker_names"]
+        trajectory_weights = MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS[virtual_marker_name]["marker_weights"]
 
         logger.info(
             f"Calculating virtual marker trajectory: {virtual_marker_name} \n"
@@ -85,8 +84,8 @@ def calculate_virtual_trajectories(body_empty_scale: float,
         )
 
         virtual_marker_xyz = calculate_virtual_marker_trajectory(
-            trajectory_3d_frame_marker_xyz=freemocap_data.body_fr_mar_xyz,
-            all_trajectory_names=freemocap_data.body_names,
+            trajectory_3d_frame_marker_xyz=freemocap_data_handler.body_frame_name_xyz,
+            all_trajectory_names=freemocap_data_handler.body_names,
             component_trajectory_names=component_trajectory_names,
             trajectory_weights=trajectory_weights,
         )
@@ -97,6 +96,3 @@ def calculate_virtual_trajectories(body_empty_scale: float,
             empty_scale=body_empty_scale * 3,
             empty_type="PLAIN_AXES",
         )
-
-
-
