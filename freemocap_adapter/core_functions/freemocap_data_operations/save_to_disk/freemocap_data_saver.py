@@ -17,28 +17,32 @@ class FreemocapDataSaver:
         self.handler = freemocap_data_handler
 
     def save(self, recording_path: str):
+        try:
+            logger.info(f"Saving freemocap data to {recording_path}")
+            save_path = Path(save_path) / "saved_data"
+            save_path.mkdir(parents=True, exist_ok=True)
 
-        logger.info(f"Saving freemocap data to {save_path}")
-        save_path = Path(save_path) / "saved_data"
-        save_path.mkdir(parents=True, exist_ok=True)
+            self._save_data_readme()
 
-        self._save_data_readme()
+            # save trajectory names
+            trajectory_names_path = save_path / "trajectory_names.json"
+            trajectory_names = {
+                "body": self.handler.body_names,
+                "right_hand": self.handler.right_hand_names,
+                "left_hand": self.handler.left_hand_names,
+                "face": self.handler.face_names,
+                "other": {other_component.name: other_component.trajectory_names for other_component in
+                          self.handler.freemocap_data.other}
+            }
+            trajectory_names_path.write_text(json.dumps(trajectory_names, indent=4))
 
-        # save trajectory names
-        trajectory_names_path = save_path / "trajectory_names.json"
-        trajectory_names = {
-            "body": self.handler.body_names,
-            "right_hand": self.handler.right_hand_names,
-            "left_hand": self.handler.left_hand_names,
-            "face": self.handler.face_names,
-            "other": {other_component.name: other_component.trajectory_names for other_component in
-                      self.handler.freemocap_data.other}
-        }
-        trajectory_names_path.write_text(json.dumps(trajectory_names, indent=4))
-
-        self._save_npy(save_path)
-        self._save_csv(save_path)
-        self._save_pickle(save_path)
+            self._save_npy(save_path)
+            self._save_csv(save_path)
+            self._save_pickle(save_path)
+        except Exception as e:
+            logger.error(f"Failed to save data to disk: {e}")
+            logger.exception(e)
+            raise e
 
     def _save_csv(self, save_path):
         components = {
