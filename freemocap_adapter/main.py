@@ -21,8 +21,6 @@ def main(recording_path: str):
     logger.info("Loading FreeMoCap data...")
     freemocap_data = FreemocapData.from_recording_path(recording_path=recording_path)
 
-
-
     logger.info("Create keyframed empties...")
     raw_empties = create_freemocap_empties(freemocap_data=freemocap_data)
 
