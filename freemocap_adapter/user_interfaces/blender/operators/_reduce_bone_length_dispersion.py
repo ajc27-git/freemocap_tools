@@ -5,6 +5,8 @@ import time
 from bpy.types import Operator
 
 from freemocap_adapter.core_functions.bones.reduce_bone_length_dispersion import reduce_bone_length_dispersion
+from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.helpers.freemocap_empties_from_parent_object import \
+    freemocap_empties_from_parent_object
 from freemocap_adapter.data_models.bones.bone_definitions import BONE_DEFINITIONS
 
 logger = logging.getLogger(__name__)
@@ -20,7 +22,7 @@ class FMC_ADAPTER_OT_reduce_bone_length_dispersion(Operator):
         scene = context.scene
         fmc_adapter_tool = scene.fmc_adapter_tool
         parent_empty = fmc_adapter_tool.data_parent_empty
-        empties = {empty.name: empty for empty in parent_empty.children}
+        empties = freemocap_empties_from_parent_object(parent_empty)
         frame_number = scene.frame_current  # grab the current frame number so we can set it back after we're done
         # Get start time
         start = time.time()

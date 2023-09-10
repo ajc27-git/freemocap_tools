@@ -6,7 +6,7 @@ import numpy as np
 
 from freemocap_adapter.core_functions.freemocap_data_operations.helpers.create_trajectory_name_lists import \
     create_trajectory_name_lists
-from freemocap_adapter.data_models.freemocap_data.freemocap_data_stats import FreemocapDataStats
+from freemocap_adapter.data_models.freemocap_data.helpers.freemocap_data_stats import FreemocapDataStats
 from freemocap_adapter.data_models.freemocap_data.helpers.freemocap_component_data import FreemocapComponentData
 from freemocap_adapter.data_models.freemocap_data.helpers.freemocap_data_paths import FreemocapDataPaths
 
@@ -61,20 +61,20 @@ class FreemocapData:
 
         return cls(
             body=FreemocapComponentData(name="body",
-                                        data_frame_name_xyz=body_frame_name_xyz,
+                                        data=body_frame_name_xyz,
                                         data_source=data_source,
                                         trajectory_names=body_names),
 
             hands={"right": FreemocapComponentData(name="right_hand",
-                                                   data_frame_name_xyz=right_hand_frame_name_xyz,
+                                                   data=right_hand_frame_name_xyz,
                                                    data_source=data_source,
                                                    trajectory_names=right_hand_names),
                    "left": FreemocapComponentData(name="left_hand",
-                                                  data_frame_name_xyz=left_hand_frame_name_xyz,
+                                                  data=left_hand_frame_name_xyz,
                                                   data_source=data_source,
                                                   trajectory_names=left_hand_names)},
             face=FreemocapComponentData(name="face",
-                                        data_frame_name_xyz=face_frame_name_xyz,
+                                        data=face_frame_name_xyz,
                                         data_source=data_source,
                                         trajectory_names=face_names),
             other=other,
@@ -99,12 +99,11 @@ class FreemocapData:
             face_frame_name_xyz=np.load(str(data_paths.face_npy)) / scale,
 
             other={"center_of_mass": FreemocapComponentData(name="center_of_mass",
-                                                            data_frame_name_xyz=np.load(
+                                                            data=np.load(
                                                                 str(data_paths.center_of_mass_npy)) / scale,
                                                             data_source="freemocap",
                                                             trajectory_names=["center_of_mass"])},
-            metadata=metadata,
-            **kwargs
+            metadata=metadata,            
         )
 
     @classmethod

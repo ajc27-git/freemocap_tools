@@ -20,7 +20,7 @@ from freemocap_adapter.data_models.parameter_models.parameter_models import Conf
 logger = logging.getLogger(__name__)
 
 
-class MainRunner:
+class RunAsMain:
     """
     This class is used to run the program as a main script.
     """

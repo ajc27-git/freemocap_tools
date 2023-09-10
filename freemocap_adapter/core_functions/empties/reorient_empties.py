@@ -5,16 +5,15 @@ import bpy
 import mathutils
 
 from freemocap_adapter.core_functions.empties.translate_empty import translate_empty_and_its_children
-from freemocap_adapter.data_models.mediapipe_names.empties_heirarchy import MEDIAPIPE_EMPTIES_HEIRARCHY
 
 
 def reorient_empties(empties: Dict[str, bpy.types.Object],
                      z_align_ref_empty: str,
                      z_align_angle_offset: float,
                      ground_ref_empty: str,
-                     z_translation_offset: float, 
+                     z_translation_offset: float,
                      correct_fingers_empties: bool,
-                     parent_object: bpy.types.Object,):
+                     parent_object: bpy.types.Object):
     # Reference to the global adjust_empties_executed variable
     global REORIENT_EMPTIES_EXECUTED
     # Reference to the global origin location and rotation pre reset variables
@@ -63,7 +62,6 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
 
     # Calculate left_hip z position from origin
     left_hip_z_from_origin = left_hip_location[2] - body_origin.location[2]
-
 
     # left_hip_z_from_origin = abs(left_hip_location[2]) - abs(origin.location[2])
     # Calculate angle from origin local x axis to the position of left_hip on origin xz plane
@@ -129,7 +127,8 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
 
     # Save the body_origin world matrix
     ORIGIN_LOCATION_PRE_RESET = (body_origin.location[0], body_origin.location[1], body_origin.location[2])
-    ORIGIN_ROTATION_PRE_RESET = (body_origin.rotation_euler[0], body_origin.rotation_euler[1], body_origin.rotation_euler[2])
+    ORIGIN_ROTATION_PRE_RESET = (
+        body_origin.rotation_euler[0], body_origin.rotation_euler[1], body_origin.rotation_euler[2])
 
     # Deselect all
     bpy.ops.object.select_all(action='DESELECT')
@@ -146,37 +145,30 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
     body_origin.location = mathutils.Vector([0, 0, 0])
     body_origin.rotation_euler = mathutils.Vector([0, 0, 0])
 
-
-
     # Deselect all objects
     for object in bpy.data.objects:
         object.select_set(False)
 
-    # Adjust the position of the finger tracking empties. Move right_hand_wrist (and all its child empties) to match the right_wrist position
-    if correct_fingers_empties:
-        hand_side = ['right', 'left']
+    # # Adjust the position of the finger tracking empties. Move right_hand_wrist (and all its child empties) to match the right_wrist position
+    # if correct_fingers_empties:
+    #     hand_side = ['right', 'left']
 
-        # Iterate through each scene frame and calculate the position delta from x_hand_wrist to x_wrist and move all the fingers empties by that delta
-        for frame in range(scene.frame_start, scene.frame_end):
-            # Set scene frame
-            scene.frame_set(frame)
+    #     # Iterate through each scene frame and calculate the position delta from x_hand_wrist to x_wrist and move all the fingers empties by that delta
+    #     for frame in range(scene.frame_start, scene.frame_end):
+    #         # Set scene frame
+    #         scene.frame_set(frame)
 
-            for side in hand_side:
-                hand_empties = empties['hands'][side]
-                # Get the position delta
-                position_delta = body_empties[side + '_wrist'].location - hand_empties[side + '_hand_wrist'].location
+    #         for side in hand_side:
+    #             hand_empties = empties['hands'][side]
+    #             body_wrist_empty = body_empties[side + '_wrist']
+    #             hand_wrist_empty = hand_empties[side + '_hand_wrist']
+    #             # Get the position delta
+    #             position_delta = body_wrist_empty.location - hand_wrist_empty.location
 
-                # Translate the hand_wrist empty and its children by the position delta
-                translate_empty_and_its_children(MEDIAPIPE_EMPTIES_HEIRARCHY, side + '_hand_wrist', frame, position_delta)
-
-
-
-    # # Add the hand middle empties if the option is enabled
-    # if add_hand_middle_empty:
-    #     # Update the empty positions dictionary
-    #     update_empty_positions()
-    #
-    #     add_hands_middle_empties()
+    #             # Translate the hand_wrist empty and its children by the position delta
+    #             translate_empty_and_its_children(empty_name=side + '_hand_wrist',
+    #                                              frame_index=frame,
+    #                                              delta=position_delta, )
 
     # Deselect all objects
     bpy.ops.object.select_all(action='DESELECT')
@@ -184,8 +176,6 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
 
     # Change the adjust_empties_executed variable
     REORIENT_EMPTIES_EXECUTED = True
-
-    return empties
 
 
 def clean_existing_freemocap_stuff():

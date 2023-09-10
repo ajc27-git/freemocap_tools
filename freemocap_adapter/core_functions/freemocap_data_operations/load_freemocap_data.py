@@ -16,10 +16,17 @@ def load_freemocap_data(
     try:
         freemocap_data_handler = FreemocapDataHandler.from_recording_path(recording_path=recording_path)
         logger.info(f"Loaded freemocap_data from {recording_path} successfully: \n{freemocap_data_handler}")
-
-        freemocap_data_handler.calculate_virtual_trajectories()
-
-        return freemocap_data_handler
     except Exception as e:
         logger.error(f"Failed to load freemocap freemocap_data: {e}")
         raise e
+
+    try:
+        logger.info("Calculating virtual trajectories....")
+        freemocap_data_handler.calculate_virtual_trajectories()
+    except Exception as e:
+        logger.error(f"Failed to calculate virtual trajectories: {e}")
+        logger.exception(e)
+        raise e
+
+    return freemocap_data_handler
+

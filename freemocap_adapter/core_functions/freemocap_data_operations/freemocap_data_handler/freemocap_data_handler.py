@@ -9,7 +9,7 @@ from freemocap_adapter.core_functions.empties.creation.create_virtual_trajectori
 from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.helpers.put_freemocap_data_into_inertial_reference_frame import \
     get_lowest_body_trajectories, get_frame_with_lowest_velocity
 from freemocap_adapter.data_models.freemocap_data.freemocap_data_model import FreemocapData
-from freemocap_adapter.data_models.freemocap_data.helpers import FreemocapComponentData
+from freemocap_adapter.data_models.freemocap_data.helpers.freemocap_component_data import FreemocapComponentData
 
 FREEMOCAP_DATA_COMPONENT_TYPES = Literal["body", "right_hand", "left_hand", "face", "other"]
 
@@ -19,15 +19,18 @@ logger = logging.getLogger(__name__)
 class FreemocapDataHandler:
     def __init__(self,
                  freemocap_data: FreemocapData):
+
         self.freemocap_data = freemocap_data
         self._intermediate_stages = None
-        self.mark_processing_stage(name="raw")
+        self.mark_processing_stage(name="original_from_file")
 
     @classmethod
     def from_recording_path(cls,
                             recording_path: Union[str, Path],
                             ) -> "FreemocapDataHandler":
-        cls._validate_recording_path(recording_path)
+        cls._validate_recording_path(recording_path = recording_path)
+        freemocap_data = FreemocapData.from_recording_path(recording_path=recording_path)
+        return cls(freemocap_data=freemocap_data)
 
     def add_trajectories(self,
                          trajectories: Dict[str, np.ndarray],
@@ -54,24 +57,24 @@ class FreemocapDataHandler:
 
         if component_type == "body":
             # extend the body data with the new trajectories
-            self.freemocap_data.body.data_frame_name_xyz = np.concatenate(
-                [self.freemocap_data.body.data_frame_name_xyz, trajectory_frame_name_xyz], axis=1)
+            self.freemocap_data.body.data = np.concatenate(
+                [self.freemocap_data.body.data, trajectory_frame_name_xyz], axis=1)
             self.freemocap_data.body.trajectory_names.extend(trajectory_names)
         elif component_type == "right_hand":
-            self.freemocap_data.hands["right"].data_frame_name_xyz = np.concatenate(
-                [self.freemocap_data.hands["right"].data_frame_name_xyz, trajectory_frame_name_xyz], axis=1)
+            self.freemocap_data.hands["right"].data = np.concatenate(
+                [self.freemocap_data.hands["right"].data, trajectory_frame_name_xyz], axis=1)
             self.freemocap_data.hands["right"].trajectory_names.extend(trajectory_names)
         elif component_type == "left_hand":
-            self.freemocap_data.hands["left"].data_frame_name_xyz = np.concatenate(
-                [self.freemocap_data.hands["left"].data_frame_name_xyz, trajectory_frame_name_xyz], axis=1)
+            self.freemocap_data.hands["left"].data = np.concatenate(
+                [self.freemocap_data.hands["left"].data, trajectory_frame_name_xyz], axis=1)
             self.freemocap_data.hands["left"].trajectory_names.extend(trajectory_names)
         elif component_type == "face":
-            self.freemocap_data.face.data_frame_name_xyz = np.concatenate(
-                [self.freemocap_data.face.data_frame_name_xyz, trajectory_frame_name_xyz], axis=1)
+            self.freemocap_data.face.data = np.concatenate(
+                [self.freemocap_data.face.data, trajectory_frame_name_xyz], axis=1)
             self.freemocap_data.face.trajectory_names.extend(trajectory_names)
         elif component_type == "other":
             self.add_other_component(FreemocapComponentData(name=group_name if group_name is not None else "unknown",
-                                                            data_frame_name_xyz=trajectory_frame_name_xyz,
+                                                            data=trajectory_frame_name_xyz,
                                                             data_source=source if source is not None else "unknown",
                                                             trajectory_names=trajectory_names))
 
@@ -103,7 +106,7 @@ class FreemocapDataHandler:
             if trajectory_name in self.face_names:
                 trajectories.append(self.face_frame_name_xyz[:, self.face_names.index(trajectory_name)])
 
-            for other_component in self.freemocap_data.other:
+            for name, other_component in self.freemocap_data.other.items():
                 if trajectory_name in other_component.trajectory_names:
                     trajectories.append(
                         other_component.data_frame_name_xyz[:, other_component.trajectory_names.index(trajectory_name)])
@@ -134,6 +137,11 @@ class FreemocapDataHandler:
         trajectories.update(self.face_trajectories)
         trajectories.update(self.other_trajectories)
         return trajectories
+
+
+    @property
+    def center_of_mass_trajectory(self) -> np.ndarray:
+        return self.freemocap_data.other["center_of_mass"].data
 
     @property
     def body_trajectories(self) -> Dict[str, np.ndarray]:
@@ -185,48 +193,63 @@ class FreemocapDataHandler:
         return all_data
 
     @property
+    def center_of_mass_frame_name_xyz(self):
+        # add a dummy "name" dimenstion to self.center_of_mass_trajectory so it can be used with stuff made for standard trajectories
+
+        com_frame_frame_xyz = np.expand_dims(self.center_of_mass_trajectory, axis=1)
+        if com_frame_frame_xyz.shape[0] != self.number_of_frames:
+            raise ValueError(
+                f"Number of frames ({self.number_of_frames}) does not match number of frames in center_of_mass_frame_name_xyz ({com_frame_frame_xyz.shape[0]}).")
+        if com_frame_frame_xyz.shape[1] != 1:
+            raise ValueError(
+                f"Number of trajectories ({1}) does not match number of trajectories in center_of_mass_frame_name_xyz ({com_frame_frame_xyz.shape[1]}).")
+        if com_frame_frame_xyz.shape[2] != 3:
+            raise ValueError(f"center_of_mass_frame_name_xyz should have 3 dimensions. Got {com_frame_frame_xyz.shape[2]} instead.")
+        return com_frame_frame_xyz
+
+    @property
     def body_frame_name_xyz(self):
-        return self.freemocap_data.body.data_frame_name_xyz
+        return self.freemocap_data.body.data
 
     @body_frame_name_xyz.setter
     def body_frame_name_xyz(self, value):
         if value.shape != self.body_frame_name_xyz.shape:
             raise ValueError(
                 f"Shape of new body data ({value.shape}) does not match shape of old body data ({self.body_frame_name_xyz.shape}).")
-        self.freemocap_data.body.data_frame_name_xyz = value
+        self.freemocap_data.body.data = value
 
     @property
     def right_hand_frame_name_xyz(self):
-        return self.freemocap_data.hands["right"].data_frame_name_xyz
+        return self.freemocap_data.hands["right"].data
 
     @right_hand_frame_name_xyz.setter
     def right_hand_frame_name_xyz(self, value):
         if value.shape != self.right_hand_frame_name_xyz.shape:
             raise ValueError(
                 f"Shape of new right hand data ({value.shape}) does not match shape of old right hand data ({self.right_hand_frame_name_xyz.shape}).")
-        self.freemocap_data.hands["right"].data_frame_name_xyz = value
+        self.freemocap_data.hands["right"].data = value
 
     @property
     def left_hand_frame_name_xyz(self):
-        return self.freemocap_data.hands["left"].data_frame_name_xyz
+        return self.freemocap_data.hands["left"].data
 
     @left_hand_frame_name_xyz.setter
     def left_hand_frame_name_xyz(self, value):
         if value.shape != self.left_hand_frame_name_xyz.shape:
             raise ValueError(
                 f"Shape of new left hand data ({value.shape}) does not match shape of old left hand data ({self.left_hand_frame_name_xyz.shape}).")
-        self.freemocap_data.hands["left"].data_frame_name_xyz = value
+        self.freemocap_data.hands["left"].data = value
 
     @property
     def face_frame_name_xyz(self):
-        return self.freemocap_data.face.data_frame_name_xyz
+        return self.freemocap_data.face.data
 
     @face_frame_name_xyz.setter
     def face_frame_name_xyz(self, value):
         if value.shape != self.face_frame_name_xyz.shape:
             raise ValueError(
                 f"Shape of new face data ({value.shape}) does not match shape of old face data ({self.face_frame_name_xyz.shape}).")
-        self.freemocap_data.face.data_frame_name_xyz = value
+        self.freemocap_data.face.data = value
 
     @property
     def body_names(self):
@@ -367,6 +390,15 @@ class FreemocapDataHandler:
         component[:, :, 2] += vector[2]
         return component
 
+    def apply_scale(self, scale):
+        logger.info(f"Applying scale {scale}")
+        self.body_frame_name_xyz *= scale
+        self.right_hand_frame_name_xyz *= scale
+        self.left_hand_frame_name_xyz *= scale
+        self.face_frame_name_xyz *= scale
+        for other_component in self.freemocap_data.other:
+            other_component.data_frame_name_xyz *= scale
+
     def apply_affine_transformations(self, transform: Union[np.ndarray, List[List[float]]]):
         # Separate rotation matrix and translation vector
         if isinstance(transform, list):
@@ -439,7 +471,7 @@ class FreemocapDataHandler:
                 self.face_frame_name_xyz = np.array(face_frames)
             if len(other_data) > 0:
                 for name, other_component in self.freemocap_data.other.items():
-                    other_component.data_frame_name_xyz = np.array(other_data[name])
+                    other_component.data = np.array(other_data[name])
 
         except Exception as e:
             logger.error(f"Failed to extract data from empties {empties.keys()}")
@@ -467,7 +499,8 @@ class FreemocapDataHandler:
             logger.exception(e)
             raise e
 
-    def _validate_recording_path(self, recording_path: Union[str, Path]):
+    @staticmethod
+    def _validate_recording_path( recording_path: Union[str, Path]):
         if recording_path == "":
             logger.error("No recording path specified")
             raise FileNotFoundError("No recording path specified")
@@ -475,11 +508,3 @@ class FreemocapDataHandler:
             logger.error(f"Recording path {recording_path} does not exist")
             raise FileNotFoundError(f"Recording path {recording_path} does not exist")
 
-    def apply_scale(self, scale):
-        logger.info(f"Applying scale {scale}")
-        self.body_frame_name_xyz *= scale
-        self.right_hand_frame_name_xyz *= scale
-        self.left_hand_frame_name_xyz *= scale
-        self.face_frame_name_xyz *= scale
-        for other_component in self.freemocap_data.other:
-            other_component.data_frame_name_xyz *= scale

@@ -8,9 +8,9 @@ import mathutils
 from freemocap_adapter.core_functions.bones.calculate_bone_length_statistics import calculate_bone_length_statistics
 from freemocap_adapter.core_functions.empties.translate_empty import translate_empty_and_its_children
 from freemocap_adapter.core_functions.empties.update_empty_positions import get_empty_positions
-from freemocap_adapter.data_models.mediapipe_names.empties_heirarchy import MEDIAPIPE_EMPTIES_HEIRARCHY
 
 logger = logging.getLogger(__name__)
+
 
 def reduce_bone_length_dispersion(empties: Dict[str, bpy.types.Object],
                                   bones: Dict[str, Dict[str, Any]],
@@ -82,11 +82,9 @@ def reduce_bone_length_dispersion(empties: Dict[str, bpy.types.Object],
                 position_delta = bone_vector_norm * (new_length - original_length)
 
                 # Translate the tail empty and its children by the position delta.
-                translate_empty_and_its_children(empties_hierarchy=MEDIAPIPE_EMPTIES_HEIRARCHY,
-                                                 empty_name=tail,
+                translate_empty_and_its_children(empty_name=tail,
                                                  frame_index=frame_index,
                                                  delta=position_delta)
-
 
     # Update the empty positions dictionary
     empties_positions_corrected = get_empty_positions(empties=empties)
@@ -106,7 +104,6 @@ def reduce_bone_length_dispersion(empties: Dict[str, bpy.types.Object],
         print('{:<15} {:>12} {:>12} {:>12}'.format(name, str(m.trunc(new_median * 100 * 10000000) / 10000000),
                                                    str(m.trunc(new_stdev * 100 * 10000000) / 10000000),
                                                    str(m.trunc(new_cv * 100 * 10000) / 10000)))
-
 
 
 def print_virtual_bone_information(bones: Dict[str, Dict[str, Any]]):

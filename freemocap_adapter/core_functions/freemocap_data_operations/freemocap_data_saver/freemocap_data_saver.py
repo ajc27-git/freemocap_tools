@@ -61,7 +61,7 @@ class FreemocapDataSaver:
         }
 
         for name, other_component in self.handler.freemocap_data.other.items():
-            components[name] = other_component.data_frame_name_xyz
+            components[name] = other_component.data
 
         all_csv_header = ""
 

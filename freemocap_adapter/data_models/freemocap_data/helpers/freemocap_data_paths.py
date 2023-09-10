@@ -22,8 +22,8 @@ class FreemocapDataPaths:
             left_hand_npy=output_data_path / "mediapipe_left_hand_3d_xyz.npy",
             face_npy=output_data_path / "mediapipe_face_3d_xyz.npy",
 
-            center_of_mass_npy=output_data_path / "center_of_mass" /"total_body_center_of_mass_xyz.npy",
-            segment_centers_of_mass_npy=output_data_path / "center_of_mass" /"segmentCOM_frame_joint_xyz.npy",
+            center_of_mass_npy=output_data_path / "center_of_mass" / "total_body_center_of_mass_xyz.npy",
+            segment_centers_of_mass_npy=output_data_path / "center_of_mass" / "segmentCOM_frame_joint_xyz.npy",
 
-            reprojection_error_npy=output_data_path / "raw_data" / "reprojection_error.npy",
+            reprojection_error_npy=output_data_path / "raw_data" / "mediapipe3dData_numFrames_numTrackedPoints_reprojectionError.npy",
         )

@@ -5,6 +5,8 @@ import time
 from bpy.types import Operator
 
 from freemocap_adapter.core_functions.empties.reorient_empties import reorient_empties
+from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.helpers.freemocap_empties_from_parent_object import \
+    freemocap_empties_from_parent_object
 from freemocap_adapter.core_functions.rig.add_rig import add_rig
 from freemocap_adapter.user_interfaces.blender.operators._add_body_mesh import REORIENT_EMPTIES_EXECUTED
 
@@ -22,7 +24,7 @@ class FMC_ADAPTER_OT_add_rig(Operator):
         scene = context.scene
         fmc_adapter_tool = scene.fmc_adapter_tool
         parent_empty = fmc_adapter_tool.data_parent_empty
-        empties = {empty.name: empty for empty in parent_empty.children}
+        empties = freemocap_empties_from_parent_object(parent_empty)
         # Get start time
         start = time.time()
 
