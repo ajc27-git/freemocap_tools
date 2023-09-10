@@ -1,5 +1,6 @@
 import logging
 from copy import deepcopy
+from pathlib import Path
 from typing import List, Union, Literal, Dict, Any
 
 import numpy as np
@@ -7,7 +8,8 @@ import numpy as np
 from freemocap_adapter.core_functions.empties.creation.create_virtual_trajectories import calculate_virtual_trajectories
 from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.helpers.put_freemocap_data_into_inertial_reference_frame import \
     get_lowest_body_trajectories, get_frame_with_lowest_velocity
-from freemocap_adapter.data_models.freemocap_data.freemocap_data import FreemocapData, ComponentData
+from freemocap_adapter.data_models.freemocap_data.freemocap_data_model import FreemocapData
+from freemocap_adapter.data_models.freemocap_data.helpers import FreemocapComponentData
 
 FREEMOCAP_DATA_COMPONENT_TYPES = Literal["body", "right_hand", "left_hand", "face", "other"]
 
@@ -19,6 +21,13 @@ class FreemocapDataHandler:
                  freemocap_data: FreemocapData):
         self.freemocap_data = freemocap_data
         self._intermediate_stages = None
+        self.mark_processing_stage(name="raw")
+
+    @classmethod
+    def from_recording_path(cls,
+                            recording_path: Union[str, Path],
+                            ) -> "FreemocapDataHandler":
+        cls._validate_recording_path(recording_path)
 
     def add_trajectories(self,
                          trajectories: Dict[str, np.ndarray],
@@ -61,10 +70,10 @@ class FreemocapDataHandler:
                 [self.freemocap_data.face.data_frame_name_xyz, trajectory_frame_name_xyz], axis=1)
             self.freemocap_data.face.trajectory_names.extend(trajectory_names)
         elif component_type == "other":
-            self.add_other_component(ComponentData(name=group_name if group_name is not None else "unknown",
-                                                   data_frame_name_xyz=trajectory_frame_name_xyz,
-                                                   data_source=source if source is not None else "unknown",
-                                                   trajectory_names=trajectory_names))
+            self.add_other_component(FreemocapComponentData(name=group_name if group_name is not None else "unknown",
+                                                            data_frame_name_xyz=trajectory_frame_name_xyz,
+                                                            data_source=source if source is not None else "unknown",
+                                                            trajectory_names=trajectory_names))
 
     def get_trajectories(self, trajectory_names: List[str], components=None) -> Dict[str, np.ndarray]:
         if not isinstance(trajectory_names, list):
@@ -337,7 +346,7 @@ class FreemocapDataHandler:
             other_component.data_frame_name_xyz = self._rotate_component(other_component.data_frame_name_xyz,
                                                                          rotation_matrix)
 
-    def translate_by(self, vector: Union[np.ndarray, List[float]]):
+    def apply_translation(self, vector: Union[np.ndarray, List[float]]):
         logger.info(f"Translating by vector {vector}")
         if isinstance(vector, list):
             vector = np.array(vector)
@@ -358,7 +367,7 @@ class FreemocapDataHandler:
         component[:, :, 2] += vector[2]
         return component
 
-    def apply_transform(self, transform: Union[np.ndarray, List[List[float]]]):
+    def apply_affine_transformations(self, transform: Union[np.ndarray, List[List[float]]]):
         # Separate rotation matrix and translation vector
         if isinstance(transform, list):
             transform = np.array(transform)
@@ -372,7 +381,10 @@ class FreemocapDataHandler:
         self.apply_rotation(rotation_matrix)
 
         # Apply translation
-        self += translation_vector
+        self.apply_translation(translation_vector)
+
+        # Apply scale
+        self.apply_scale(scale)
 
     def add_metadata(self, metadata: dict):
         logger.info(f"Adding metadata {metadata.keys()}")
@@ -435,9 +447,10 @@ class FreemocapDataHandler:
             raise e
         self.mark_processing_stage(stage_name)
 
-    def add_other_component(self, component: ComponentData):
+    def add_other_component(self, component: FreemocapComponentData):
         logger.info(f"Adding other component {component.name}")
         self.freemocap_data.other[component.name] = component
+        self.mark_processing_stage(f"added_{component.name}")
 
     def calculate_virtual_trajectories(self):
         logger.info(f"Calculating virtual trajectories")
@@ -447,7 +460,26 @@ class FreemocapDataHandler:
             self.add_trajectories(trajectories=virtual_trajectories,
                                   component_type="body",
                                   )
+            self.mark_processing_stage("added_virtual_trajectories")
+
         except Exception as e:
             logger.error(f"Failed to calculate virtual trajectories: {e}")
             logger.exception(e)
             raise e
+
+    def _validate_recording_path(self, recording_path: Union[str, Path]):
+        if recording_path == "":
+            logger.error("No recording path specified")
+            raise FileNotFoundError("No recording path specified")
+        if not Path(recording_path).exists():
+            logger.error(f"Recording path {recording_path} does not exist")
+            raise FileNotFoundError(f"Recording path {recording_path} does not exist")
+
+    def apply_scale(self, scale):
+        logger.info(f"Applying scale {scale}")
+        self.body_frame_name_xyz *= scale
+        self.right_hand_frame_name_xyz *= scale
+        self.left_hand_frame_name_xyz *= scale
+        self.face_frame_name_xyz *= scale
+        for other_component in self.freemocap_data.other:
+            other_component.data_frame_name_xyz *= scale

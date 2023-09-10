@@ -1,54 +1,40 @@
 import logging
 
-from freemocap_adapter.core_functions.setup_scene.clear_scene import clear_scene
 from freemocap_adapter.data_models.parameter_models.load_parameters_config import load_default_parameters_config
 from freemocap_adapter.data_models.parameter_models.parameter_models import Config
-from freemocap_adapter.user_interfaces.run_as_main_script.helpers import validate_recording_path, main_load_freemocap, \
-    main_create_empties, main_reorient_empties, main_save_data_to_disk, main_add_rig, main_attach_mesh_to_rig, \
-    main_add_videos
+from freemocap_adapter.user_interfaces.run_as_main_script.run_as_main import MainRunner
 
 logger = logging.getLogger(__name__)
 
 
 def main(recording_path: str,
          config: Config = load_default_parameters_config()):
-    validate_recording_path(recording_path)
+    main_runner = MainRunner(recording_path=recording_path,
+                             config=config)
 
-    # Clear scene
-    # logger.info("Clearing scene...")
-    # clear_scene()
+    main_runner.load_freemocap_data()
 
-    freemocap_data_handler, freemocap_origin_axes = main_load_freemocap(recording_path=recording_path)
+    main_runner.create_empties()
 
-    empties = main_create_empties(freemocap_data_handler=freemocap_data_handler,
-                                  freemocap_origin_axes=freemocap_origin_axes)
+    main_runner.reorient_empties()
 
-    logger.info("Re orient empties so the skeleton data aligns with gravity with the feet on the ground (Z=0) plane...")
-    reoriented_empties = main_reorient_empties(config=config,
-                                               empties=empties,
-                                               freemocap_origin_axes=freemocap_origin_axes,
-                                               good_clean_frame=freemocap_data_handler.good_clean_frame,
-                                               )
- 
-    main_save_data_to_disk(freemocap_data_handler=freemocap_data_handler,
-                           recording_path=recording_path,
-                           empties=reoriented_empties)
+    main_runner.save_data_to_disk()
 
-    main_add_rig(config = config,
-                 empties=reoriented_empties,)
+    main_runner.add_rig()
 
-    main_attach_mesh_to_rig(config=config)
+    main_runner.attach_mesh_to_rig()
 
-    main_add_videos(recording_path=recording_path)
+    main_runner.add_videos()
 
     # logger.info("Exporting FBX...")
     # export_fbx(recording_path=recording_path, )
 
-    logger.success("Done!")
+    logger.success("Done!!!")
 
 
 if __name__ == "__main__" or __name__ == "<run_path>":
-    print('hello\n hello \n hello')
-    logging.info(f"Running {__file__}...")
-    recording_path = r"C:\Users\jonma\freemocap_data\recording_sessions\freemocap_sample_data"
+    from freemocap_adapter.core_functions.setup_scene.get_path_to_sample_data import get_path_to_sample_data
+
+    recording_path = get_path_to_sample_data()
+    logging.info(f"Running {__file__} with recording_path={recording_path}")
     main(recording_path=recording_path)

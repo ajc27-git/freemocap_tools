@@ -6,6 +6,8 @@ import addon_utils
 import bpy
 import numpy as np
 
+from freemocap_adapter.core_functions.setup_scene.make_parent_empties import create_video_parent_empty
+
 logger  = logging.getLogger(__name__)
 
 def get_video_paths(path_to_video_folder: Path) -> list:
@@ -57,15 +59,14 @@ def add_videos_to_scene(videos_path: Union[Path, str],
         video_as_plane.parent = parent_object
 
 
-def load_videos(recording_path:str,
-                parent_empty: bpy.types.Object, ):
+def load_videos(recording_path: Union[str, Path]):
     """
     ############################
     Load videos into scene using `videos_as_planes` addon
     """
 
     recording_path = Path(recording_path)
-
+    video_parent_empty = create_video_parent_empty(name=f"{Path(recording_path).stem}_video_anchor")
 
     if Path(recording_path / "annotated_videos").is_dir():
         videos_path = Path(recording_path / "annotated_videos")

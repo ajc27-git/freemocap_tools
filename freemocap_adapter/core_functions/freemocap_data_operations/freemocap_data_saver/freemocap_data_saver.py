@@ -8,7 +8,7 @@ import numpy as np
 
 from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.freemocap_data_handler import \
     FreemocapDataHandler
-from freemocap_adapter.core_functions.freemocap_data_operations.save_to_disk.data_readme_text import DATA_README_TEXT
+from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_saver.data_readme_text import DATA_README_TEXT
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,8 @@ class FreemocapDataSaver:
     def __init__(self, freemocap_data_handler: FreemocapDataHandler):
         self.handler = freemocap_data_handler
 
-    def save(self, recording_path: str):
+    def save(self, recording_path: Union[str, Path]):
+        recording_path = Path(recording_path)
         try:
             save_path = Path(recording_path) / "saved_data"
             save_path.mkdir(parents=True, exist_ok=True)
@@ -74,7 +75,7 @@ class FreemocapDataSaver:
                        fmt='%s', header=csv_header)
             logger.debug(f"Saved {component_name}_frame_name_xyz to {csv_path / f'{component_name}_frame_name_xyz.csv'}")
 
-        np.savetxt(str(csv_path / "all_frame_name_xyz.csv"),
+        np.savetxt(str(save_path / "all_frame_name_xyz.csv"),
                    self.handler.all_frame_name_xyz.reshape(self.handler.all_frame_name_xyz.shape[0], -1), delimiter=",",
                    fmt='%s', header=all_csv_header)
         logger.debug(f"Saved all_frame_name_xyz to {csv_path / 'all_frame_name_xyz.csv'}")
@@ -103,7 +104,7 @@ class FreemocapDataSaver:
                     other_component.data_frame_name_xyz)
             logger.debug(f"Saved {other_component.name}_frame_name_xyz to {npy_path / f'{other_component.name}_frame_name_xyz.npy'}")
 
-        np.save(str(npy_path / "all_frame_name_xyz.npy"), self.handler.all_frame_name_xyz)
+        np.save(str(save_path / "all_frame_name_xyz.npy"), self.handler.all_frame_name_xyz)
         logger.debug(f"Saved all_frame_name_xyz to {npy_path / 'all_frame_name_xyz.npy'}")
 
 
@@ -113,7 +114,7 @@ class FreemocapDataSaver:
         readme_path.write_text(DATA_README_TEXT, encoding="utf-8")
 
     def _save_pickle(self, save_path):
-        logger.info(f"Saving pickle to {save_path}")
-        pickle_path = save_path / "freemocap_handler.pkl"
+        logger.info(f"Saving `FreemocapDataHandler` pickle to {save_path}")
+        pickle_path = save_path / "freemocap_data_handler.pkl"
         with open(str(pickle_path), "wb") as f:
             pickle.dump(self.handler, f)
