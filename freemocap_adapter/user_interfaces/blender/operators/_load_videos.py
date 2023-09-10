@@ -1,8 +1,7 @@
+import logging
 from pathlib import Path
 
 import bpy
-
-import logging
 
 from freemocap_adapter.core_functions.setup_scene.make_parent_empties import create_video_parent_empty
 

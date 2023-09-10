@@ -8,7 +8,6 @@ from freemocap_adapter.core_functions.empties.translate_empty import translate_e
 from freemocap_adapter.data_models.mediapipe_names.empties_heirarchy import MEDIAPIPE_EMPTIES_HEIRARCHY
 
 
-
 def reorient_empties(empties: Dict[str, bpy.types.Object],
                      z_align_ref_empty: str,
                      z_align_angle_offset: float,
@@ -30,15 +29,18 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
     bpy.ops.screen.animation_cancel()
 
     # unparent empties
-    for empty in empties.values():
-        empty.parent = None
+    empties_list = []
+    for child in parent_object.children:
+        empties_list.append(child)
+        child.parent = None
 
     ### Move freemocap_origin_axes to the hips_center empty and rotate it so the ###
     ### z axis intersects the trunk_center empty and the x axis intersects the left_hip empty ###
     body_origin = parent_object
-    hips_center = empties['hips_center']
+    body_empties = empties['body']
+    hips_center = body_empties['hips_center']
 
-    left_hip = empties['left_hip']
+    left_hip = body_empties['left_hip']
 
     # Move origin to hips_center
     body_origin.location = hips_center.location
@@ -74,7 +76,7 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
     ### Calculate angle in the local yz plane to rotate origin so its z axis crosses the z_align_empty ###
     ### Preferably the trunk_center or left_knee ###
     # Get the z_align_empty object
-    z_align_empty = empties[z_align_ref_empty]
+    z_align_empty = body_empties[z_align_ref_empty]
     # Get z_align_empty location from origin
     z_align_empty_loc_from_origin = z_align_empty.location - body_origin.location
     # Get the vector distance
@@ -96,7 +98,7 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
     ### Move the origin along its local z axis to place it at an imaginary "capture ground plane" ###
     ### Preferable be placed at a heel or foot_index level ###
     # Get the ground reference empty object
-    ground_empty = empties[ground_ref_empty]
+    ground_empty = body_empties[ground_ref_empty]
     # Get ground_empty location from origin
     ground_empty_loc_from_origin = ground_empty.location - body_origin.location
     # Get the vector distance
@@ -133,9 +135,8 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
     bpy.ops.object.select_all(action='DESELECT')
 
     # ### Reparent all the capture empties to the origin  ###
-    for empties in empties.values():
-        empties.select_set(True)
-
+    for empty in empties_list:
+        empty.select_set(True)
 
     # Set the origin active in 3Dview
     bpy.context.view_layer.objects.active = body_origin
@@ -161,9 +162,9 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
             scene.frame_set(frame)
 
             for side in hand_side:
+                hand_empties = empties['hands'][side]
                 # Get the position delta
-                position_delta = bpy.data.objects[side + '_wrist'].location - bpy.data.objects[
-                    side + '_hand_wrist'].location
+                position_delta = body_empties[side + '_wrist'].location - hand_empties[side + '_hand_wrist'].location
 
                 # Translate the hand_wrist empty and its children by the position delta
                 translate_empty_and_its_children(MEDIAPIPE_EMPTIES_HEIRARCHY, side + '_hand_wrist', frame, position_delta)

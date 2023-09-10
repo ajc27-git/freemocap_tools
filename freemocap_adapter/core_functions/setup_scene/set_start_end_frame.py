@@ -1,6 +1,7 @@
+import logging
+
 import bpy
 
-import logging
 logger = logging.getLogger(__name__)
 
 def set_start_end_frame(number_of_frames: int):

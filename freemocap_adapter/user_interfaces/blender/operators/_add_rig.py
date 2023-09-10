@@ -4,9 +4,9 @@ import time
 
 from bpy.types import Operator
 
-from freemocap_adapter.ui_view_interface.operators._add_body_mesh import REORIENT_EMPTIES_EXECUTED
 from freemocap_adapter.core_functions.empties.reorient_empties import reorient_empties
 from freemocap_adapter.core_functions.rig.add_rig import add_rig
+from freemocap_adapter.user_interfaces.blender.operators._add_body_mesh import REORIENT_EMPTIES_EXECUTED
 
 logger = logging.getLogger(__name__)
 

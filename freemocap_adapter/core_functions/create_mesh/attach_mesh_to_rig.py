@@ -1,7 +1,8 @@
+import logging
 import math as m
 
 import bpy
-import logging
+
 logger = logging.getLogger(__name__)
 
 def attach_mesh_to_rig(body_mesh_mode: str = "custom"):

@@ -17,6 +17,7 @@ def load_freemocap_data(
         logger.info(f"Loaded freemocap_data from {recording_path} successfully: \n{freemocap_data}")
         logger.debug(str(freemocap_data))
         freemocap_data_handler = FreemocapDataHandler(freemocap_data=freemocap_data)
+        freemocap_data_handler.calculate_virtual_trajectories()
         return freemocap_data_handler
     except Exception as e:
         logger.error(f"Failed to load freemocap freemocap_data: {e}")

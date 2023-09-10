@@ -4,8 +4,6 @@ from typing import Dict
 import numpy as np
 from numpy.linalg import svd
 
-from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.freemocap_data_handler import \
-    FreemocapDataHandler
 
 logger = logging.getLogger(__name__)
 
@@ -107,34 +105,34 @@ def get_plane_definition_from_points(points: np.ndarray) -> Dict[str, np.ndarray
     return {"center": center,
             "normal": normal}
 
-
-def put_freemocap_data_into_inertial_reference_frame(
-        freemocap_data_handler: FreemocapDataHandler) -> FreemocapDataHandler:
-    logger.info(
-        "Putting freemocap data in inertial reference frame...\n freemocap_data(before):\n{freemocap_data_handler}")
-    lowest_trajectories = get_lowest_body_trajectories(freemocap_data_handler)
-
-    lowest_slowest_points = get_low_velocity_points(trajectories=lowest_trajectories,
-                                                    percentile=0.25)
-    freemocap_data_handler.add_metadata({"slow_points": lowest_slowest_points})
-
-    ground_plane_definition = get_plane_definition_from_points(points=lowest_slowest_points)
-
-    freemocap_data_handler.add_metadata({"unrotated_ground_plane_definition": ground_plane_definition})
-
-    # freemocap_data_handler.translate_by(-ground_plane_definition["center"])
-    # freemocap_data_handler.mark_processing_stage("translated_to_origin")
-
-    # rotation_matrix = find_rotation_matrix_to_put_groundplane_at_z_equal_zero(ground_plane_definition)
-
-    # for trajectory_name, trajectory in freemocap_data_handler.trajectories.items():
-    #     freemocap_data_handler.trajectories[trajectory_name] = rotation_matrix @ trajectory.T
-    
-    # freemocap_data_handler.mark_processing_stage("inertial_reference_frame")
-
-    logger.success(
-        "Finished putting freemocap data in inertial reference frame.\n freemocap_data(after):\n{freemocap_data_handler}")
-    return freemocap_data_handler
+#
+# def put_freemocap_data_into_inertial_reference_frame(
+#         freemocap_data_handler: FreemocapDataHandler) -> FreemocapDataHandler:
+#     logger.info(
+#         "Putting freemocap data in inertial reference frame...\n freemocap_data(before):\n{freemocap_data_handler}")
+#     lowest_trajectories = get_lowest_body_trajectories(freemocap_data_handler)
+#
+#     lowest_slowest_points = get_low_velocity_points(trajectories=lowest_trajectories,
+#                                                     percentile=0.25)
+#     freemocap_data_handler.add_metadata({"slow_points": lowest_slowest_points})
+#
+#     ground_plane_definition = get_plane_definition_from_points(points=lowest_slowest_points)
+#
+#     freemocap_data_handler.add_metadata({"unrotated_ground_plane_definition": ground_plane_definition})
+#
+#     # freemocap_data_handler.translate_by(-ground_plane_definition["center"])
+#     # freemocap_data_handler.mark_processing_stage("translated_to_origin")
+#
+#     # rotation_matrix = find_rotation_matrix_to_put_groundplane_at_z_equal_zero(ground_plane_definition)
+#
+#     # for trajectory_name, trajectory in freemocap_data_handler.trajectories.items():
+#     #     freemocap_data_handler.trajectories[trajectory_name] = rotation_matrix @ trajectory.T
+#
+#     # freemocap_data_handler.mark_processing_stage("inertial_reference_frame")
+#
+#     logger.success(
+#         "Finished putting freemocap data in inertial reference frame.\n freemocap_data(after):\n{freemocap_data_handler}")
+#     return freemocap_data_handler
 
 
 def find_rotation_matrix_to_put_groundplane_at_z_equal_zero(ground_plane_definition: Dict[str, np.ndarray]):

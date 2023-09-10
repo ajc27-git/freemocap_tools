@@ -33,10 +33,11 @@ def get_empty_positions(empties: Dict[str, bpy.types.Object], ) -> dict[str, dic
         # Set scene frame
         scene.frame_set(frame)
         # Iterate through each object
-        for name, empty in empties.items():
-            empty_positions[name]['x'].append(empty.location[0])
-            empty_positions[name]['y'].append(empty.location[1])
-            empty_positions[name]['z'].append(empty.location[2])
+        for name, component in empties.items():
+            for name, empty in component.items():
+                empty_positions[name]['x'].append(empty.location[0])
+                empty_positions[name]['y'].append(empty.location[1])
+                empty_positions[name]['z'].append(empty.location[2])
 
     # Reset the scene frame to where it was before
     scene.frame_set(current_frame)

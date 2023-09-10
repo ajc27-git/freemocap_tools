@@ -1,6 +1,8 @@
 
-import bpy
 import logging
+
+import bpy
+
 logger = logging.getLogger(__name__)
 def create_freemocap_parent_empty(name: str = "freemocap_data_parent_empty"):
     logger.info("Creating freemocap parent empty...")

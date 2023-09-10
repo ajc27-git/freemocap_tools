@@ -1,6 +1,4 @@
 import logging
-
-import logging
 import sys
 from datetime import datetime
 from enum import Enum
@@ -8,7 +6,6 @@ from logging.config import dictConfig
 
 from freemocap_adapter.system.configure_logging.utilities import get_hashed_color
 
-import bpy
 
 class LogLevel(Enum):
     TRACE = 5

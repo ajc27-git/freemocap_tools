@@ -3,7 +3,6 @@ import logging
 import bpy
 import bpy_extras
 
-import logging
 logger = logging.getLogger(__name__)
 
 

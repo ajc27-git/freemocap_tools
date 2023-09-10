@@ -2,7 +2,7 @@ import logging
 
 import bpy
 
-from freemocap_adapter.core_functions.empties.creation.create_empy_from_trajectory import \
+from freemocap_adapter.core_functions.empties.creation.create_empty_from_trajectory import \
     create_empties
 from freemocap_adapter.core_functions.empties.creation.create_virtual_trajectories import calculate_virtual_trajectories
 from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.freemocap_data_handler import \
@@ -26,7 +26,6 @@ def create_freemocap_empties(freemocap_data_handler: FreemocapDataHandler,
 
     empties = {}
     try:
-
         # body trajectories
         empties["body"] = create_empties(trajectory_frame_marker_xyz=freemocap_data_handler.body_frame_name_xyz,
                                          names_list=freemocap_data_handler.body_names,
@@ -51,15 +50,6 @@ def create_freemocap_empties(freemocap_data_handler: FreemocapDataHandler,
             empty_type="PLAIN_AXES",
             parent_object=parent_object,
         )
-
-        # creation virtual markers
-        calculate_virtual_trajectories(freemocap_data_handler=freemocap_data_handler,
-                                       parent_object=parent_object,
-                                       body_empty_scale=BODY_EMPTY_SCALE,
-                                       )
-
-        logger.info(f"Adding virtual marker names to body trajectory names")
-        logger.info("Done creating virtual markers")
         return empties
 
     except Exception as e:

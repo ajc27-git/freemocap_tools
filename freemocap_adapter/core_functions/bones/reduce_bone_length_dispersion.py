@@ -1,3 +1,4 @@
+import logging
 import math as m
 from typing import Dict, Any
 
@@ -9,7 +10,6 @@ from freemocap_adapter.core_functions.empties.translate_empty import translate_e
 from freemocap_adapter.core_functions.empties.update_empty_positions import get_empty_positions
 from freemocap_adapter.data_models.mediapipe_names.empties_heirarchy import MEDIAPIPE_EMPTIES_HEIRARCHY
 
-import logging
 logger = logging.getLogger(__name__)
 
 def reduce_bone_length_dispersion(empties: Dict[str, bpy.types.Object],

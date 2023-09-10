@@ -1,5 +1,7 @@
 from dataclasses import dataclass
+
 import numpy as np
+
 
 def calculate_stats(data):
     return {

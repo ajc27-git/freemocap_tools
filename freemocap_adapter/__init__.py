@@ -11,7 +11,6 @@ configure_logging(LogLevel.TRACE)
 
 logger = logging.getLogger(__name__)
 
-
 #######################################################################
 ### Add-on to adapt the Freemocap Blender output. It can adjust the
 ### empties position, add a rig and a body mesh. The resulting rig
@@ -37,10 +36,10 @@ bl_info = {
 
 def unregister():
     import bpy
-    from freemocap_adapter.ui_view_interface import USER_INTERFACE_CLASSES
 
     logger.info(f"Unregistering {__file__} as add-on")
-    for cls in USER_INTERFACE_CLASSES:
+    from freemocap_adapter.user_interfaces.blender import BLENDER_USER_INTERFACE_CLASSES
+    for cls in BLENDER_USER_INTERFACE_CLASSES:
         logger.trace(f"Unregistering class {cls.__name__}")
         bpy.utils.unregister_class(cls)
 
@@ -50,17 +49,18 @@ def unregister():
 
 def register():
     import bpy
-    from freemocap_adapter.ui_view_interface import USER_INTERFACE_CLASSES, FMC_ADAPTER_PROPERTIES
 
     logger.info(f"Registering {__file__} as add-on")
-    logger.debug(f"Registering classes {USER_INTERFACE_CLASSES}")
-    for cls in USER_INTERFACE_CLASSES:
+    from freemocap_adapter.user_interfaces.blender import BLENDER_USER_INTERFACE_CLASSES
+    logger.debug(f"Registering classes {BLENDER_USER_INTERFACE_CLASSES}")
+    for cls in BLENDER_USER_INTERFACE_CLASSES:
         logger.trace(f"Registering class {cls.__name__}")
         bpy.utils.register_class(cls)
 
     logger.info(f"Registering property group FMC_ADAPTER_PROPERTIES")
-    bpy.types.Scene.fmc_adapter_tool = bpy.props.PointerProperty(type=FMC_ADAPTER_PROPERTIES)
 
+    from freemocap_adapter.user_interfaces.blender import FMC_ADAPTER_PROPERTIES
+    bpy.types.Scene.fmc_adapter_tool = bpy.props.PointerProperty(type=FMC_ADAPTER_PROPERTIES)
 
     try:
         from freemocap_adapter.core_functions.export.get_io_scene_fbx_addon import get_io_scene_fbx_addon

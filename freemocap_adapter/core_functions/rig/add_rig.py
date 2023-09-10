@@ -6,8 +6,8 @@ import mathutils
 
 from freemocap_adapter.core_functions.bones.calculate_bone_length_statistics import calculate_bone_length_statistics
 from freemocap_adapter.core_functions.empties.update_empty_positions import get_empty_positions
-from freemocap_adapter.data_models.bones.bone_definitions import BONE_DEFINITIONS
 from freemocap_adapter.data_models.bones.bone_constraints import BONES_CONSTRAINTS
+from freemocap_adapter.data_models.bones.bone_definitions import BONE_DEFINITIONS
 
 
 def add_rig(empties: Dict[str, bpy.types.Object],

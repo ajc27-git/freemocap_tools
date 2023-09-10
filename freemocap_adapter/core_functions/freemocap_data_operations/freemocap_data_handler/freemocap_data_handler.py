@@ -1,13 +1,13 @@
-import json
 import logging
 from copy import deepcopy
-from enum import Enum
-from pathlib import Path
 from typing import List, Union, Literal, Dict, Any
 
 import numpy as np
 
-from freemocap_adapter.data_models.freemocap_data.freemocap_data import FreemocapData
+from freemocap_adapter.core_functions.empties.creation.create_virtual_trajectories import calculate_virtual_trajectories
+from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.helpers.put_freemocap_data_into_inertial_reference_frame import \
+    get_lowest_body_trajectories, get_frame_with_lowest_velocity
+from freemocap_adapter.data_models.freemocap_data.freemocap_data import FreemocapData, ComponentData
 
 FREEMOCAP_DATA_COMPONENT_TYPES = Literal["body", "right_hand", "left_hand", "face", "other"]
 
@@ -20,28 +20,68 @@ class FreemocapDataHandler:
         self.freemocap_data = freemocap_data
         self._intermediate_stages = None
 
-    def get_trajectories(self,
-                         trajectory_names: List[str],
-                         components: Union[
-                             List[FREEMOCAP_DATA_COMPONENT_TYPES], FREEMOCAP_DATA_COMPONENT_TYPES] = None) -> Dict[
-        str, np.ndarray]:
+    def add_trajectories(self,
+                         trajectories: Dict[str, np.ndarray],
+                         component_type: FREEMOCAP_DATA_COMPONENT_TYPES,
+                         source: str = None,
+                         group_name: str = None):
+        
+        trajectory_names = list(trajectories.keys())
+        trajectory_frame_name_xyz = np.array(list(trajectories.values()))
+        trajectory_frame_name_xyz = trajectory_frame_name_xyz.reshape((self.number_of_frames, len(trajectory_names), 3))
+        
 
-        trajectories = {}
+        if trajectory_frame_name_xyz.shape[0] != self.number_of_frames:
+            raise ValueError(
+                f"Number of frames ({trajectory_frame_name_xyz.shape[0]}) does not match number of frames in existing data ({self.number_of_frames}).")
+
+        if trajectory_frame_name_xyz.shape[1] != len(trajectory_names):
+            raise ValueError(
+                f"Number of trajectories ({trajectory_frame_name_xyz.shape[1]}) does not match number of trajectory names ({len(trajectory_names)}).")
+
+        if trajectory_frame_name_xyz.shape[2] != 3:
+            raise ValueError(
+                f"Trajectory data should have 3 dimensions. Got {trajectory_frame_name_xyz.shape[2]} instead.")
+
+        if component_type == "body":
+            # extend the body data with the new trajectories
+            self.freemocap_data.body.data_frame_name_xyz = np.concatenate(
+                [self.freemocap_data.body.data_frame_name_xyz, trajectory_frame_name_xyz], axis=1)
+            self.freemocap_data.body.trajectory_names.extend(trajectory_names)
+        elif component_type == "right_hand":
+            self.freemocap_data.hands["right"].data_frame_name_xyz = np.concatenate(
+                [self.freemocap_data.hands["right"].data_frame_name_xyz, trajectory_frame_name_xyz], axis=1)
+            self.freemocap_data.hands["right"].trajectory_names.extend(trajectory_names)
+        elif component_type == "left_hand":
+            self.freemocap_data.hands["left"].data_frame_name_xyz = np.concatenate(
+                [self.freemocap_data.hands["left"].data_frame_name_xyz, trajectory_frame_name_xyz], axis=1)
+            self.freemocap_data.hands["left"].trajectory_names.extend(trajectory_names)
+        elif component_type == "face":
+            self.freemocap_data.face.data_frame_name_xyz = np.concatenate(
+                [self.freemocap_data.face.data_frame_name_xyz, trajectory_frame_name_xyz], axis=1)
+            self.freemocap_data.face.trajectory_names.extend(trajectory_names)
+        elif component_type == "other":
+            self.add_other_component(ComponentData(name=group_name if group_name is not None else "unknown",
+                                                   data_frame_name_xyz=trajectory_frame_name_xyz,
+                                                   data_source=source if source is not None else "unknown",
+                                                   trajectory_names=trajectory_names))
+
+    def get_trajectories(self, trajectory_names: List[str], components=None) -> Dict[str, np.ndarray]:
         if not isinstance(trajectory_names, list):
             trajectory_names = [trajectory_names]
-        if components is None or isinstance(components, list):
+
+        if components is None:
+            components = [None] * len(trajectory_names)
+        elif not isinstance(components, list):
             components = [components] * len(trajectory_names)
 
-        for trajectory_name, component in zip(trajectory_names, components):
-            trajectories[trajectory_name] = self.get_trajectory(trajectory_name, component)
-
-        return trajectories
+        return {name: self.get_trajectory(name, comp) for name, comp in zip(trajectory_names, components)}
 
     def get_trajectory(self,
                        trajectory_name: str,
-                       component: Literal["body", "right_hand", "left_hand", "face", "other"] = None):
+                       component_type: FREEMOCAP_DATA_COMPONENT_TYPES = None):
         trajectories = []
-        if component is None:
+        if component_type is None:
             if trajectory_name in self.body_names:
                 trajectories.append(self.body_frame_name_xyz[:, self.body_names.index(trajectory_name)])
 
@@ -69,6 +109,12 @@ class FreemocapDataHandler:
     @property
     def metadata(self) -> Dict[Any, Any]:
         return self.freemocap_data.metadata
+
+    @property
+    def good_clean_frame(self) -> int:
+        lowest_trajectories = get_lowest_body_trajectories(freemocap_data_handler=self)
+        good_clean_frame_index = get_frame_with_lowest_velocity(lowest_trajectories)
+        return good_clean_frame_index
 
     @property
     def trajectories(self) -> Dict[str, np.ndarray]:
@@ -298,20 +344,21 @@ class FreemocapDataHandler:
         if vector.shape != (3,):
             raise ValueError(f"Vector must be a 3D vector. Got {vector.shape} instead.")
 
-        self._translate_component(self.body_frame_name_xyz, vector)
-        self._translate_component(self.right_hand_frame_name_xyz, vector)
-        self._translate_component(self.left_hand_frame_name_xyz, vector)
-        self._translate_component(self.face_frame_name_xyz, vector)
+        self.body_frame_name_xyz = self._translate_component_data(self.body_frame_name_xyz, vector)
+        self.right_hand_frame_name_xyz = self._translate_component_data(self.right_hand_frame_name_xyz, vector)
+        self.left_hand_frame_name_xyz = self._translate_component_data(self.left_hand_frame_name_xyz, vector)
+        self.face_frame_name_xyz = self._translate_component_data(self.face_frame_name_xyz, vector)
 
         for other_component in self.freemocap_data.other:
-            self._translate_component(other_component.data_frame_name_xyz, vector)
+            self._translate_component_data(other_component.data_frame_name_xyz, vector)
 
-    def _translate_component(self, component, vector):
+    def _translate_component_data(self, component, vector):
         component[:, :, 0] += vector[0]
         component[:, :, 1] += vector[1]
         component[:, :, 2] += vector[2]
+        return component
 
-    def apply_transform(self, transform):
+    def apply_transform(self, transform: Union[np.ndarray, List[List[float]]]):
         # Separate rotation matrix and translation vector
         if isinstance(transform, list):
             transform = np.array(transform)
@@ -336,20 +383,71 @@ class FreemocapDataHandler:
         try:
             import bpy
             logger.info(f"Extracting data from empties {empties.keys()}")
-            self.freemocap_data.body.data_frame_name_xyz = np.array(
-                [bpy.data.objects[empty_name].location for empty_name in empties["body"].keys()])
-            self.freemocap_data.right_hand.data_frame_name_xyz = np.array(
-                [bpy.data.objects[empty_name].location for empty_name in empties["hands"]["right"].keys()])
-            self.freemocap_data.left_hand.data_frame_name_xyz = np.array(
-                [bpy.data.objects[empty_name].location for empty_name in empties["hands"]["left"].keys()])
-            self.freemocap_data.face.data_frame_name_xyz = np.array(
-                [bpy.data.objects[empty_name].location for empty_name in empties["face"].keys()])
-            for other_component in self.freemocap_data.other:
-                other_component.data_frame_name_xyz = np.array(
-                    [bpy.data.objects[empty_name].location for empty_name in empties[other_component.name].keys()])
+
+            body_frames = []
+            right_hand_frames = []
+            left_hand_frames = []
+            face_frames = []
+            other_data = {}
+
+            for frame_number in range(bpy.context.scene.frame_start, bpy.context.scene.frame_end):
+                logger.debug(f"Extracting data from frame {frame_number}...")
+                bpy.context.scene.frame_set(frame_number)
+
+                if "body" in empties.keys():
+                    body_frames.append(np.array(
+                        [bpy.data.objects[empty_name].location for empty_name in empties["body"].keys()]))
+
+                if "hands" in empties.keys():
+                    right_hand_frames.append(np.array(
+                        [bpy.data.objects[empty_name].location for empty_name in empties["hands"]["right"].keys()]))
+
+                    left_hand_frames.append(np.array(
+                        [bpy.data.objects[empty_name].location for empty_name in empties["hands"]["left"].keys()]))
+
+                if "face" in empties.keys():
+                    face_frames.append(np.array(
+                        [bpy.data.objects[empty_name].location for empty_name in empties["face"].keys()]))
+
+                if "other" in empties.keys():
+                    for name, other_component in self.freemocap_data.other.items():
+                        if name not in other_data:
+                            other_data[name] = []
+                        other_data[name].append(np.array(
+                            [bpy.data.objects[empty_name].location for empty_name in
+                             empties[other_component.name].keys()]))
+
+            if len(body_frames) > 0:
+                self.body_frame_name_xyz = np.array(body_frames)
+            if len(right_hand_frames) > 0:
+                self.right_hand_frame_name_xyz = np.array(right_hand_frames)
+            if len(left_hand_frames) > 0:
+                self.left_hand_frame_name_xyz = np.array(left_hand_frames)
+            if len(face_frames) > 0:
+                self.face_frame_name_xyz = np.array(face_frames)
+            if len(other_data) > 0:
+                for name, other_component in self.freemocap_data.other.items():
+                    other_component.data_frame_name_xyz = np.array(other_data[name])
+
         except Exception as e:
             logger.error(f"Failed to extract data from empties {empties.keys()}")
             logger.exception(e)
             raise e
         self.mark_processing_stage(stage_name)
 
+    def add_other_component(self, component: ComponentData):
+        logger.info(f"Adding other component {component.name}")
+        self.freemocap_data.other[component.name] = component
+
+    def calculate_virtual_trajectories(self):
+        logger.info(f"Calculating virtual trajectories")
+        try:
+            virtual_trajectories = calculate_virtual_trajectories(body_frame_name_xyz=self.body_frame_name_xyz,
+                                                                  body_names=self.body_names)
+            self.add_trajectories(trajectories=virtual_trajectories,
+                                  component_type="body",
+                                  )
+        except Exception as e:
+            logger.error(f"Failed to calculate virtual trajectories: {e}")
+            logger.exception(e)
+            raise e

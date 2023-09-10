@@ -1,6 +1,8 @@
+import bpy
+
 from freemocap_adapter.core_functions.setup_scene.clear_scene import clear_scene
 
-import bpy
+
 class FMC_ADAPTER_clear_scene(bpy.types.Operator):
     bl_idname = 'fmc_adapter.clear_scene'
     bl_label = "Clear Scene"

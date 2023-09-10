@@ -1,10 +1,9 @@
-from typing import Union
-from pathlib import Path
-import bpy
-import addon_utils
-
 import logging
+from pathlib import Path
+from typing import Union
 
+import addon_utils
+import bpy
 import numpy as np
 
 logger  = logging.getLogger(__name__)

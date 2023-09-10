@@ -1,8 +1,9 @@
+import logging
 from typing import List, Union, Dict
+
 import bpy
 import numpy as np
 
-import logging
 logger = logging.getLogger(__name__)
 
 def create_empties(trajectory_frame_marker_xyz: np.ndarray,

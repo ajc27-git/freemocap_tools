@@ -1,11 +1,7 @@
 import logging
 from pathlib import Path
 
-import bpy
-
 from freemocap_adapter.core_functions.empties.creation.create_freemocap_empties import create_freemocap_empties
-from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.helpers.estimate_good_clean_frame import \
-    estimate_good_clean_frame
 from freemocap_adapter.core_functions.freemocap_data_operations.load_freemocap_data import load_freemocap_data
 from freemocap_adapter.core_functions.setup_scene.make_parent_empties import create_freemocap_parent_empty
 from freemocap_adapter.core_functions.setup_scene.set_start_end_frame import set_start_end_frame
@@ -44,8 +40,7 @@ class FMC_ADAPTER_load_freemocap_data(bpy.types.Operator):  # , bpy_extras.io_ut
             return {'CANCELLED'}
 
 
-        good_clean_frame = estimate_good_clean_frame(freemocap_data_handler=freemocap_data_handler)
-        scene.frame_set(good_clean_frame)
+        scene.frame_set(freemocap_data_handler.good_clean_frame)
         bpy.ops.screen.animation_play()
         bpy.ops.screen.animation_cancel()
        

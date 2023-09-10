@@ -1,67 +1,27 @@
 import json
-from dataclasses import dataclass
+
+from freemocap_adapter.data_models.parameter_models.parameter_models import AdjustEmpties, ReduceBoneLengthDispersion, \
+    ReduceShakiness, AddRig, AddBodyMesh, Config
 
 
 # Define the data classes to represent the JSON structure
 
-@dataclass
-class AdjustEmpties:
-    vertical_align_reference: str
-    vertical_align_angle_offset: float
-    ground_align_reference: str
-    vertical_align_position_offset: float
-    correct_fingers_empties: bool
-    add_hand_middle_empty: bool
 
-
-@dataclass
-class ReduceBoneLengthDispersion:
-    interval_variable: str
-    interval_factor: float
-
-
-@dataclass
-class ReduceShakiness:
-    recording_fps: float
-
-
-@dataclass
-class AddRig:
-    bone_length_method: str
-    keep_symmetry: bool
-    add_fingers_constraints: bool
-    use_limit_rotation: bool
-
-
-@dataclass
-class AddBodyMesh:
-    body_mesh_mode: str
-
-
-@dataclass
-class Config:
-    # recording_path: str
-    adjust_empties: AdjustEmpties
-    reduce_bone_length_dispersion: ReduceBoneLengthDispersion
-    reduce_shakiness: ReduceShakiness
-    add_rig: AddRig
-    add_body_mesh: AddBodyMesh
-
-
-def load_default_parameters_config(filename: str = "default_parameters.json") -> Config:
-    with open(filename, "r") as f:
-        data = json.load(f)
-    # if not 'recording_path' in data:
-    #     data['recording_path'] = get_path_to_sample_data()
-    # Parse JSON data into the dataclass structure
-    return Config(
-        # recording_path=data['recording_path'],
-        adjust_empties=AdjustEmpties(**data['adjust_empties']),
-        reduce_bone_length_dispersion=ReduceBoneLengthDispersion(**data['reduce_bone_length_dispersion']),
-        reduce_shakiness=ReduceShakiness(**data['reduce_shakiness']),
-        add_rig=AddRig(**data['add_rig']),
-        add_body_mesh=AddBodyMesh(**data['add_body_mesh'])
-    )
+def load_default_parameters_config(filename: str = None) -> Config:
+    if filename is not None:
+        with open(filename, "r") as f:
+            data = json.load(f)
+        # Parse JSON data into the dataclass structure
+        return Config(
+            # recording_path=data['recording_path'],
+            adjust_empties=AdjustEmpties(**data['adjust_empties']),
+            reduce_bone_length_dispersion=ReduceBoneLengthDispersion(**data['reduce_bone_length_dispersion']),
+            reduce_shakiness=ReduceShakiness(**data['reduce_shakiness']),
+            add_rig=AddRig(**data['add_rig']),
+            add_body_mesh=AddBodyMesh(**data['add_body_mesh'])
+        )
+    else:
+        return Config()
 
 
 if __name__ == "__main__":

@@ -33,10 +33,21 @@ class DataPaths:
 
 @dataclass
 class ComponentData:
-    component_name: str
+    name: str
     data_frame_name_xyz: np.ndarray
     data_source: str
     trajectory_names: List[str]
+
+    def __post_init__(self):
+        assert self.data_frame_name_xyz.ndim == 3, \
+            f"Data frame shape {self.data_frame_name_xyz.shape} does not have 3 dimensions (frame, marker, xyz)"
+        assert self.data_frame_name_xyz.shape[1] == len(self.trajectory_names), \
+            f"Data frame shape {self.data_frame_name_xyz.shape} does not match trajectory names length {len(self.trajectory_names)}"
+        assert self.data_frame_name_xyz.shape[2] == 3, \
+            f"Data frame shape {self.data_frame_name_xyz.shape} does not have 3 columns (xyz)"
+
+
+
 
 
 @dataclass
@@ -84,20 +95,20 @@ class FreemocapData:
                 raise ValueError(f"Component: {name} type not recognized (type: {type(component)}")
 
         return cls(
-            body=ComponentData(component_name="body",
+            body=ComponentData(name="body",
                                data_frame_name_xyz=body_frame_name_xyz,
                                data_source=data_source,
                                trajectory_names=body_names),
 
-            hands={"right": ComponentData(component_name="right_hand",
+            hands={"right": ComponentData(name="right_hand",
                                           data_frame_name_xyz=right_hand_frame_name_xyz,
                                           data_source=data_source,
                                           trajectory_names=right_hand_names),
-                   "left": ComponentData(component_name="left_hand",
+                   "left": ComponentData(name="left_hand",
                                          data_frame_name_xyz=left_hand_frame_name_xyz,
                                          data_source=data_source,
                                          trajectory_names=left_hand_names)},
-            face=ComponentData(component_name="face",
+            face=ComponentData(name="face",
                                data_frame_name_xyz=face_frame_name_xyz,
                                data_source=data_source,
                                trajectory_names=face_names),

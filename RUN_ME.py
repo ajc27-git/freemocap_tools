@@ -1,13 +1,13 @@
 import logging
 
 from freemocap_adapter.core_functions.bones.reduce_bone_length_dispersion import reduce_bone_length_dispersion
+from freemocap_adapter.core_functions.create_mesh.attach_mesh_to_rig import attach_mesh_to_rig
 from freemocap_adapter.core_functions.empties.reorient_empties import reorient_empties
 from freemocap_adapter.core_functions.export.fbx import export_fbx
-from freemocap_adapter.core_functions.setup_scene.clear_scene import clear_scene
-from freemocap_adapter.core_functions.setup_scene.get_path_to_sample_data import get_or_download_sample_data
 from freemocap_adapter.core_functions.freemocap_data_operations.load_freemocap_data import load_freemocap_data
 from freemocap_adapter.core_functions.rig.add_rig import add_rig
-from freemocap_adapter.core_functions.create_mesh.attach_mesh_to_rig import attach_mesh_to_rig
+from freemocap_adapter.core_functions.setup_scene.clear_scene import clear_scene
+from freemocap_adapter.core_functions.setup_scene.get_path_to_sample_data import get_or_download_sample_data
 
 logger = logging.getLogger(__name__)
 

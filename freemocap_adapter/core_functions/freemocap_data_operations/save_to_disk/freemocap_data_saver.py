@@ -2,6 +2,7 @@ import json
 import logging
 import pickle
 from pathlib import Path
+from typing import Union
 
 import numpy as np
 
@@ -18,11 +19,12 @@ class FreemocapDataSaver:
 
     def save(self, recording_path: str):
         try:
-            logger.info(f"Saving freemocap data to {recording_path}")
-            save_path = Path(save_path) / "saved_data"
+            save_path = Path(recording_path) / "saved_data"
             save_path.mkdir(parents=True, exist_ok=True)
+            logger.info(f"Saving freemocap data to {save_path}")
 
-            self._save_data_readme()
+
+            self._save_data_readme(save_path=save_path)
 
             # save trajectory names
             trajectory_names_path = save_path / "trajectory_names.json"
@@ -39,12 +41,17 @@ class FreemocapDataSaver:
             self._save_npy(save_path)
             self._save_csv(save_path)
             self._save_pickle(save_path)
+            logger.success(f"Saved freemocap data to {save_path}")
+
         except Exception as e:
             logger.error(f"Failed to save data to disk: {e}")
             logger.exception(e)
             raise e
 
     def _save_csv(self, save_path):
+        csv_path = save_path / "csv"
+        csv_path.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Saving csv files to {csv_path}")
         components = {
             'body': self.handler.body_frame_name_xyz,
             'right_hand': self.handler.right_hand_frame_name_xyz,
@@ -63,30 +70,50 @@ class FreemocapDataSaver:
             all_csv_header += csv_header
 
             reshaped_data = component_data.reshape(component_data.shape[0], -1)
-            np.savetxt(str(save_path / "csv" / f"{component_name}_frame_name_xyz.csv"), reshaped_data, delimiter=",",
+            np.savetxt(str(csv_path / f"{component_name}_frame_name_xyz.csv"), reshaped_data, delimiter=",",
                        fmt='%s', header=csv_header)
+            logger.debug(f"Saved {component_name}_frame_name_xyz to {csv_path / f'{component_name}_frame_name_xyz.csv'}")
 
-        np.savetxt(str(save_path / "csv" / "all_frame_name_xyz.csv"),
+        np.savetxt(str(csv_path / "all_frame_name_xyz.csv"),
                    self.handler.all_frame_name_xyz.reshape(self.handler.all_frame_name_xyz.shape[0], -1), delimiter=",",
                    fmt='%s', header=all_csv_header)
+        logger.debug(f"Saved all_frame_name_xyz to {csv_path / 'all_frame_name_xyz.csv'}")
 
     def _save_npy(self, save_path):
-        # save npy
-        np.save(str(save_path / "npy" / "body_frame_name_xyz.npy"), self.handler.body_frame_name_xyz)
-        np.save(str(save_path / "npy" / "right_hand_frame_name_xyz.npy"), self.handler.right_hand_frame_name_xyz)
-        np.save(str(save_path / "npy" / "left_hand_frame_name_xyz.npy"), self.handler.left_hand_frame_name_xyz)
-        np.save(str(save_path / "npy" / "face_frame_name_xyz.npy"), self.handler.face_frame_name_xyz)
-        for other_component in self.handler.freemocap_data.other:
-            np.save(str(save_path / "npy" / f"{other_component.name}_frame_name_xyz.npy"),
-                    other_component.data_frame_name_xyz)
-        np.save(str(save_path / "npy" / "all_frame_name_xyz.npy"), self.handler.all_frame_name_xyz)
 
-    def _save_data_readme(self, save_path):
-        readme_path = save_path / "freemocap_data_read_me.md"
+        npy_path = save_path / "npy"
+        npy_path.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Saving npy files to {npy_path}")
+
+
+        np.save(str(npy_path / "body_frame_name_xyz.npy"), self.handler.body_frame_name_xyz)
+        logger.debug(f"Saved body_frame_name_xyz to {npy_path / 'body_frame_name_xyz.npy'}")
+
+        np.save(str(npy_path / "right_hand_frame_name_xyz.npy"), self.handler.right_hand_frame_name_xyz)
+        logger.debug(f"Saved right_hand_frame_name_xyz to {npy_path / 'right_hand_frame_name_xyz.npy'}")
+
+        np.save(str(npy_path / "left_hand_frame_name_xyz.npy"), self.handler.left_hand_frame_name_xyz)
+        logger.debug(f"Saved left_hand_frame_name_xyz to {npy_path / 'left_hand_frame_name_xyz.npy'}")
+
+        np.save(str(npy_path / "face_frame_name_xyz.npy"), self.handler.face_frame_name_xyz)
+        logger.debug(f"Saved face_frame_name_xyz to {npy_path / 'face_frame_name_xyz.npy'}")
+
+        for other_component in self.handler.freemocap_data.other:
+            np.save(str(npy_path / f"{other_component.name}_frame_name_xyz.npy"),
+                    other_component.data_frame_name_xyz)
+            logger.debug(f"Saved {other_component.name}_frame_name_xyz to {npy_path / f'{other_component.name}_frame_name_xyz.npy'}")
+
+        np.save(str(npy_path / "all_frame_name_xyz.npy"), self.handler.all_frame_name_xyz)
+        logger.debug(f"Saved all_frame_name_xyz to {npy_path / 'all_frame_name_xyz.npy'}")
+
+
+    def _save_data_readme(self, save_path: Union[str, Path]):
+        logger.info(f"Saving data readme to {save_path}")
+        readme_path = Path(save_path) / "freemocap_data_read_me.md"
         readme_path.write_text(DATA_README_TEXT, encoding="utf-8")
 
     def _save_pickle(self, save_path):
-        # save freemocap_handler as pickle (the handler doesn't havea save to pickle method, so we save the data directly)
+        logger.info(f"Saving pickle to {save_path}")
         pickle_path = save_path / "freemocap_handler.pkl"
         with open(str(pickle_path), "wb") as f:
             pickle.dump(self.handler, f)

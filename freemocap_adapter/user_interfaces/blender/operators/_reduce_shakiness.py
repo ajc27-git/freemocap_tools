@@ -1,3 +1,4 @@
+import logging
 import math as m
 import time
 
@@ -5,7 +6,6 @@ from bpy.types import Operator
 
 from freemocap_adapter.core_functions.empties.reduce_shakiness import reduce_shakiness
 
-import logging
 logger = logging.getLogger(__name__)
 
 class FMC_ADAPTER_OT_reduce_shakiness(Operator):

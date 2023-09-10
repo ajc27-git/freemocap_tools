@@ -1,4 +1,5 @@
-DATA_README_TEXT = f"""# Freemocap Data
+DATA_README_TEXT = """
+# Freemocap Data
 This folder contains the data extracted from the recording.
 ## Data
 The data is stored in the following files:

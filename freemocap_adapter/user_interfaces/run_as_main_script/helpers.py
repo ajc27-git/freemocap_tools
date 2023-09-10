@@ -1,7 +1,10 @@
+import logging
 import math
 import time
 from pathlib import Path
 from typing import Dict
+
+import bpy
 
 from freemocap_adapter.core_functions.create_mesh.attach_mesh_to_rig import attach_mesh_to_rig
 from freemocap_adapter.core_functions.empties.creation.create_freemocap_empties import create_freemocap_empties
@@ -10,16 +13,17 @@ from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_h
     FreemocapDataHandler
 from freemocap_adapter.core_functions.freemocap_data_operations.load_freemocap_data import load_freemocap_data
 from freemocap_adapter.core_functions.freemocap_data_operations.load_videos import load_videos
-from freemocap_adapter.core_functions.freemocap_data_operations.save_to_disk.save_to_disk import FreemocapDataSaver
+from freemocap_adapter.core_functions.freemocap_data_operations.save_to_disk.freemocap_data_saver import FreemocapDataSaver
 from freemocap_adapter.core_functions.rig.add_rig import add_rig
 from freemocap_adapter.core_functions.setup_scene.make_parent_empties import create_video_parent_empty, \
     create_freemocap_parent_empty
 from freemocap_adapter.core_functions.setup_scene.set_start_end_frame import set_start_end_frame
-from freemocap_adapter.data_models.default_parameters.load_parameters import Config
-from freemocap_adapter.main import logger
+from freemocap_adapter.data_models.parameter_models.parameter_models import Config
+
+logger = logging.getLogger(__name__)
 
 
-def main_add_videos(recording_path):
+def main_add_videos(recording_path: str):
     logger.info("Loading videos as planes...")
     video_parent_empty = create_video_parent_empty(name=f"{Path(recording_path).stem}_video_anchor")
     try:
@@ -31,20 +35,28 @@ def main_add_videos(recording_path):
         raise e
 
 
-def main_attach_mesh_to_rig(config):
+def main_attach_mesh_to_rig(config: Config):
     logger.info("Adding body mesh...")
     attach_mesh_to_rig(body_mesh_mode=config.add_body_mesh.body_mesh_mode)
 
 
-def main_save_data_to_disk(freemocap_data_handler, recording_path, reoriented_empties):
-    freemocap_data_handler.extract_data_from_empties(empties=reoriented_empties)
-    FreemocapDataSaver(freemocap_data_handler=freemocap_data_handler).save(recording_path=recording_path)
+def main_save_data_to_disk(freemocap_data_handler: FreemocapDataHandler,
+                           recording_path: str,
+                           empties: Dict[str, bpy.types.Object]):
+    try:
+        freemocap_data_handler.extract_data_from_empties(empties=empties)
+        FreemocapDataSaver(freemocap_data_handler=freemocap_data_handler).save(recording_path=recording_path)
+    except Exception as e:
+        logger.error(f"Failed to save data to disk: {e}")
+        logger.exception(e)
+        raise e
 
 
-def main_add_rig(config, reoriented_empties):
+def main_add_rig(config: Config,
+                 empties: Dict[str, bpy.types.Object]):
     try:
         logger.info("Adding rig...")
-        add_rig(empties=reoriented_empties,
+        add_rig(empties=empties,
                 bone_length_method=config.add_rig.bone_length_method,
                 keep_symmetry=config.add_rig.keep_symmetry,
                 add_fingers_constraints=config.add_rig.add_fingers_constraints,
@@ -59,11 +71,15 @@ def main_add_rig(config, reoriented_empties):
 def main_reorient_empties(config: Config,
                           empties: Dict[str, bpy.types.Object],
                           freemocap_origin_axes: bpy.types.Object,
-                          good_clean_frame) -> Dict[str, bpy.types.Object]:
+                          good_clean_frame: int,
+                          ) -> Dict[str, bpy.types.Object]:
     scene = bpy.context.scene
     try:
         start = time.time()
         logger.info('Executing Re-orient Empties...')
+
+        scene.frame_set(good_clean_frame)
+
         reoriented_empties = reorient_empties(z_align_ref_empty=config.adjust_empties.vertical_align_reference,
                                               z_align_angle_offset=config.adjust_empties.vertical_align_angle_offset,
                                               ground_ref_empty=config.adjust_empties.ground_align_reference,
@@ -77,7 +93,6 @@ def main_reorient_empties(config: Config,
         end = time.perf_counter()
         logger.success(
             'Finished reorienting empties! Execution time (s): ' + str(math.trunc((end - start) * 1000) / 1000))
-        scene.frame_set(good_clean_frame)  # set the frame back to what it was before we started
         return reoriented_empties
     except Exception as e:
         logger.exception(f'Error while reorienting empties! {e}')

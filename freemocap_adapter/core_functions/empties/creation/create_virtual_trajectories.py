@@ -1,98 +1,77 @@
-from copy import copy
-from typing import List
-
-import bpy
+import logging
+from typing import List, Dict
 import numpy as np
-
-from freemocap_adapter.core_functions.empties.creation.create_empy_from_trajectory import \
-    create_keyframed_empty_from_3d_trajectory_data
-from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.freemocap_data_handler import \
-    FreemocapDataHandler
-from freemocap_adapter.core_functions.freemocap_data_operations.load_freemocap_data import logger
 from freemocap_adapter.data_models.mediapipe_names.virtual_trajectories import MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS
 
+logger = logging.getLogger(__name__)
 
-def test_virtual_marker_definitions(virtual_marker_definitions: dict):
+
+def validate_marker_definitions(virtual_marker_definitions: dict):
     """
     Validate the virtual marker definitions dictionary to ensure that there are the same number of marker names and weights, and that the weights sum to 1
     """
+    for virtual_marker_name, virtual_marker_definition in virtual_marker_definitions.items():
+        names = virtual_marker_definition["marker_names"]
+        weights = virtual_marker_definition["marker_weights"]
+        if len(names) != len(weights):
+            raise ValueError(
+                f"marker_names and marker_weights must be the same length for virtual marker {virtual_marker_name}")
+        if sum(weights) != 1:
+            raise ValueError(f"marker_weights must sum to 1 for virtual marker {virtual_marker_name}")
 
-    for (virtual_marker_name, virtual_marker_definition,) in virtual_marker_definitions.items():
-        assert len(virtual_marker_definition["marker_names"]) == len(
-            virtual_marker_definition["marker_weights"]
-        ), f"marker_names and marker_weights must be the same length for virtual marker {virtual_marker_name}"
-        assert (
-                sum(virtual_marker_definition["marker_weights"]) == 1
-        ), f"marker_weights must sum to 1 for virtual marker {virtual_marker_name}"
 
-
-def calculate_virtual_marker_trajectory(
-        trajectory_3d_frame_marker_xyz: np.ndarray,
-        all_trajectory_names: list,
-        component_trajectory_names: List,
-        trajectory_weights: List,
-) -> np.ndarray:
+def calculate_virtual_trajectory(all_trajectories: np.ndarray, all_names: list, component_names: List,
+                                        weights: List) -> np.ndarray:
     """
-    Create a virtual marker from a set of component markers. A 'Virtual Marker' is a 'fake' marker created by combining the data from 'real' (measured) marker/trajectory data
-    `trajectory_3d_frame_marker_xyz`: all trajectory data in a numpy array with shape [frame, marker, xyz]
-    `all_trajectory_names`: list of all trajectory names
-    `component_trajectory_names`: the trajectories we'll use to make this virtual marker
-    `trajectory_weights`: the weights we'll use to combine the compoenent trajectories into the virtual maker
+    Create a virtual marker from a set of component markers. A 'Virtual Marker' is a 'fake' marker created by combining the data from 'real' (measured) marker/trajectory data.
     """
+    try:
+        number_of_frames = all_trajectories.shape[0]
+        number_of_dimensions = all_trajectories.shape[2] 
+        virtual_trajectory_frame_xyz = np.zeros((number_of_frames, number_of_dimensions), dtype=np.float32)
 
-    # double check that the weights scale to one, otherwise this function will return screwy results
-    assert np.sum(trajectory_weights) == 1, "Error - Trajectory_weights must sum to 1!"
-    assert len(component_trajectory_names) == len(
-        trajectory_weights
-    ), "Error - component_trajectory_names and trajectory_weights must be the same length!"
-    virtual_marker_xyz = np.zeros((trajectory_3d_frame_marker_xyz.shape[0], 3))
+        for name, weight in zip(component_names, weights):
+            if name not in all_names:
+                raise ValueError(f"Trajectory {name} not found in trajectory names list")
 
-    for trajectory_name, weight in zip(component_trajectory_names, trajectory_weights):
-        # pull out the trajectory data for this component trajectory and scale by it's `weight`
-        component_trajectory_xyz = copy(
-            trajectory_3d_frame_marker_xyz[:, all_trajectory_names.index(trajectory_name), :] * weight
+            # pull out the trajectory data for this component trajectory and scale by its weight
+            component_xyz = all_trajectories[:, all_names.index(name)] * weight
+            virtual_trajectory_frame_xyz += component_xyz
+    except Exception as e:
+        logger.error(f"Error calculating virtual marker trajectory: {e}")
+        logger.exception(e)
+        raise
+    return virtual_trajectory_frame_xyz
+
+
+def calculate_virtual_trajectories(body_frame_name_xyz: np.ndarray,
+                                   body_names: List[str]) -> Dict[str, np.ndarray]:
+    """
+    Create virtual markers from the body data using the marker definitions.
+    """
+    logger.info("Creating virtual markers...")
+    validate_marker_definitions(MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS)
+
+    virtual_trajectories = {}
+    for marker_name, marker_definition in MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS.items():
+        logger.info(f"Calculating virtual marker trajectory: {marker_name} \n"
+                    f"Component trajectories: {marker_definition['marker_names']} \n"
+                    f" weights: {marker_definition['marker_weights']}\n")
+
+        virtual_trajectory_frame_xyz = calculate_virtual_trajectory(
+            all_trajectories=body_frame_name_xyz,
+            all_names=body_names,
+            component_names=marker_definition["marker_names"],
+            weights=marker_definition["marker_weights"]
         )
 
-        # add it to the virtual marker
-        virtual_marker_xyz += component_trajectory_xyz
+        if marker_name in body_names:
+            raise ValueError(
+                f"Virtual marker name {marker_name} is already in the trajectory names list. This will cause problems later. Please choose a different name for your virtual marker.")
 
-    return virtual_marker_xyz
-
-
-# TODO - disentagle "calculate" from "creation empty" responsibilities
-def calculate_virtual_trajectories(freemocap_data_handler: FreemocapDataHandler,
-                                   body_empty_scale: float,
-                                   parent_object: bpy.types.Object,
-                                   ) -> None:
-    #######################################################################
-    # %% creation virtual markers
-    logger.info("_________________________\n"
-                "Creating virtual markers...\n"
-                "-------------------------\n")
-
-    test_virtual_marker_definitions(MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS)
-
-    virtual_marker_names = list(MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS.keys())
-    for virtual_marker_name in virtual_marker_names:
-        component_trajectory_names = MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS[virtual_marker_name]["marker_names"]
-        trajectory_weights = MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS[virtual_marker_name]["marker_weights"]
-
-        logger.info(
-            f"Calculating virtual marker trajectory: {virtual_marker_name} \n"
-            f"Component trajectories: {component_trajectory_names} \n"
-            f" weights: {trajectory_weights}\n"
-        )
-
-        virtual_marker_xyz = calculate_virtual_marker_trajectory(
-            trajectory_3d_frame_marker_xyz=freemocap_data_handler.body_frame_name_xyz,
-            all_trajectory_names=freemocap_data_handler.body_names,
-            component_trajectory_names=component_trajectory_names,
-            trajectory_weights=trajectory_weights,
-        )
-        create_keyframed_empty_from_3d_trajectory_data(
-            trajectory_fr_xyz=virtual_marker_xyz,
-            trajectory_name=virtual_marker_name,
-            parent_origin=parent_object,
-            empty_scale=body_empty_scale * 3,
-            empty_type="PLAIN_AXES",
-        )
+        if virtual_trajectory_frame_xyz.shape[0] != body_frame_name_xyz.shape[0] or virtual_trajectory_frame_xyz.shape[1] != body_frame_name_xyz.shape[2]:
+            raise ValueError(
+                f"Virtual marker {marker_name} has shape {virtual_trajectory_frame_xyz.shape} but should have shape ({body_frame_name_xyz.shape[0]}, {body_frame_name_xyz.shape[2]})"
+            )
+        virtual_trajectories[marker_name] = virtual_trajectory_frame_xyz
+    return virtual_trajectories
