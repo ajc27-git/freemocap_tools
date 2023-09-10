@@ -3,7 +3,10 @@ This folder contains the data extracted from the recording.
 ## Data
 The data is stored in the following files:
 ### `trajectory_names.json`
-A json file containing the names of the trajectories in the data. The format is as follows:
+A json file containing the names of the trajectories in the data. 
+The order of the trajectories is the same as the order of the data in the npy files, and was used to make the headers in the .csv files.
+
+The format is as follows:
 ```json
 {{
 "body": ["nose", "left_eye", "right_eye", ...],
@@ -12,8 +15,17 @@ A json file containing the names of the trajectories in the data. The format is 
     "other": {"other_component_name": ["trajectory_name_1", "trajectory_name_2", ...]}
 }}
 ```
+### `freemocap_data_hanlder.pkl`
+This is a 'pickle' file containing the `FreeMocapDataHandler` object. This object contains all of the data in the other files, and is an ease way to access the data in python.
 
-The order of the trajectories is the same as the order of the data in the npy files, and was used to make the headers in the .csv files.
+To load it, you can do:
+```python
+import pickle
+with open("freemocap_data_handler.pkl", "rb") as f:
+    freemocap_data_handler = pickle.load(f)
+```
+The resulting object is a `FreeMocapDataHandler` object - check the class definition for more information on how to use it.
+
 
 ### `/npy` folder
 - `body_frame_name_xyz.npy`: Body trajectory data in the format, dimensions: (frame, trajectory_name, xyz)

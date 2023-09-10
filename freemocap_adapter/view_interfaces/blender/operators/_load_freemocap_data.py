@@ -52,7 +52,6 @@ class FMC_ADAPTER_load_freemocap_data(bpy.types.Operator):  # , bpy_extras.io_ut
 
         try:
             logger.info("Creating keyframed empties....")
-            logger.info("Create keyframed empties...")
             empties = create_freemocap_empties(freemocap_data_handler=freemocap_data_handler,
                                                parent_object=freemocap_origin_axes, )
             logger.success(f"Finished creating keyframed empties: {empties.keys()}")

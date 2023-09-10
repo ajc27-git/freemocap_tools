@@ -1,5 +1,8 @@
+import json
 import logging
 from copy import deepcopy
+from enum import Enum
+from pathlib import Path
 from typing import List, Union, Literal, Dict, Any
 
 import numpy as np
@@ -66,6 +69,7 @@ class FreemocapDataHandler:
     @property
     def metadata(self) -> Dict[Any, Any]:
         return self.freemocap_data.metadata
+
     @property
     def trajectories(self) -> Dict[str, np.ndarray]:
         trajectories = {}
@@ -103,6 +107,27 @@ class FreemocapDataHandler:
             trajectories.update({trajectory_name: component.data_frame_name_xyz[:, trajectory_number]
                                  for trajectory_number, trajectory_name in enumerate(component.trajectory_names)})
         return trajectories
+
+    @property
+    def all_frame_name_xyz(self):
+        all_data = np.concatenate([self.body_frame_name_xyz,
+                                   self.right_hand_frame_name_xyz,
+                                   self.left_hand_frame_name_xyz,
+                                   self.face_frame_name_xyz], axis=1)
+
+        for other_component in self.freemocap_data.other:
+            all_data = np.concatenate([all_data, other_component.data_frame_name_xyz], axis=1)
+
+        if all_data.shape[0] != self.number_of_frames:
+            raise ValueError(
+                f"Number of frames ({self.number_of_frames}) does not match number of frames in all_frame_name_xyz ({all_data.shape[0]}).")
+        if all_data.shape[1] != self.number_of_trajectories:
+            raise ValueError(
+                f"Number of trajectories ({self.number_of_trajectories}) does not match number of trajectories in all_frame_name_xyz ({all_data.shape[1]}).")
+        if all_data.shape[2] != 3:
+            raise ValueError(f"all_frame_name_xyz should have 3 dimensions. Got {all_data.shape[2]} instead.")
+
+        return all_data
 
     @property
     def body_frame_name_xyz(self):
@@ -247,9 +272,9 @@ class FreemocapDataHandler:
         for frame_number in range(data_frame_name_xyz.shape[0]):
             for trajectory_number in range(data_frame_name_xyz.shape[1]):
                 rotated_data_frame_name_xyz[frame_number, trajectory_number, :] = rotation_matrix @ data_frame_name_xyz[
-                                                                                            frame_number,
-                                                                                            trajectory_number,
-                                                                                            :]
+                                                                                                    frame_number,
+                                                                                                    trajectory_number,
+                                                                                                    :]
         return rotated_data_frame_name_xyz
 
     def apply_rotation(self, rotation_matrix: Union[np.ndarray, List[List[float]]]):
@@ -305,3 +330,26 @@ class FreemocapDataHandler:
     def add_metadata(self, metadata: dict):
         logger.info(f"Adding metadata {metadata.keys()}")
         self.freemocap_data.metadata.update(metadata)
+
+    def extract_data_from_empties(self, empties: Dict[str, Any], stage_name: str = "from_empties"):
+
+        try:
+            import bpy
+            logger.info(f"Extracting data from empties {empties.keys()}")
+            self.freemocap_data.body.data_frame_name_xyz = np.array(
+                [bpy.data.objects[empty_name].location for empty_name in empties["body"].keys()])
+            self.freemocap_data.right_hand.data_frame_name_xyz = np.array(
+                [bpy.data.objects[empty_name].location for empty_name in empties["hands"]["right"].keys()])
+            self.freemocap_data.left_hand.data_frame_name_xyz = np.array(
+                [bpy.data.objects[empty_name].location for empty_name in empties["hands"]["left"].keys()])
+            self.freemocap_data.face.data_frame_name_xyz = np.array(
+                [bpy.data.objects[empty_name].location for empty_name in empties["face"].keys()])
+            for other_component in self.freemocap_data.other:
+                other_component.data_frame_name_xyz = np.array(
+                    [bpy.data.objects[empty_name].location for empty_name in empties[other_component.name].keys()])
+        except Exception as e:
+            logger.error(f"Failed to extract data from empties {empties.keys()}")
+            logger.exception(e)
+            raise e
+        self.mark_processing_stage(stage_name)
+

@@ -1,5 +1,6 @@
 import json
 import logging
+import pickle
 from pathlib import Path
 
 import numpy as np
@@ -11,14 +12,14 @@ from freemocap_adapter.core_functions.freemocap_data_operations.save_to_disk.dat
 logger = logging.getLogger(__name__)
 
 
-class FreeMoCapDataSaver:
+class FreemocapDataSaver:
     def __init__(self, freemocap_data_handler: FreemocapDataHandler):
         self.handler = freemocap_data_handler
 
-    def save_to_disk(self, save_path: str):
+    def save(self, recording_path: str):
 
         logger.info(f"Saving freemocap data to {save_path}")
-        save_path = Path(save_path) / "mocap_data"
+        save_path = Path(save_path) / "saved_data"
         save_path.mkdir(parents=True, exist_ok=True)
 
         self._save_data_readme()
@@ -37,6 +38,7 @@ class FreeMoCapDataSaver:
 
         self._save_npy(save_path)
         self._save_csv(save_path)
+        self._save_pickle(save_path)
 
     def _save_csv(self, save_path):
         components = {
@@ -75,9 +77,12 @@ class FreeMoCapDataSaver:
                     other_component.data_frame_name_xyz)
         np.save(str(save_path / "npy" / "all_frame_name_xyz.npy"), self.handler.all_frame_name_xyz)
 
-    def _save_data_readme(self.
+    def _save_data_readme(self, save_path):
+        readme_path = save_path / "freemocap_data_read_me.md"
+        readme_path.write_text(DATA_README_TEXT, encoding="utf-8")
 
-        handler, save_path):
-
-    readme_path = save_path / "freemocap_data_read_me.md"
-    readme_path.write_text(DATA_README_TEXT, encoding="utf-8")
+    def _save_pickle(self, save_path):
+        # save freemocap_handler as pickle (the handler doesn't havea save to pickle method, so we save the data directly)
+        pickle_path = save_path / "freemocap_handler.pkl"
+        with open(str(pickle_path), "wb") as f:
+            pickle.dump(self.handler, f)
