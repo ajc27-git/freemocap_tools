@@ -332,6 +332,22 @@ class FreemocapDataHandler:
     def __str__(self):
         return str(self.freemocap_data)
 
+    def apply_rotation(self, rotation_matrix: Union[np.ndarray, List[List[float]]]):
+
+        if isinstance(rotation_matrix, list):
+            rotation_matrix = np.array(rotation_matrix)
+
+        if rotation_matrix.shape != (3, 3):
+            raise ValueError(f"Rotation matrix must be a 3x3 matrix. Got {rotation_matrix.shape} instead.")
+
+        logger.info(f"Applying rotation matrix {rotation_matrix}")
+        self.body_frame_name_xyz = self._rotate_component(self.body_frame_name_xyz, rotation_matrix)
+        self.right_hand_frame_name_xyz = self._rotate_component(self.right_hand_frame_name_xyz, rotation_matrix)
+        self.left_hand_frame_name_xyz = self._rotate_component(self.left_hand_frame_name_xyz, rotation_matrix)
+        self.face_frame_name_xyz = self._rotate_component(self.face_frame_name_xyz, rotation_matrix)
+
+        for name, other_component in self.freemocap_data.other.items():
+            other_component.data = self._rotate_component(other_component.data, rotation_matrix)
     def _rotate_component(self,
                           data_frame_name_xyz: Union[np.ndarray, List[float]],
                           rotation_matrix: Union[np.ndarray, List[List[float]]]) -> np.ndarray:
@@ -361,22 +377,6 @@ class FreemocapDataHandler:
                                                                                                     :]
         return rotated_data_frame_name_xyz
 
-    def apply_rotation(self, rotation_matrix: Union[np.ndarray, List[List[float]]]):
-
-        if isinstance(rotation_matrix, list):
-            rotation_matrix = np.array(rotation_matrix)
-
-        if rotation_matrix.shape != (3, 3):
-            raise ValueError(f"Rotation matrix must be a 3x3 matrix. Got {rotation_matrix.shape} instead.")
-
-        logger.info(f"Applying rotation matrix {rotation_matrix}")
-        self.body_frame_name_xyz = self._rotate_component(self.body_frame_name_xyz, rotation_matrix)
-        self.right_hand_frame_name_xyz = self._rotate_component(self.right_hand_frame_name_xyz, rotation_matrix)
-        self.left_hand_frame_name_xyz = self._rotate_component(self.left_hand_frame_name_xyz, rotation_matrix)
-        self.face_frame_name_xyz = self._rotate_component(self.face_frame_name_xyz, rotation_matrix)
-
-        for name, other_component in self.freemocap_data.other.items():
-            other_component.data = self._rotate_component(other_component.data, rotation_matrix)
 
     def apply_translation(self, vector: Union[np.ndarray, List[float]]):
         logger.info(f"Translating by vector {vector}")
@@ -532,35 +532,59 @@ class FreemocapDataHandler:
         ground_reference_trajectories = self.get_trajectories(
             trajectory_names=["right_heel", "left_heel", "right_foot_index", "left_foot_index"])
 
-        low_velocity_region = find_low_velocity_region_around_frame(trajectories=ground_reference_trajectories,
-                                                                    frame_number=self.good_clean_frame,)
                                                                     
 
-        original_reference_trajectories = {trajectory_name: trajectory[low_velocity_region[0]:low_velocity_region[1]]
+        original_reference_trajectories = {trajectory_name: trajectory[self.good_clean_frame]
                                            for trajectory_name, trajectory in ground_reference_trajectories.items()}
 
-        center_reference_point = np.mean(np.nanmean(list(original_reference_trajectories.values()), axis=0), axis=0)
+        center_reference_point = np.nanmean(list(original_reference_trajectories.values()), axis=0)
+
+        x_forward_reference_points = []
+        for trajectory in self.get_trajectories(trajectory_names=["left_foot_index", "right_foot_index"]).values():
+            x_forward_reference_points.append(trajectory[self.good_clean_frame, :])
+        x_forward_reference_point = np.nanmean(x_forward_reference_points, axis=0)
+
+        y_leftward_reference_points = []
+        for trajectory in self.get_trajectories(trajectory_names=["left_heel", "left_foot_index"]).values():
+            y_leftward_reference_points.append(trajectory[self.good_clean_frame, :])
+        y_leftward_reference_point = np.nanmean(y_leftward_reference_points, axis=0)
+
+        z_upward_reference_point = self.get_trajectory("head_center")[self.good_clean_frame, :]        
+        
+        
+        x_forward = x_forward_reference_point - center_reference_point
+        y_left = y_leftward_reference_point - center_reference_point
+        z_up = z_upward_reference_point - center_reference_point
+
+
+        
+        # Make them orthogonal
+        z_hat = np.cross(x_forward, y_left)
+        y_hat = np.cross(x_forward, z_hat)
+        x_hat = np.cross(y_hat, z_hat)
+        
+        # Normalize them
+        x_hat = x_hat / np.linalg.norm(x_hat)
+        y_hat = y_hat / np.linalg.norm(y_hat)
+        z_hat = z_hat / np.linalg.norm(z_hat)
+
+        rotation_matrix = np.array([x_hat, y_hat, z_hat])
+
+        assert np.allclose(np.linalg.norm(x_hat), 1), "x_hat is not normalized"
+        assert np.allclose(np.linalg.norm(y_hat), 1), "y_hat is not normalized"
+        assert np.allclose(np.linalg.norm(z_hat), 1), "z_hat is not normalized"
+        assert np.allclose(np.dot(z_hat, y_hat), 0), "z_hat is not orthogonal to y_hat"
+        assert np.allclose(np.dot(z_hat, x_hat), 0), "z_hat is not orthogonal to x_hat"
+        assert np.allclose(np.dot(y_hat, x_hat), 0), "y_hat is not orthogonal to x_hat"
+        assert np.allclose(rotation_matrix @ x_hat, [1, 0, 0]), "x_hat is not rotated to [1, 0, 0]"
+        assert np.allclose(rotation_matrix @ y_hat, [0, 1, 0]), "y_hat is not rotated to [0, 1, 0]"
+        assert np.allclose(rotation_matrix @ z_hat, [0, 0, 1]), "z_hat is not rotated to [0, 0, 1]"
+        assert np.allclose(np.cross(x_hat, y_hat), z_hat), "Vectors do not follow right-hand rule"
+        assert np.allclose(np.linalg.det(rotation_matrix), 1), "rotation matrix is not a rotation matrix"
+        
+        
         self.apply_translation(-center_reference_point)
         self.mark_processing_stage("translated_to_origin")
-
-        left_reference_trajectories = self.get_trajectories(trajectory_names=["left_heel", "left_foot_index"])
-        forward_reference_trajectories = self.get_trajectories(trajectory_names=["right_heel", "right_foot_index"])
-        up_reference_trajectory = self.get_trajectory("head_center")[low_velocity_region[0]:low_velocity_region[1]]
-
-        left_reference_point = np.mean(np.nanmean(list(left_reference_trajectories.values()), axis=0), axis=0)
-        forward_reference_point = np.mean(np.nanmean(list(forward_reference_trajectories.values()), axis=0), axis=0)
-        up_reference_point = np.nanmean(up_reference_trajectory, axis=0)
-
-        x_hat_raw = forward_reference_point / np.linalg.norm(forward_reference_point)
-        y_hat_raw = left_reference_point / np.linalg.norm(left_reference_point)
-        z_hat_raw = up_reference_point / np.linalg.norm(up_reference_point)
-
-        x_hat_orthogonal = np.cross(z_hat_raw, y_hat_raw)
-        y_hat_orthogonal = np.cross(z_hat_raw, x_hat_orthogonal)
-        z_hat_orthogonal = np.cross(x_hat_orthogonal, y_hat_orthogonal)
-
-        rotation_matrix = np.array([x_hat_orthogonal, y_hat_orthogonal, z_hat_orthogonal]).T
-
         self.apply_rotation(rotation_matrix=rotation_matrix)
         self.mark_processing_stage("inertial_reference_frame")
 
