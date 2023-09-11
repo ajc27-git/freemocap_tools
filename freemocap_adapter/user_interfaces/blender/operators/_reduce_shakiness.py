@@ -8,8 +8,8 @@ from freemocap_adapter.core_functions.empties.reduce_shakiness import reduce_sha
 
 logger = logging.getLogger(__name__)
 
-class FMC_ADAPTER_OT_reduce_shakiness(Operator):
 
+class FMC_ADAPTER_OT_reduce_shakiness(Operator):
     bl_idname = 'fmc_adapter.reduce_shakiness'
     bl_label = 'Freemocap Adapter - Reduce Shakiness'
     bl_description = 'Reduce the shakiness of the capture empties by restricting their acceleration to a defined threshold'

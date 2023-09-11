@@ -6,9 +6,9 @@ import numpy as np
 
 from freemocap_adapter.core_functions.freemocap_data_operations.helpers.create_trajectory_name_lists import \
     create_trajectory_name_lists
-from freemocap_adapter.data_models.freemocap_data.helpers.freemocap_data_stats import FreemocapDataStats
 from freemocap_adapter.data_models.freemocap_data.helpers.freemocap_component_data import FreemocapComponentData
 from freemocap_adapter.data_models.freemocap_data.helpers.freemocap_data_paths import FreemocapDataPaths
+from freemocap_adapter.data_models.freemocap_data.helpers.freemocap_data_stats import FreemocapDataStats
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +103,7 @@ class FreemocapData:
                                                                 str(data_paths.center_of_mass_npy)) / scale,
                                                             data_source="freemocap",
                                                             trajectory_names=["center_of_mass"])},
-            metadata=metadata,            
+            metadata=metadata,
         )
 
     @classmethod
@@ -118,6 +118,7 @@ class FreemocapData:
 
     def __str__(self):
         return str(FreemocapDataStats.from_freemocap_data(self))
+
 
 if __name__ == "__main__":
     from freemocap_adapter.core_functions.setup_scene.get_path_to_sample_data import get_path_to_sample_data

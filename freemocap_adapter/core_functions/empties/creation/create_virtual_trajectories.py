@@ -1,6 +1,8 @@
 import logging
 from typing import List, Dict
+
 import numpy as np
+
 from freemocap_adapter.data_models.mediapipe_names.virtual_trajectories import MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS
 
 logger = logging.getLogger(__name__)
@@ -21,13 +23,13 @@ def validate_marker_definitions(virtual_marker_definitions: dict):
 
 
 def calculate_virtual_trajectory(all_trajectories: np.ndarray, all_names: list, component_names: List,
-                                        weights: List) -> np.ndarray:
+                                 weights: List) -> np.ndarray:
     """
     Create a virtual marker from a set of component markers. A 'Virtual Marker' is a 'fake' marker created by combining the data from 'real' (measured) marker/trajectory data.
     """
     try:
         number_of_frames = all_trajectories.shape[0]
-        number_of_dimensions = all_trajectories.shape[2] 
+        number_of_dimensions = all_trajectories.shape[2]
         virtual_trajectory_frame_xyz = np.zeros((number_of_frames, number_of_dimensions), dtype=np.float32)
 
         for name, weight in zip(component_names, weights):
@@ -69,7 +71,8 @@ def calculate_virtual_trajectories(body_frame_name_xyz: np.ndarray,
             raise ValueError(
                 f"Virtual marker name {marker_name} is already in the trajectory names list. This will cause problems later. Please choose a different name for your virtual marker.")
 
-        if virtual_trajectory_frame_xyz.shape[0] != body_frame_name_xyz.shape[0] or virtual_trajectory_frame_xyz.shape[1] != body_frame_name_xyz.shape[2]:
+        if virtual_trajectory_frame_xyz.shape[0] != body_frame_name_xyz.shape[0] or virtual_trajectory_frame_xyz.shape[
+            1] != body_frame_name_xyz.shape[2]:
             raise ValueError(
                 f"Virtual marker {marker_name} has shape {virtual_trajectory_frame_xyz.shape} but should have shape ({body_frame_name_xyz.shape[0]}, {body_frame_name_xyz.shape[2]})"
             )

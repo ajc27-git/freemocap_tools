@@ -10,6 +10,7 @@ def calculate_stats(data):
         'std_dev': np.nanstd(data) if data.size > 0 else np.nan,
     }
 
+
 @dataclass
 class FreemocapDataStats:
     body_stats: dict

@@ -46,7 +46,7 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         print('Adding rig with median length method...')
 
         # Update the empty positions dictionary
-        empty_positions =  get_empty_positions(empties=empties)
+        empty_positions = get_empty_positions(empties=empties)
 
         # Update the information of the virtual bones
         calculate_bone_length_statistics(empty_positions=empty_positions, bones=BONE_DEFINITIONS)
@@ -57,7 +57,8 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         rig.select_set(True)
 
         # Get rig height as the sum of the major bones length in a standing position. Assume foot declination angle of 23º
-        avg_ankle_projection_length = (m.sin(m.radians(23)) * BONE_DEFINITIONS['foot.R']['median'] + m.sin(m.radians(23)) *
+        avg_ankle_projection_length = (m.sin(m.radians(23)) * BONE_DEFINITIONS['foot.R']['median'] + m.sin(
+            m.radians(23)) *
                                        BONE_DEFINITIONS['foot.L']['median']) / 2
         avg_shin_length = (BONE_DEFINITIONS['shin.R']['median'] + BONE_DEFINITIONS['shin.L']['median']) / 2
         avg_thigh_length = (BONE_DEFINITIONS['thigh.R']['median'] + BONE_DEFINITIONS['thigh.L']['median']) / 2
@@ -161,9 +162,11 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         foot_L_length = avg_foot_length if keep_symmetry else BONE_DEFINITIONS['foot.L']['median']
 
         foot_R.tail = (
-        -pelvis_R_length, -foot_R_length * m.cos(m.radians(23)), foot_R.head[2] - foot_R_length * m.sin(m.radians(23)))
+            -pelvis_R_length, -foot_R_length * m.cos(m.radians(23)),
+            foot_R.head[2] - foot_R_length * m.sin(m.radians(23)))
         foot_L.tail = (
-        pelvis_L_length, -foot_L_length * m.cos(m.radians(23)), foot_L.head[2] - foot_L_length * m.sin(m.radians(23)))
+            pelvis_L_length, -foot_L_length * m.cos(m.radians(23)),
+            foot_L.head[2] - foot_L_length * m.sin(m.radians(23)))
 
         # Move the heel bones so their head is aligned with the ankle on the x axis
         avg_heel_length = (BONE_DEFINITIONS['heel.02.R']['median'] + BONE_DEFINITIONS['heel.02.L']['median']) / 2
@@ -387,7 +390,8 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         hand_L = rig.data.edit_bones['hand.L']
 
         # Get average upperarm length
-        avg_upper_arm_length = (BONE_DEFINITIONS['upper_arm.R']['median'] + BONE_DEFINITIONS['upper_arm.L']['median']) / 2
+        avg_upper_arm_length = (BONE_DEFINITIONS['upper_arm.R']['median'] + BONE_DEFINITIONS['upper_arm.L'][
+            'median']) / 2
 
         # Set the upperarm bones length based on the keep symmetry parameter
         upper_arm_R_length = avg_upper_arm_length if keep_symmetry else BONE_DEFINITIONS['upper_arm.R']['median']
@@ -432,13 +436,13 @@ def add_rig(empties: Dict[str, bpy.types.Object],
             # Add an auxiliary bone to the side of the upperarms and forearms to check their rotation
             upper_arm_R_Rot = rig.data.edit_bones.new('uppe_rarm.R.Rot')
             upper_arm_R_Rot.head = (
-            upper_arm_R.head[0] - upper_arm_R_length / 2, upper_arm_R.head[1], upper_arm_R.head[2])
+                upper_arm_R.head[0] - upper_arm_R_length / 2, upper_arm_R.head[1], upper_arm_R.head[2])
             upper_arm_R_Rot.tail = (upper_arm_R_Rot.head[0], upper_arm_R_Rot.head[1], upper_arm_R_Rot.head[2] + 0.1)
             upper_arm_R_Rot.parent = upper_arm_R
             upper_arm_R_Rot.use_connect = False
             upper_arm_L_Rot = rig.data.edit_bones.new('uppe_rarm.L.Rot')
             upper_arm_L_Rot.head = (
-            upper_arm_L.head[0] + upper_arm_L_length / 2, upper_arm_L.head[1], upper_arm_L.head[2])
+                upper_arm_L.head[0] + upper_arm_L_length / 2, upper_arm_L.head[1], upper_arm_L.head[2])
             upper_arm_L_Rot.tail = (upper_arm_L_Rot.head[0], upper_arm_L_Rot.head[1], upper_arm_L_Rot.head[2] + 0.1)
             upper_arm_L_Rot.parent = upper_arm_L
             upper_arm_L_Rot.use_connect = False
@@ -584,10 +588,12 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         # Add the thumb carpals
         thumb_carpal_R = rig.data.edit_bones.new('thumb.carpal.R')
         thumb_carpal_R.head = hand_R.head
-        thumb_carpal_R.tail = thumb_carpal_R.head + mathutils.Vector([0, -BONE_DEFINITIONS['thumb.carpal.R']['median'], 0])
+        thumb_carpal_R.tail = thumb_carpal_R.head + mathutils.Vector(
+            [0, -BONE_DEFINITIONS['thumb.carpal.R']['median'], 0])
         thumb_carpal_L = rig.data.edit_bones.new('thumb.carpal.L')
         thumb_carpal_L.head = hand_L.head
-        thumb_carpal_L.tail = thumb_carpal_L.head + mathutils.Vector([0, -BONE_DEFINITIONS['thumb.carpal.L']['median'], 0])
+        thumb_carpal_L.tail = thumb_carpal_L.head + mathutils.Vector(
+            [0, -BONE_DEFINITIONS['thumb.carpal.L']['median'], 0])
 
         # Asign the parent to thumb carpals
         thumb_carpal_R.parent = hand_R
@@ -1233,4 +1239,4 @@ def add_rig(empties: Dict[str, bpy.types.Object],
     # Deselect all objects
     bpy.ops.object.select_all(action='DESELECT')
 
-    return  rig
+    return rig

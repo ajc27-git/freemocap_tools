@@ -33,7 +33,8 @@ def translate_empty_and_its_children(empty_name: str,
 
     # If empty has children then call this function for every child
     if empty_name in MEDIAPIPE_EMPTIES_HIERARCHY.keys():
-        logger.debug(f"Translating children of empty {empty_name}: {MEDIAPIPE_EMPTIES_HIERARCHY[empty_name]['children']}")
+        logger.debug(
+            f"Translating children of empty {empty_name}: {MEDIAPIPE_EMPTIES_HIERARCHY[empty_name]['children']}")
         for child in MEDIAPIPE_EMPTIES_HIERARCHY[empty_name]['children']:
             translate_empty_and_its_children(empty_name=child,
                                              frame_index=frame_index,

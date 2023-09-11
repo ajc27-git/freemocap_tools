@@ -39,12 +39,6 @@ class FMC_ADAPTER_load_freemocap_data(bpy.types.Operator):  # , bpy_extras.io_ut
             logger.error(e)
             return {'CANCELLED'}
 
-
-        scene.frame_set(freemocap_data_handler.good_clean_frame)
-        bpy.ops.screen.animation_play()
-        bpy.ops.screen.animation_cancel()
-       
-
         try:
             logger.info("Creating keyframed empties....")
             empties = create_freemocap_empties(freemocap_data_handler=freemocap_data_handler,

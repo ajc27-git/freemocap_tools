@@ -58,7 +58,7 @@ MEDIAPIPE_TRAJECTORY_NAMES = {
         "pinky_dip",
         "pinky_tip",
     ],
-    #NOTE - these are the names of the first couple face markers, there are like 400 more points in that mesh that will be names liked `face_012` etc
+    # NOTE - these are the names of the first couple face markers, there are like 400 more points in that mesh that will be names liked `face_012` etc
     "face": ["right_eye",
              "left_eye",
              "nose_tip",

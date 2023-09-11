@@ -5,6 +5,7 @@ import bpy
 
 logger = logging.getLogger(__name__)
 
+
 def attach_mesh_to_rig(body_mesh_mode: str = "custom"):
     if body_mesh_mode == "file":
 
@@ -84,7 +85,7 @@ def attach_mesh_to_rig(body_mesh_mode: str = "custom"):
         neck_mesh_location = (neck.head[0], neck.head[1], neck.head[2] + neck.length / 2)
 
         head_mesh_location = (neck.tail[0], neck.tail[1], neck.tail[2])
-        head_mesh_radius = base_cylinder_radius*2
+        head_mesh_radius = base_cylinder_radius * 2
 
         right_eye_mesh_location = (neck.tail[0] - 0.04, neck.tail[1] - head_mesh_radius, neck.tail[2] + 0.02)
         right_eye_mesh_radius = head_mesh_radius / 3
@@ -97,12 +98,12 @@ def attach_mesh_to_rig(body_mesh_mode: str = "custom"):
 
         right_arm_mesh_length = shoulder_R.tail[0] - hand_R.head[0]
         right_arm_mesh_location = (
-        shoulder_R.tail[0] - right_arm_mesh_length / 2, shoulder_R.tail[1], shoulder_R.tail[2] - 0.02)
+            shoulder_R.tail[0] - right_arm_mesh_length / 2, shoulder_R.tail[1], shoulder_R.tail[2] - 0.02)
         right_arm_mesh_radius = base_cylinder_radius
 
         left_arm_mesh_length = hand_L.head[0] - shoulder_L.tail[0]
         left_arm_mesh_location = (
-        shoulder_L.tail[0] + left_arm_mesh_length / 2, shoulder_L.tail[1], shoulder_L.tail[2] - 0.02)
+            shoulder_L.tail[0] + left_arm_mesh_length / 2, shoulder_L.tail[1], shoulder_L.tail[2] - 0.02)
         left_arm_mesh_radius = base_cylinder_radius
 
         right_hand_mesh_location = (hand_R.tail[0], hand_R.tail[1], hand_R.tail[2])

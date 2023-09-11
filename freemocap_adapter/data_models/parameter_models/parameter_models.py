@@ -7,7 +7,7 @@ class AdjustEmpties:
     vertical_align_angle_offset: float = 0.0
     ground_align_reference: str = "left_foot_index"
     vertical_align_position_offset: float = 0.0
-    correct_fingers_empties: bool =  True
+    correct_fingers_empties: bool = True
     add_hand_middle_empty: bool = True
 
 

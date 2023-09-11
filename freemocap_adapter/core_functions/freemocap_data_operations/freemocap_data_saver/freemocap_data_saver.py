@@ -8,7 +8,8 @@ import numpy as np
 
 from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.freemocap_data_handler import \
     FreemocapDataHandler
-from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_saver.data_readme_text import DATA_README_TEXT
+from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_saver.data_readme_text import \
+    DATA_README_TEXT
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,6 @@ class FreemocapDataSaver:
             save_path = Path(recording_path) / "saved_data"
             save_path.mkdir(parents=True, exist_ok=True)
             logger.info(f"Saving freemocap data to {save_path}")
-
 
             self._save_data_readme(save_path=save_path)
 
@@ -73,7 +73,8 @@ class FreemocapDataSaver:
             reshaped_data = component_data.reshape(component_data.shape[0], -1)
             np.savetxt(str(csv_path / f"{component_name}_frame_name_xyz.csv"), reshaped_data, delimiter=",",
                        fmt='%s', header=csv_header)
-            logger.debug(f"Saved {component_name}_frame_name_xyz to {csv_path / f'{component_name}_frame_name_xyz.csv'}")
+            logger.debug(
+                f"Saved {component_name}_frame_name_xyz to {csv_path / f'{component_name}_frame_name_xyz.csv'}")
 
         np.savetxt(str(save_path / "all_frame_name_xyz.csv"),
                    self.handler.all_frame_name_xyz.reshape(self.handler.all_frame_name_xyz.shape[0], -1), delimiter=",",
@@ -85,7 +86,6 @@ class FreemocapDataSaver:
         npy_path = save_path / "npy"
         npy_path.mkdir(parents=True, exist_ok=True)
         logger.info(f"Saving npy files to {npy_path}")
-
 
         np.save(str(npy_path / "body_frame_name_xyz.npy"), self.handler.body_frame_name_xyz)
         logger.debug(f"Saved body_frame_name_xyz to {npy_path / 'body_frame_name_xyz.npy'}")
@@ -102,11 +102,11 @@ class FreemocapDataSaver:
         for other_component in self.handler.freemocap_data.other:
             np.save(str(npy_path / f"{other_component.name}_frame_name_xyz.npy"),
                     other_component.data_frame_name_xyz)
-            logger.debug(f"Saved {other_component.name}_frame_name_xyz to {npy_path / f'{other_component.name}_frame_name_xyz.npy'}")
+            logger.debug(
+                f"Saved {other_component.name}_frame_name_xyz to {npy_path / f'{other_component.name}_frame_name_xyz.npy'}")
 
         np.save(str(save_path / "all_frame_name_xyz.npy"), self.handler.all_frame_name_xyz)
         logger.debug(f"Saved all_frame_name_xyz to {npy_path / 'all_frame_name_xyz.npy'}")
-
 
     def _save_data_readme(self, save_path: Union[str, Path]):
         logger.info(f"Saving data readme to {save_path}")

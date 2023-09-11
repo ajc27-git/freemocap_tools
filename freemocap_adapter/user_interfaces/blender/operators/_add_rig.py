@@ -48,10 +48,10 @@ class FMC_ADAPTER_OT_add_rig(Operator):
         logger.debug('Executing Add Rig...')
 
         rig = add_rig(empties=empties,
-                bone_length_method=fmc_adapter_tool.bone_length_method,
-                keep_symmetry=fmc_adapter_tool.keep_symmetry,
-                add_fingers_constraints=fmc_adapter_tool.add_fingers_constraints,
-                use_limit_rotation=fmc_adapter_tool.use_limit_rotation)
+                      bone_length_method=fmc_adapter_tool.bone_length_method,
+                      keep_symmetry=fmc_adapter_tool.keep_symmetry,
+                      add_fingers_constraints=fmc_adapter_tool.add_fingers_constraints,
+                      use_limit_rotation=fmc_adapter_tool.use_limit_rotation)
 
         # Get end time and print execution time
         end = time.time()

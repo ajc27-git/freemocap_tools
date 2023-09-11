@@ -8,7 +8,8 @@ import numpy as np
 
 from freemocap_adapter.core_functions.setup_scene.make_parent_empties import create_video_parent_empty
 
-logger  = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
+
 
 def get_video_paths(path_to_video_folder: Path) -> list:
     """Search the folder for 'mp4' files (case insensitive) and return them as a list"""
@@ -20,19 +21,19 @@ def get_video_paths(path_to_video_folder: Path) -> list:
 
     return unique_list_of_video_paths
 
+
 def add_videos_to_scene(videos_path: Union[Path, str],
                         parent_object: bpy.types.Object,
                         video_location_scale: float = 4,
                         video_size_scale: float = 5,
                         ):
-
     logger.info(f"Adding videos to scene...")
 
     number_of_videos = len(list(get_video_paths(videos_path)))
     logger.debug(f"Found {number_of_videos} videos in {videos_path}")
     for (
-        video_number,
-        video_path,
+            video_number,
+            video_path,
     ) in enumerate(get_video_paths(videos_path)):
         logger.info(f"Adding video: {video_path.name} to scene")
 
@@ -52,8 +53,8 @@ def add_videos_to_scene(videos_path: Union[Path, str],
         video_as_plane.location = [
             vid_x,
             video_location_scale,
-            video_size_scale*.6
-            ]
+            video_size_scale * .6
+        ]
         video_as_plane.rotation_euler = [np.pi / 2, 0, 0]
         video_as_plane.scale = [video_size_scale] * 3
         video_as_plane.parent = parent_object

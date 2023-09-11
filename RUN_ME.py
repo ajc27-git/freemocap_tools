@@ -11,6 +11,7 @@ from freemocap_adapter.core_functions.setup_scene.get_path_to_sample_data import
 
 logger = logging.getLogger(__name__)
 
+
 def main():
     logger.info("Running RUN_ME.py...")
     logger.info("Clearing scene...")

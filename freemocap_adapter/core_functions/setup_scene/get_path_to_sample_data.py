@@ -24,6 +24,7 @@ def get_path_to_sample_data():
 
     return sample_data_path
 
+
 if __name__ == "__main__":
     sample_data_path = get_path_to_sample_data()
     print(f"Sample data downloaded found at: {str(sample_data_path)}")

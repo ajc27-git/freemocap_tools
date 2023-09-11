@@ -6,14 +6,12 @@ import bpy
 from freemocap_adapter.core_functions.create_mesh.attach_mesh_to_rig import attach_mesh_to_rig
 from freemocap_adapter.core_functions.empties.creation.create_freemocap_empties import create_freemocap_empties
 from freemocap_adapter.core_functions.empties.reorient_empties import reorient_empties
-from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler import freemocap_data_handler
 from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_saver.freemocap_data_saver import \
     FreemocapDataSaver
 from freemocap_adapter.core_functions.freemocap_data_operations.load_freemocap_data import load_freemocap_data
 from freemocap_adapter.core_functions.freemocap_data_operations.load_videos import load_videos
 from freemocap_adapter.core_functions.rig.add_rig import add_rig
-from freemocap_adapter.core_functions.setup_scene.make_parent_empties import create_freemocap_parent_empty, \
-    create_video_parent_empty
+from freemocap_adapter.core_functions.setup_scene.make_parent_empties import create_freemocap_parent_empty
 from freemocap_adapter.core_functions.setup_scene.set_start_end_frame import set_start_end_frame
 from freemocap_adapter.data_models.parameter_models.parameter_models import Config
 
@@ -87,12 +85,12 @@ class RunAsMain:
     def save_data_to_disk(self):
         try:
             self.freemocap_data_handler.extract_data_from_empties(empties=self.empties)
-            FreemocapDataSaver(freemocap_data_handler=self.freemocap_data_handler).save(recording_path=self.recording_path)
+            FreemocapDataSaver(freemocap_data_handler=self.freemocap_data_handler).save(
+                recording_path=self.recording_path)
         except Exception as e:
             logger.error(f"Failed to save data to disk: {e}")
             logger.exception(e)
             raise e
-
 
     def add_rig(self):
         try:
@@ -116,9 +114,8 @@ class RunAsMain:
         logger.info("Loading videos as planes...")
 
         try:
-            load_videos(recording_path=self.recording_path )
+            load_videos(recording_path=self.recording_path)
         except Exception as e:
             logger.error(e)
             logger.exception(e)
             raise e
-

@@ -6,8 +6,11 @@ from typing import List, Union, Literal, Dict, Any
 import numpy as np
 
 from freemocap_adapter.core_functions.empties.creation.create_virtual_trajectories import calculate_virtual_trajectories
+from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.helpers.find_low_velocity_region import \
+    find_low_velocity_region_around_frame
 from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.helpers.put_freemocap_data_into_inertial_reference_frame import \
-    get_lowest_body_trajectories, get_frame_with_lowest_velocity
+    get_frame_with_lowest_velocity
+
 from freemocap_adapter.data_models.freemocap_data.freemocap_data_model import FreemocapData
 from freemocap_adapter.data_models.freemocap_data.helpers.freemocap_component_data import FreemocapComponentData
 
@@ -28,7 +31,7 @@ class FreemocapDataHandler:
     def from_recording_path(cls,
                             recording_path: Union[str, Path],
                             ) -> "FreemocapDataHandler":
-        cls._validate_recording_path(recording_path = recording_path)
+        cls._validate_recording_path(recording_path=recording_path)
         freemocap_data = FreemocapData.from_recording_path(recording_path=recording_path)
         return cls(freemocap_data=freemocap_data)
 
@@ -37,11 +40,10 @@ class FreemocapDataHandler:
                          component_type: FREEMOCAP_DATA_COMPONENT_TYPES,
                          source: str = None,
                          group_name: str = None):
-        
+
         trajectory_names = list(trajectories.keys())
         trajectory_frame_name_xyz = np.array(list(trajectories.values()))
         trajectory_frame_name_xyz = trajectory_frame_name_xyz.reshape((self.number_of_frames, len(trajectory_names), 3))
-        
 
         if trajectory_frame_name_xyz.shape[0] != self.number_of_frames:
             raise ValueError(
@@ -95,21 +97,22 @@ class FreemocapDataHandler:
         trajectories = []
         if component_type is None:
             if trajectory_name in self.body_names:
-                trajectories.append(self.body_frame_name_xyz[:, self.body_names.index(trajectory_name)])
+                trajectories.append(self.body_frame_name_xyz[:, self.body_names.index(trajectory_name), :])
 
             if trajectory_name in self.right_hand_names:
-                trajectories.append(self.right_hand_frame_name_xyz[:, self.right_hand_names.index(trajectory_name)])
+                trajectories.append(self.right_hand_frame_name_xyz[:, self.right_hand_names.index(trajectory_name), :])
 
             if trajectory_name in self.left_hand_names:
-                trajectories.append(self.left_hand_frame_name_xyz[:, self.left_hand_names.index(trajectory_name)])
+                trajectories.append(self.left_hand_frame_name_xyz[:, self.left_hand_names.index(trajectory_name), :])
 
             if trajectory_name in self.face_names:
-                trajectories.append(self.face_frame_name_xyz[:, self.face_names.index(trajectory_name)])
+                trajectories.append(self.face_frame_name_xyz[:, self.face_names.index(trajectory_name), :])
 
             for name, other_component in self.freemocap_data.other.items():
                 if trajectory_name in other_component.trajectory_names:
                     trajectories.append(
-                        other_component.data_frame_name_xyz[:, other_component.trajectory_names.index(trajectory_name)])
+                        other_component.data_frame_name_xyz[:, other_component.trajectory_names.index(trajectory_name),
+                        :])
         if trajectories == []:
             raise ValueError(f"Trajectory {trajectory_name} not found.")
         if len(trajectories) > 1:
@@ -124,7 +127,7 @@ class FreemocapDataHandler:
 
     @property
     def good_clean_frame(self) -> int:
-        lowest_trajectories = get_lowest_body_trajectories(freemocap_data_handler=self)
+        lowest_trajectories = self.get_lowest_body_trajectories()
         good_clean_frame_index = get_frame_with_lowest_velocity(lowest_trajectories)
         return good_clean_frame_index
 
@@ -137,7 +140,6 @@ class FreemocapDataHandler:
         trajectories.update(self.face_trajectories)
         trajectories.update(self.other_trajectories)
         return trajectories
-
 
     @property
     def center_of_mass_trajectory(self) -> np.ndarray:
@@ -204,7 +206,8 @@ class FreemocapDataHandler:
             raise ValueError(
                 f"Number of trajectories ({1}) does not match number of trajectories in center_of_mass_frame_name_xyz ({com_frame_frame_xyz.shape[1]}).")
         if com_frame_frame_xyz.shape[2] != 3:
-            raise ValueError(f"center_of_mass_frame_name_xyz should have 3 dimensions. Got {com_frame_frame_xyz.shape[2]} instead.")
+            raise ValueError(
+                f"center_of_mass_frame_name_xyz should have 3 dimensions. Got {com_frame_frame_xyz.shape[2]} instead.")
         return com_frame_frame_xyz
 
     @property
@@ -340,7 +343,7 @@ class FreemocapDataHandler:
         if rotation_matrix.shape != (3, 3):
             raise ValueError(f"Rotation matrix must be a 3x3 matrix. Got {rotation_matrix.shape} instead.")
 
-        if data_frame_name_xyz.shape[2] == 2:
+        if data_frame_name_xyz.shape[-1] == 2:
             logger.info(f"2D data detected. Adding a third dimension with zeros.")
             data_frame_name_xyz = np.concatenate(
                 [data_frame_name_xyz, np.zeros((data_frame_name_xyz.shape[0], data_frame_name_xyz.shape[1], 1))],
@@ -348,26 +351,32 @@ class FreemocapDataHandler:
 
         rotated_data_frame_name_xyz = np.zeros(data_frame_name_xyz.shape)
         for frame_number in range(data_frame_name_xyz.shape[0]):
-            for trajectory_number in range(data_frame_name_xyz.shape[1]):
-                rotated_data_frame_name_xyz[frame_number, trajectory_number, :] = rotation_matrix @ data_frame_name_xyz[
+            if len(data_frame_name_xyz.shape) == 2:
+                rotated_data_frame_name_xyz[frame_number, :] = rotation_matrix @ data_frame_name_xyz[frame_number, :]
+            elif len(data_frame_name_xyz.shape) == 3:
+                for trajectory_number in range(data_frame_name_xyz.shape[1]):
+                    rotated_data_frame_name_xyz[frame_number, trajectory_number, :] = rotation_matrix @ data_frame_name_xyz[
                                                                                                     frame_number,
                                                                                                     trajectory_number,
                                                                                                     :]
         return rotated_data_frame_name_xyz
 
     def apply_rotation(self, rotation_matrix: Union[np.ndarray, List[List[float]]]):
+
         if isinstance(rotation_matrix, list):
             rotation_matrix = np.array(rotation_matrix)
+
         if rotation_matrix.shape != (3, 3):
             raise ValueError(f"Rotation matrix must be a 3x3 matrix. Got {rotation_matrix.shape} instead.")
+
         logger.info(f"Applying rotation matrix {rotation_matrix}")
         self.body_frame_name_xyz = self._rotate_component(self.body_frame_name_xyz, rotation_matrix)
         self.right_hand_frame_name_xyz = self._rotate_component(self.right_hand_frame_name_xyz, rotation_matrix)
         self.left_hand_frame_name_xyz = self._rotate_component(self.left_hand_frame_name_xyz, rotation_matrix)
         self.face_frame_name_xyz = self._rotate_component(self.face_frame_name_xyz, rotation_matrix)
-        for other_component in self.freemocap_data.other:
-            other_component.data_frame_name_xyz = self._rotate_component(other_component.data_frame_name_xyz,
-                                                                         rotation_matrix)
+
+        for name, other_component in self.freemocap_data.other.items():
+            other_component.data = self._rotate_component(other_component.data, rotation_matrix)
 
     def apply_translation(self, vector: Union[np.ndarray, List[float]]):
         logger.info(f"Translating by vector {vector}")
@@ -381,13 +390,20 @@ class FreemocapDataHandler:
         self.left_hand_frame_name_xyz = self._translate_component_data(self.left_hand_frame_name_xyz, vector)
         self.face_frame_name_xyz = self._translate_component_data(self.face_frame_name_xyz, vector)
 
-        for other_component in self.freemocap_data.other:
-            self._translate_component_data(other_component.data_frame_name_xyz, vector)
+        for name, other_component in self.freemocap_data.other.items():
+            self._translate_component_data(other_component.data, vector)
 
-    def _translate_component_data(self, component, vector):
-        component[:, :, 0] += vector[0]
-        component[:, :, 1] += vector[1]
-        component[:, :, 2] += vector[2]
+    def _translate_component_data(self, component: np.ndarray, vector: np.ndarray):
+        if len(component.shape) == 2:
+            component[:, 0] += vector[0]
+            component[:, 1] += vector[1]
+            component[:, 2] += vector[2]
+        elif len(component.shape) == 3:
+            component[:, :, 0] += vector[0]
+            component[:, :, 1] += vector[1]
+            component[:, :, 2] += vector[2]
+        else:
+            raise ValueError(f"Component data must have 2 or 3 dimensions. Got {component.shape[2]} instead.")
         return component
 
     def apply_scale(self, scale):
@@ -500,7 +516,7 @@ class FreemocapDataHandler:
             raise e
 
     @staticmethod
-    def _validate_recording_path( recording_path: Union[str, Path]):
+    def _validate_recording_path(recording_path: Union[str, Path]):
         if recording_path == "":
             logger.error("No recording path specified")
             raise FileNotFoundError("No recording path specified")
@@ -508,3 +524,82 @@ class FreemocapDataHandler:
             logger.error(f"Recording path {recording_path} does not exist")
             raise FileNotFoundError(f"Recording path {recording_path} does not exist")
 
+    def put_data_in_inertial_reference_frame(self):
+
+        logger.info(
+            f"Putting freemocap data in inertial reference frame...")
+
+        ground_reference_trajectories = self.get_trajectories(
+            trajectory_names=["right_heel", "left_heel", "right_foot_index", "left_foot_index"])
+
+        low_velocity_region = find_low_velocity_region_around_frame(trajectories=ground_reference_trajectories,
+                                                                    frame_number=self.good_clean_frame,)
+                                                                    
+
+        original_reference_trajectories = {trajectory_name: trajectory[low_velocity_region[0]:low_velocity_region[1]]
+                                           for trajectory_name, trajectory in ground_reference_trajectories.items()}
+
+        center_reference_point = np.mean(np.nanmean(list(original_reference_trajectories.values()), axis=0), axis=0)
+        self.apply_translation(-center_reference_point)
+        self.mark_processing_stage("translated_to_origin")
+
+        left_reference_trajectories = self.get_trajectories(trajectory_names=["left_heel", "left_foot_index"])
+        forward_reference_trajectories = self.get_trajectories(trajectory_names=["right_heel", "right_foot_index"])
+        up_reference_trajectory = self.get_trajectory("head_center")[low_velocity_region[0]:low_velocity_region[1]]
+
+        left_reference_point = np.mean(np.nanmean(list(left_reference_trajectories.values()), axis=0), axis=0)
+        forward_reference_point = np.mean(np.nanmean(list(forward_reference_trajectories.values()), axis=0), axis=0)
+        up_reference_point = np.nanmean(up_reference_trajectory, axis=0)
+
+        x_hat_raw = forward_reference_point / np.linalg.norm(forward_reference_point)
+        y_hat_raw = left_reference_point / np.linalg.norm(left_reference_point)
+        z_hat_raw = up_reference_point / np.linalg.norm(up_reference_point)
+
+        x_hat_orthogonal = np.cross(z_hat_raw, y_hat_raw)
+        y_hat_orthogonal = np.cross(z_hat_raw, x_hat_orthogonal)
+        z_hat_orthogonal = np.cross(x_hat_orthogonal, y_hat_orthogonal)
+
+        rotation_matrix = np.array([x_hat_orthogonal, y_hat_orthogonal, z_hat_orthogonal]).T
+
+        self.apply_rotation(rotation_matrix=rotation_matrix)
+        self.mark_processing_stage("inertial_reference_frame")
+
+        logger.success(
+            "Finished putting freemocap data in inertial reference frame.\n freemocap_data(after):\n{self}")
+
+    def get_lowest_body_trajectories(self) -> Dict[str, np.ndarray]:
+        body_names = self.body_names
+
+        # checking for markers from the ground up!
+        body_parts_from_low_to_high = [
+            ("feet", ["right_heel", "left_heel", "right_foot_index", "left_foot_index"]),
+            ("ankle", ["right_ankle", "left_ankle"]),
+            ("knee", ["right_knee", "left_knee"]),
+            ("hip", ["right_hip", "left_hip"]),
+            ("shoulder", ["right_shoulder", "left_shoulder"]),
+            ("head", ["nose", "right_eye_inner", "right_eye",
+                      "right_eye_outer", "left_eye_inner",
+                      "left_eye", "left_eye_outer",
+                      "right_ear", "left_ear",
+                      "mouth_right", "mouth_left"]),
+        ]
+
+        for part_name, part_list in body_parts_from_low_to_high:
+            if all([part in body_names for part in part_list]):
+                logger.debug(f"Trying to use {part_name} trajectories to define ground plane.")
+                part_trajectories = self.get_trajectories(part_list)
+
+                for trajectory_name, trajectory in part_trajectories.items():
+                    if np.isnan(trajectory).all():
+                        logger.warning(
+                            f"Trajectory {trajectory_name} is all nan. Removing from lowest body trajectories.")
+                        del part_trajectories[trajectory_name]
+
+                if len(part_trajectories) < 2:
+                    logger.debug(f"Found less than 2 {part_name} trajectories. Trying next part..")
+                else:
+                    logger.info(f"Found {part_name} trajectories. Using {part_name} as lowest body trajectories.")
+                    return part_trajectories
+
+        logger.error(f"Found less than 2 head trajectories. Cannot find lowest body trajectories!")
+        raise Exception("Cannot find lowest body trajectories!")

@@ -28,5 +28,11 @@ def load_freemocap_data(
         logger.exception(e)
         raise e
 
+    try:
+        logger.info("Putting freemocap data in inertial reference frame....")
+        freemocap_data_handler.put_data_in_inertial_reference_frame()
+    except Exception as e:
+        logger.error(f"Failed when trying to put freemocap data in inertial reference frame: {e}")
+        logger.exception(e)
+        raise e
     return freemocap_data_handler
-

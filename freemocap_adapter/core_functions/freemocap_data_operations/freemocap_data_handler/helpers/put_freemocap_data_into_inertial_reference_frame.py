@@ -4,7 +4,6 @@ from typing import Dict
 import numpy as np
 from numpy.linalg import svd
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -32,7 +31,7 @@ def get_frame_with_lowest_velocity(trajectories: Dict[str, np.ndarray]) -> int:
 
             # Calculate velocity if this is not the last frame
             if frame < number_of_frames - 1:
-                velocity = np.linalg.norm(trajectory[frame+1] - trajectory[frame])
+                velocity = np.linalg.norm(trajectory[frame + 1] - trajectory[frame])
                 velocities.append(velocity)
 
         # If all trajectories are visible in this frame, calculate total velocity
@@ -105,35 +104,6 @@ def get_plane_definition_from_points(points: np.ndarray) -> Dict[str, np.ndarray
     return {"center": center,
             "normal": normal}
 
-#
-# def put_freemocap_data_into_inertial_reference_frame(
-#         freemocap_data_handler: FreemocapDataHandler) -> FreemocapDataHandler:
-#     logger.info(
-#         "Putting freemocap data in inertial reference frame...\n freemocap_data(before):\n{freemocap_data_handler}")
-#     lowest_trajectories = get_lowest_body_trajectories(freemocap_data_handler)
-#
-#     lowest_slowest_points = get_low_velocity_points(trajectories=lowest_trajectories,
-#                                                     percentile=0.25)
-#     freemocap_data_handler.add_metadata({"slow_points": lowest_slowest_points})
-#
-#     ground_plane_definition = get_plane_definition_from_points(points=lowest_slowest_points)
-#
-#     freemocap_data_handler.add_metadata({"unrotated_ground_plane_definition": ground_plane_definition})
-#
-#     # freemocap_data_handler.translate_by(-ground_plane_definition["center"])
-#     # freemocap_data_handler.mark_processing_stage("translated_to_origin")
-#
-#     # rotation_matrix = find_rotation_matrix_to_put_groundplane_at_z_equal_zero(ground_plane_definition)
-#
-#     # for trajectory_name, trajectory in freemocap_data_handler.trajectories.items():
-#     #     freemocap_data_handler.trajectories[trajectory_name] = rotation_matrix @ trajectory.T
-#
-#     # freemocap_data_handler.mark_processing_stage("inertial_reference_frame")
-#
-#     logger.success(
-#         "Finished putting freemocap data in inertial reference frame.\n freemocap_data(after):\n{freemocap_data_handler}")
-#     return freemocap_data_handler
-
 
 def find_rotation_matrix_to_put_groundplane_at_z_equal_zero(ground_plane_definition: Dict[str, np.ndarray]):
     # Validate input
@@ -158,9 +128,12 @@ def find_rotation_matrix_to_put_groundplane_at_z_equal_zero(ground_plane_definit
 
     # Compute rotation matrix
     rotation_matrix = np.array([
-        [cos_theta + u_x**2 * (1 - cos_theta), u_x*u_y*(1 - cos_theta) - u_z*sin_theta, u_x*u_z*(1 - cos_theta) + u_y*sin_theta],
-        [u_y*u_x*(1 - cos_theta) + u_z*sin_theta, cos_theta + u_y**2 * (1 - cos_theta), u_y*u_z*(1 - cos_theta) - u_x*sin_theta],
-        [u_z*u_x*(1 - cos_theta) - u_y*sin_theta, u_z*u_y*(1 - cos_theta) + u_x*sin_theta, cos_theta + u_z**2 * (1 - cos_theta)]
+        [cos_theta + u_x ** 2 * (1 - cos_theta), u_x * u_y * (1 - cos_theta) - u_z * sin_theta,
+         u_x * u_z * (1 - cos_theta) + u_y * sin_theta],
+        [u_y * u_x * (1 - cos_theta) + u_z * sin_theta, cos_theta + u_y ** 2 * (1 - cos_theta),
+         u_y * u_z * (1 - cos_theta) - u_x * sin_theta],
+        [u_z * u_x * (1 - cos_theta) - u_y * sin_theta, u_z * u_y * (1 - cos_theta) + u_x * sin_theta,
+         cos_theta + u_z ** 2 * (1 - cos_theta)]
     ])
 
     return rotation_matrix
@@ -177,40 +150,3 @@ def validate_groundplane_definition(ground_plane_definition):
     if ground_plane_definition["center"].shape != (3,):
         raise Exception(
             f"ground_plane_definition['center'] has shape {ground_plane_definition['center'].shape} (should be (3,)).")
-
-
-def get_lowest_body_trajectories(freemocap_data_handler) -> Dict[str, np.ndarray]:
-    body_names = freemocap_data_handler.body_names
-
-    # checking for markers from the ground up!
-    trajectory_parts = [
-        ("feet", ["right_heel", "left_heel", "right_foot_index", "left_foot_index"]),
-        ("ankle", ["right_ankle", "left_ankle"]),
-        ("knee", ["right_knee", "left_knee"]),
-        ("hip", ["right_hip", "left_hip"]),
-        ("shoulder", ["right_shoulder", "left_shoulder"]),
-        ("head", ["nose", "right_eye_inner", "right_eye",
-                  "right_eye_outer", "left_eye_inner",
-                  "left_eye", "left_eye_outer",
-                  "right_ear", "left_ear",
-                  "mouth_right", "mouth_left"]),
-    ]
-
-    for part_name, part_list in trajectory_parts:
-        if all([part in body_names for part in part_list]):
-            logger.debug(f"Trying to use {part_name} trajectories to define ground plane.")
-            part_trajectories = freemocap_data_handler.get_trajectories(part_list)
-
-            for trajectory_name, trajectory in part_trajectories.items():
-                if np.isnan(trajectory).all():
-                    logger.warning(f"Trajectory {trajectory_name} is all nan. Removing from lowest body trajectories.")
-                    del part_trajectories[trajectory_name]
-
-            if len(part_trajectories) < 2:
-                logger.debug(f"Found less than 2 {part_name} trajectories. Trying next part..")
-            else:
-                logger.info(f"Found {part_name} trajectories. Using {part_name} as lowest body trajectories.")
-                return part_trajectories
-
-    logger.error(f"Found less than 2 head trajectories. Cannot find lowest body trajectories!")
-    raise Exception("Cannot find lowest body trajectories!")

@@ -4,7 +4,6 @@ import bpy
 
 from freemocap_adapter.core_functions.empties.creation.create_empty_from_trajectory import \
     create_empties
-from freemocap_adapter.core_functions.empties.creation.create_virtual_trajectories import calculate_virtual_trajectories
 from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.freemocap_data_handler import \
     FreemocapDataHandler
 
@@ -55,7 +54,7 @@ def create_freemocap_empties(freemocap_data_handler: FreemocapDataHandler,
         empties["other"]["center_of_mass"] = create_empties(
             trajectory_frame_marker_xyz=freemocap_data_handler.center_of_mass_frame_name_xyz,
             names_list="_center_of_mass",
-            empty_scale=body_empty_scale*3,
+            empty_scale=body_empty_scale * 3,
             empty_type="ARROWS",
             parent_object=parent_object,
         )

@@ -3,6 +3,8 @@ import mathutils
 
 ORIGIN_LOCATION_PRE_RESET = (0, 0, 0)
 ORIGIN_ROTATION_PRE_RESET = (0, 0, 0)
+
+
 def add_hands_middle_empties():
     # Try checking if the hand middle empties have been already added
     try:
@@ -82,10 +84,10 @@ def add_hands_middle_empties():
 
                 # Update the action property of the middle empty
                 hand_middle_empties[side_index].animation_data.action.fcurves[0].keyframe_points[frame_index].co[1] = \
-                hand_middle_position[0]
+                    hand_middle_position[0]
                 hand_middle_empties[side_index].animation_data.action.fcurves[1].keyframe_points[frame_index].co[1] = \
-                hand_middle_position[1]
+                    hand_middle_position[1]
                 hand_middle_empties[side_index].animation_data.action.fcurves[2].keyframe_points[frame_index].co[1] = \
-                hand_middle_position[2]
+                    hand_middle_position[2]
 
         print('Adding Hand Middle completed.')

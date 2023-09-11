@@ -36,10 +36,9 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
     ### Move freemocap_origin_axes to the hips_center empty and rotate it so the ###
     ### z axis intersects the trunk_center empty and the x axis intersects the left_hip empty ###
     body_origin = parent_object
-    body_empties = empties['body']
-    hips_center = body_empties['hips_center']
 
-    left_hip = body_empties['left_hip']
+    hips_center = empties['hips_center']
+    left_hip = empties['left_hip']
 
     # Move origin to hips_center
     body_origin.location = hips_center.location
@@ -74,7 +73,7 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
     ### Calculate angle in the local yz plane to rotate origin so its z axis crosses the z_align_empty ###
     ### Preferably the trunk_center or left_knee ###
     # Get the z_align_empty object
-    z_align_empty = body_empties[z_align_ref_empty]
+    z_align_empty = empties[z_align_ref_empty]
     # Get z_align_empty location from origin
     z_align_empty_loc_from_origin = z_align_empty.location - body_origin.location
     # Get the vector distance
@@ -96,7 +95,7 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
     ### Move the origin along its local z axis to place it at an imaginary "capture ground plane" ###
     ### Preferable be placed at a heel or foot_index level ###
     # Get the ground reference empty object
-    ground_empty = body_empties[ground_ref_empty]
+    ground_empty = empties[ground_ref_empty]
     # Get ground_empty location from origin
     ground_empty_loc_from_origin = ground_empty.location - body_origin.location
     # Get the vector distance
@@ -149,26 +148,26 @@ def reorient_empties(empties: Dict[str, bpy.types.Object],
     for object in bpy.data.objects:
         object.select_set(False)
 
-    # # Adjust the position of the finger tracking empties. Move right_hand_wrist (and all its child empties) to match the right_wrist position
-    # if correct_fingers_empties:
-    #     hand_side = ['right', 'left']
+    # Adjust the position of the finger tracking empties. Move right_hand_wrist (and all its child empties) to match the right_wrist position
+    if correct_fingers_empties:
+        hand_side = ['right', 'left']
 
-    #     # Iterate through each scene frame and calculate the position delta from x_hand_wrist to x_wrist and move all the fingers empties by that delta
-    #     for frame in range(scene.frame_start, scene.frame_end):
-    #         # Set scene frame
-    #         scene.frame_set(frame)
+        # Iterate through each scene frame and calculate the position delta from x_hand_wrist to x_wrist and move all the fingers empties by that delta
+        for frame in range(scene.frame_start, scene.frame_end):
+            # Set scene frame
+            scene.frame_set(frame)
 
-    #         for side in hand_side:
-    #             hand_empties = empties['hands'][side]
-    #             body_wrist_empty = body_empties[side + '_wrist']
-    #             hand_wrist_empty = hand_empties[side + '_hand_wrist']
-    #             # Get the position delta
-    #             position_delta = body_wrist_empty.location - hand_wrist_empty.location
+            for side in hand_side:
+                hand_empties = empties['hands'][side]
+                body_wrist_empty = empties[side + '_wrist']
+                hand_wrist_empty = hand_empties[side + '_hand_wrist']
+                # Get the position delta
+                position_delta = body_wrist_empty.location - hand_wrist_empty.location
 
-    #             # Translate the hand_wrist empty and its children by the position delta
-    #             translate_empty_and_its_children(empty_name=side + '_hand_wrist',
-    #                                              frame_index=frame,
-    #                                              delta=position_delta, )
+                # Translate the hand_wrist empty and its children by the position delta
+                translate_empty_and_its_children(empty_name=side + '_hand_wrist',
+                                                 frame_index=frame,
+                                                 delta=position_delta, )
 
     # Deselect all objects
     bpy.ops.object.select_all(action='DESELECT')

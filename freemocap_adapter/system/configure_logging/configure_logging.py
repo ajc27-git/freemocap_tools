@@ -51,6 +51,7 @@ class CustomFormatter(logging.Formatter):
             datetime.fromtimestamp(timestamp), date_format_with_microseconds
         )
 
+
 class LoggerBuilder:
     DEFAULT_LOGGING = {"version": 1, "disable_existing_loggers": False}
     # class BlenderStream:
@@ -128,12 +129,10 @@ class LoggerBuilder:
         console_handler.addFilter(DeltaTimeFilter())
         return console_handler
 
-
-
     def configure(self):
         if len(logging.getLogger().handlers) == 0:
             # handlers = [self.build_file_handler(), self.build_console_handler()]
-            handlers = [self.build_console_handler() ]#self.build_blender_handler()]
+            handlers = [self.build_console_handler()]  # self.build_blender_handler()]
             for handler in handlers:
                 if handler not in logging.getLogger("").handlers:
                     logging.getLogger("").handlers.append(handler)

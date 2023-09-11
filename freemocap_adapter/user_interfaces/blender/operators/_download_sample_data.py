@@ -11,7 +11,6 @@ class FMC_ADAPTER_download_sample_data(bpy.types.Operator, bpy_extras.io_utils.I
     bl_label = "Download Sample Data"
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
-
     def execute(self, context):
         logger.info("Downloading sample data....")
         download_sample_data()

@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 
 def main(recording_path: str,
          config: Config = load_default_parameters_config()):
-
     logger.info(f"Initializing `run_as_main` object with recording_path={recording_path} and config={config}")
     run_as_main = RunAsMain(recording_path=recording_path,
                             config=config)

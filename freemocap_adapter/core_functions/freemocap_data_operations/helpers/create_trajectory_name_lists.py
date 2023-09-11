@@ -10,7 +10,6 @@ def create_trajectory_name_lists(data_source: str,
                                  face_frame_name_xyz: np.ndarray,
                                  left_hand_frame_name_xyz: np.ndarray,
                                  right_hand_frame_name_xyz: np.ndarray):
-
     body_names = [f"body_{index}" for index in range(body_frame_name_xyz.shape[1])]
     right_hand_names = [f"right_hand_{index}" for index in range(right_hand_frame_name_xyz.shape[1])]
     left_hand_names = [f"left_hand_{index}" for index in range(left_hand_frame_name_xyz.shape[1])]

@@ -6,6 +6,7 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
+
 def create_empties(trajectory_frame_marker_xyz: np.ndarray,
                    names_list: Union[List[str], str],
                    empty_scale: float,
@@ -29,6 +30,7 @@ def create_empties(trajectory_frame_marker_xyz: np.ndarray,
         logger.trace(f"Created empty {trajectory_name}")
 
     return empties
+
 
 def create_keyframed_empty_from_3d_trajectory_data(
         trajectory_fr_xyz: np.ndarray,

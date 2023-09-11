@@ -30,13 +30,13 @@ class FMC_ADAPTER_OT_reorient_empties(Operator):
         logger.info('Executing Re-orient Empties...')
         try:
             reorient_empties(z_align_ref_empty=fmc_adapter_tool.vertical_align_reference,
-                                                  z_align_angle_offset=fmc_adapter_tool.vertical_align_angle_offset,
-                                                  ground_ref_empty=fmc_adapter_tool.ground_align_reference,
-                                                  z_translation_offset=fmc_adapter_tool.vertical_align_position_offset,
-                                                  correct_fingers_empties=fmc_adapter_tool.correct_fingers_empties,
-                                                  empties=empties,
-                                                  parent_object=parent_empty,
-                                                  )
+                             z_align_angle_offset=fmc_adapter_tool.vertical_align_angle_offset,
+                             ground_ref_empty=fmc_adapter_tool.ground_align_reference,
+                             z_translation_offset=fmc_adapter_tool.vertical_align_position_offset,
+                             correct_fingers_empties=fmc_adapter_tool.correct_fingers_empties,
+                             empties=empties,
+                             parent_object=parent_empty,
+                             )
 
             # Get end time and print execution time
             end = time.time()

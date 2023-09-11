@@ -7,9 +7,9 @@ def ensure_not_grey(r, g, b, threshold_diff=100):
     """Ensure that the color isn't desaturated grey by making one color component dominant."""
     max_val = max(r, g, b)
     if (
-        abs(r - g) < threshold_diff
-        and abs(r - b) < threshold_diff
-        and abs(g - b) < threshold_diff
+            abs(r - g) < threshold_diff
+            and abs(r - b) < threshold_diff
+            and abs(g - b) < threshold_diff
     ):
         if max_val == r:
             r = 255
