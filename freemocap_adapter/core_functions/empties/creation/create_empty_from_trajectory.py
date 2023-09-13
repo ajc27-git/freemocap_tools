@@ -23,7 +23,7 @@ def create_empties(trajectory_frame_marker_xyz: np.ndarray,
         empties[trajectory_name] = create_keyframed_empty_from_3d_trajectory_data(
             trajectory_fr_xyz=trajectory_fr_xyz,
             trajectory_name=trajectory_name,
-            parent_origin=parent_object,
+            parent_object=parent_object,
             empty_scale=empty_scale,
             empty_type=empty_type,
         )
@@ -35,7 +35,7 @@ def create_empties(trajectory_frame_marker_xyz: np.ndarray,
 def create_keyframed_empty_from_3d_trajectory_data(
         trajectory_fr_xyz: np.ndarray,
         trajectory_name: str,
-        parent_origin: List[float] = [0, 0, 0],
+        parent_object: bpy.types.Object,
         empty_scale: float = 0.1,
         empty_type: str = "PLAIN_AXES",
 ) -> bpy.types.Object:
@@ -49,7 +49,7 @@ def create_keyframed_empty_from_3d_trajectory_data(
 
     empty_object.scale = [empty_scale] * 3
 
-    empty_object.parent = parent_origin
+    empty_object.parent = parent_object
 
     for frame_number in range(trajectory_fr_xyz.shape[0]):
         empty_object.location = [

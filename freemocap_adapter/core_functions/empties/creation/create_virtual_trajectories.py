@@ -22,7 +22,9 @@ def validate_marker_definitions(virtual_marker_definitions: dict):
             raise ValueError(f"marker_weights must sum to 1 for virtual marker {virtual_marker_name}")
 
 
-def calculate_virtual_trajectory(all_trajectories: np.ndarray, all_names: list, component_names: List,
+def calculate_virtual_trajectory(all_trajectories: np.ndarray,
+                                all_names: list,
+                                 component_names: List,
                                  weights: List) -> np.ndarray:
     """
     Create a virtual marker from a set of component markers. A 'Virtual Marker' is a 'fake' marker created by combining the data from 'real' (measured) marker/trajectory data.
@@ -37,7 +39,7 @@ def calculate_virtual_trajectory(all_trajectories: np.ndarray, all_names: list, 
                 raise ValueError(f"Trajectory {name} not found in trajectory names list")
 
             # pull out the trajectory data for this component trajectory and scale by its weight
-            component_xyz = all_trajectories[:, all_names.index(name)] * weight
+            component_xyz = all_trajectories[:, all_names.index(name), :] * weight
             virtual_trajectory_frame_xyz += component_xyz
     except Exception as e:
         logger.error(f"Error calculating virtual marker trajectory: {e}")
@@ -55,26 +57,28 @@ def calculate_virtual_trajectories(body_frame_name_xyz: np.ndarray,
     validate_marker_definitions(MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS)
 
     virtual_trajectories = {}
-    for marker_name, marker_definition in MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS.items():
-        logger.info(f"Calculating virtual marker trajectory: {marker_name} \n"
-                    f"Component trajectories: {marker_definition['marker_names']} \n"
-                    f" weights: {marker_definition['marker_weights']}\n")
+    for virtual_trajectory_name, virtual_trajectory_definition in MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS.items():
+        logger.info(f"Calculating virtual marker trajectory: {virtual_trajectory_name} \n"
+                    f"Component trajectories: {virtual_trajectory_definition['marker_names']} \n"
+                    f" weights: {virtual_trajectory_definition['marker_weights']}\n")
 
         virtual_trajectory_frame_xyz = calculate_virtual_trajectory(
             all_trajectories=body_frame_name_xyz,
             all_names=body_names,
-            component_names=marker_definition["marker_names"],
-            weights=marker_definition["marker_weights"]
+            component_names=virtual_trajectory_definition["marker_names"],
+            weights=virtual_trajectory_definition["marker_weights"]
         )
 
-        if marker_name in body_names:
+        if virtual_trajectory_name in body_names:
             raise ValueError(
-                f"Virtual marker name {marker_name} is already in the trajectory names list. This will cause problems later. Please choose a different name for your virtual marker.")
+                f"Virtual marker name {virtual_trajectory_name} is already in the trajectory names list. This will cause problems later. Please choose a different name for your virtual marker.")
 
         if virtual_trajectory_frame_xyz.shape[0] != body_frame_name_xyz.shape[0] or virtual_trajectory_frame_xyz.shape[
             1] != body_frame_name_xyz.shape[2]:
             raise ValueError(
-                f"Virtual marker {marker_name} has shape {virtual_trajectory_frame_xyz.shape} but should have shape ({body_frame_name_xyz.shape[0]}, {body_frame_name_xyz.shape[2]})"
+                f"Virtual marker {virtual_trajectory_name} has shape {virtual_trajectory_frame_xyz.shape} but should have shape ({body_frame_name_xyz.shape[0]}, {body_frame_name_xyz.shape[2]})"
             )
-        virtual_trajectories[marker_name] = virtual_trajectory_frame_xyz
+        virtual_trajectories[virtual_trajectory_name] = virtual_trajectory_frame_xyz
+        
+        logger.success(f"Finished calculating virtual marker trajectory: {virtual_trajectories.keys()}")
     return virtual_trajectories

@@ -15,12 +15,12 @@ def main(recording_path: str,
 
     logger.info("Loading freemocap data...")
     run_as_main.load_freemocap_data()
-
+    
     logger.info("Creating empties...")
     run_as_main.create_empties()
 
-    logger.info("Reorienting empties...")
-    run_as_main.reorient_empties()
+    # logger.info("Reorienting empties...")
+    # run_as_main.reorient_empties()
 
     logger.info("Saving data to disk...")
     run_as_main.save_data_to_disk()
