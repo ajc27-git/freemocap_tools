@@ -19,6 +19,7 @@ def load_freemocap_data(
         freemocap_data_handler.mark_processing_stage("original_from_file")
     except Exception as e:
         logger.error(f"Failed to load freemocap freemocap_data: {e}")
+        logger.exception(e)
         raise e
 
     try:
