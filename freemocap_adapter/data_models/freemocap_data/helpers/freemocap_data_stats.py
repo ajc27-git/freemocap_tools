@@ -24,7 +24,10 @@ def calculate_stats(data):
         'shape': data.shape if data.size > 0 else np.nan,
         'mean': {"x": mean_x, "y": mean_y, "z": mean_z},
         'std_dev': {"x": std_dev_x, "y": std_dev_y, "z": std_dev_z},
-        'range': {'x': (min_x, max_x), 'y': (min_y, max_y), 'z': (min_z, max_z)},
+        'range': {'x': {'min': min_x, 'max': max_x},
+                  'y': {'min': min_y, 'max': max_y},
+                  'z': {'min': min_z, 'max': max_z}
+                  }
     }
 
 
@@ -44,11 +47,14 @@ class FreemocapDataStats:
             face_stats=calculate_stats(freemocap_data.face.data),
         )
 
+    def _format_dict(self, data):
+        if isinstance(data, dict):
+            return {k: self._format_dict(v) for k, v in data.items()}
+        elif isinstance(data, float):
+            return "{:.3f}".format(data)
+        else:
+            return data
+
     def __str__(self):
         from pprint import pformat
-
-        return pformat(
-            self.__dict__,
-            indent=4,
-            compact=True,
-        )
+        return pformat(self._format_dict(self.__dict__), indent=4, compact=True)
