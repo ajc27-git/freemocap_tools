@@ -6,8 +6,8 @@ from typing import List, Union, Literal, Dict, Any
 import numpy as np
 
 from freemocap_adapter.core_functions.empties.creation.create_virtual_trajectories import calculate_virtual_trajectories
-from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.helpers.put_freemocap_data_into_inertial_reference_frame import \
-    get_frame_with_lowest_velocity
+from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.helpers.estimate_good_frame import \
+    estimate_good_frame
 from freemocap_adapter.data_models.freemocap_data.freemocap_data_model import FreemocapData
 from freemocap_adapter.data_models.freemocap_data.helpers.freemocap_component_data import FreemocapComponentData
 
@@ -32,12 +32,9 @@ class FreemocapDataHandler:
         freemocap_data = FreemocapData.from_recording_path(recording_path=recording_path)
         return cls(freemocap_data=freemocap_data)
 
-
     @property
     def metadata(self) -> Dict[Any, Any]:
         return self.freemocap_data.metadata
-
-
 
     @property
     def trajectories(self) -> Dict[str, np.ndarray]:
@@ -183,7 +180,7 @@ class FreemocapDataHandler:
         frame_counts = self._collect_frame_counts()
         self._validate_frame_counts(frame_counts)
         return frame_counts['body']
-    
+
     def add_trajectory(self,
                        trajectory: np.ndarray,
                        trajectory_name: str,
@@ -209,7 +206,8 @@ class FreemocapDataHandler:
             self.freemocap_data.body.data = np.concatenate([self.body_frame_name_xyz, trajectory], axis=1)
             self.freemocap_data.body.trajectory_names.append(trajectory_name)
         elif component_type == "right_hand":
-            self.freemocap_data.hands["right"].data = np.concatenate([self.right_hand_frame_name_xyz, trajectory], axis=1)
+            self.freemocap_data.hands["right"].data = np.concatenate([self.right_hand_frame_name_xyz, trajectory],
+                                                                     axis=1)
             self.freemocap_data.hands["right"].trajectory_names.append(trajectory_name)
         elif component_type == "left_hand":
             self.freemocap_data.hands["left"].data = np.concatenate([self.left_hand_frame_name_xyz, trajectory], axis=1)
@@ -268,7 +266,9 @@ class FreemocapDataHandler:
         #                                                     data_source=source if source is not None else "unknown",
         #                                                     trajectory_names=incoming_trajectory_names))
 
-    def get_trajectories(self, trajectory_names: List[str], components=None) -> Dict[str, np.ndarray]:
+    def get_trajectories(self, trajectory_names: List[str], components=None, with_error: bool = False) -> Union[
+        Dict[str, np.ndarray], Dict[str, Dict[str, np.ndarray]]]:
+        
         if not isinstance(trajectory_names, list):
             trajectory_names = [trajectory_names]
 
@@ -277,37 +277,68 @@ class FreemocapDataHandler:
         elif not isinstance(components, list):
             components = [components] * len(trajectory_names)
 
-        return {name: self.get_trajectory(name, comp) for name, comp in zip(trajectory_names, components)}
+        return {name: self.get_trajectory(name=name,
+                                          component_type=component,
+                                          with_error=with_error) for
+                name, component in zip(trajectory_names, components)}
 
     def get_trajectory(self,
-                       trajectory_name: str,
-                       component_type: FREEMOCAP_DATA_COMPONENT_TYPES = None):
+                       name: str,
+                       component_type: FREEMOCAP_DATA_COMPONENT_TYPES = None,
+                       with_error: bool = False) -> Union[np.ndarray, Dict[str, np.ndarray]]:
+
+
         trajectories = []
+        errors = []
         if component_type is None:
-            if trajectory_name in self.body_names:
-                trajectories.append(self.body_frame_name_xyz[:, self.body_names.index(trajectory_name), :])
+            if name in self.body_names:
+                trajectories.append(self.body_frame_name_xyz[:, self.body_names.index(name), :])
+                if with_error:
+                    errors.append(self.freemocap_data.body.error[:, self.body_names.index(name)])
 
-            if trajectory_name in self.right_hand_names:
-                trajectories.append(self.right_hand_frame_name_xyz[:, self.right_hand_names.index(trajectory_name), :])
+            if name in self.right_hand_names:
+                trajectories.append(self.right_hand_frame_name_xyz[:, self.right_hand_names.index(name), :])
+                if with_error:
+                    errors.append(self.freemocap_data.hands["right"].error[:, self.right_hand_names.index(name)])
 
-            if trajectory_name in self.left_hand_names:
-                trajectories.append(self.left_hand_frame_name_xyz[:, self.left_hand_names.index(trajectory_name), :])
+            if name in self.left_hand_names:
+                trajectories.append(self.left_hand_frame_name_xyz[:, self.left_hand_names.index(name), :])
+                if with_error:
+                    errors.append(self.freemocap_data.hands["left"].error[:, self.left_hand_names.index(name)])
 
-            if trajectory_name in self.face_names:
-                trajectories.append(self.face_frame_name_xyz[:, self.face_names.index(trajectory_name), :])
+            if name in self.face_names:
+                trajectories.append(self.face_frame_name_xyz[:, self.face_names.index(name), :])
+                if with_error:
+                    errors.append(self.freemocap_data.face.error[:, self.face_names.index(name)])
 
-            for name, other_component in self.freemocap_data.other.items():
-                if trajectory_name in other_component.trajectory_names:
-                    trajectories.append(
-                        other_component.data_frame_name_xyz[:, other_component.trajectory_names.index(trajectory_name),
-                        :])
+            for other_component in self.freemocap_data.other.values():
+                if name in other_component.trajectory_names:
+                    if len(other_component.data.shape) == 3:
+                        trajectories.append(
+                            other_component.data[:, other_component.trajectory_names.index(name), :])
+                    elif len(other_component.data.shape) == 2:
+                        trajectories.append(
+                            other_component.data[:, other_component.trajectory_names.index(name)])
+                    else:
+                        raise ValueError(
+                            f"Data shape {other_component.data.shape} is not supported. Should be 2 or 3 dimensional.")
+
+                    if with_error and other_component.error is not None:
+                        errors.append(
+                            other_component.error[:, other_component.trajectory_names.index(name)])
+                    else:
+                        errors.append(None)
         if trajectories == []:
-            raise ValueError(f"Trajectory {trajectory_name} not found.")
+            raise ValueError(f"Trajectory {name} not found.")
+
         if len(trajectories) > 1:
             raise ValueError(
-                f"Trajectory {trajectory_name} found in multiple components. Specify component (body, right_hand, left_hand, face, other) to resolve ambiguity.")
+                f"Trajectory {name} found in multiple components. Specify component (body, right_hand, left_hand, face, other) to resolve ambiguity.")
 
-        return trajectories[0]
+        if not with_error:
+            return trajectories[0]
+        else:
+            return {"trajectory": trajectories[0], "error": errors[0]}
 
     def _collect_frame_counts(self) -> dict:
         frame_counts = {
@@ -589,11 +620,14 @@ class FreemocapDataHandler:
         logger.info(
             f"Putting freemocap data in inertial reference frame...")
 
-        ground_reference_trajectories = self.get_trajectories(
-            trajectory_names=["right_heel", "left_heel", "right_foot_index", "left_foot_index"])
-        good_frame = get_frame_with_lowest_velocity(trajectories=ground_reference_trajectories)
-        original_reference_trajectories = {trajectory_name: trajectory[good_frame, :]
-                                           for trajectory_name, trajectory in ground_reference_trajectories.items()}
+        ground_reference_trajectories_with_error = self.get_trajectories(
+            trajectory_names=["right_heel", "left_heel", "right_foot_index", "left_foot_index"],
+            with_error=True)
+
+        good_frame = estimate_good_frame(trajectories_with_error=ground_reference_trajectories_with_error)
+        original_reference_trajectories = {trajectory_name: trajectory["trajectory"][good_frame, :]
+                                           for trajectory_name, trajectory in
+                                           ground_reference_trajectories_with_error.items()}
 
         center_reference_point = np.nanmean(list(original_reference_trajectories.values()), axis=0)
 

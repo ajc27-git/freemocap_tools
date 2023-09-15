@@ -42,7 +42,7 @@ def get_frame_with_lowest_velocity(trajectories: Dict[str, np.ndarray]) -> int:
             frame_velocities.append(float('inf'))
 
     # Return the frame with the lowest total velocity
-    return int(np.argmin(frame_velocities))
+    return int(np.nanargmin(frame_velocities))
 
 
 def get_low_velocity_points(trajectories: Dict[str, np.ndarray],
