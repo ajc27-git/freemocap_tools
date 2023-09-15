@@ -1,8 +1,8 @@
+import logging
 from typing import Dict
 
 import numpy as np
 
-import logging
 logger = logging.getLogger(__name__)
 
 def estimate_good_frame(trajectories_with_error: Dict[str, Dict[str, np.ndarray]], ignore_first_n_frames: int=30):

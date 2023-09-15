@@ -22,6 +22,9 @@ def main(recording_path: str,
     # logger.info("Reorienting empties...")
     # run_as_main.reorient_empties()
 
+    logger.info("Reducing bone length dispersion...")
+    run_as_main.reduce_bone_length_dispersion()
+
     logger.info("Saving data to disk...")
     run_as_main.save_data_to_disk()
 
