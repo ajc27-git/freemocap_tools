@@ -539,7 +539,7 @@ class FreemocapDataHandler:
             right_hand_frames = []
             left_hand_frames = []
             face_frames = []
-            other_data = {}
+            other_components_frames = {}
 
             for frame_number in range(bpy.context.scene.frame_start, bpy.context.scene.frame_end):
                 logger.debug(f"Extracting data from frame {frame_number}...")
@@ -561,13 +561,11 @@ class FreemocapDataHandler:
                         [bpy.data.objects[empty_name].location for empty_name in empties["face"].keys()]))
 
                 if "other" in empties.keys():
-                    for name, other_component in self.freemocap_data.other.items():
-                        if name not in other_data:
-                            other_data[name] = []
-                        other_data[name].append(np.array(
-                            [bpy.data.objects[empty_name].location for empty_name in
-                             empties[other_component.name].keys()]))
-
+                    for other_name, other_component in self.freemocap_data.other.items():    
+                        if not other_name in other_components.keys():
+                            other_components[other_name] = []
+                        other_components_frames[other_name].append(np.ndarray(bpy.data.objects[other_name].location))
+                           
             if len(body_frames) > 0:
                 self.body_frame_name_xyz = np.array(body_frames)
             if len(right_hand_frames) > 0:
@@ -576,14 +574,15 @@ class FreemocapDataHandler:
                 self.left_hand_frame_name_xyz = np.array(left_hand_frames)
             if len(face_frames) > 0:
                 self.face_frame_name_xyz = np.array(face_frames)
-            if len(other_data) > 0:
-                for name, other_component in self.freemocap_data.other.items():
-                    other_component.data = np.array(other_data[name])
-
+            if len(other_components_frames) > 0:
+                for other_name, other_component_frames in other_components_frames.items():
+                    self.freemocap_data.other[other_name].data = np.array(other_component_frames)
+                    
         except Exception as e:
             logger.error(f"Failed to extract data from empties {empties.keys()}")
             logger.exception(e)
             raise e
+        
         self.mark_processing_stage(stage_name)
 
     def add_other_component(self, component: FreemocapComponentData):

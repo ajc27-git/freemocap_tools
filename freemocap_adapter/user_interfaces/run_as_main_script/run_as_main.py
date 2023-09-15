@@ -84,7 +84,7 @@ class RunAsMain:
 
     def save_data_to_disk(self):
         try:
-            self.freemocap_data_handler.extract_data_from_empties(empties=self.empties)
+            # self.freemocap_data_handler.extract_data_from_empties(empties=self.empties)
             FreemocapDataSaver(freemocap_data_handler=self.freemocap_data_handler).save(
                 recording_path=self.recording_path)
         except Exception as e:

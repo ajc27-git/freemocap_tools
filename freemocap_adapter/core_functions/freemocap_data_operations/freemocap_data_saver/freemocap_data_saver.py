@@ -34,8 +34,8 @@ class FreemocapDataSaver:
                 "right_hand": self.handler.right_hand_names,
                 "left_hand": self.handler.left_hand_names,
                 "face": self.handler.face_names,
-                "other": {other_component.name: other_component.trajectory_names for other_component in
-                          self.handler.freemocap_data.other}
+                "other": {key: value.trajectory_names for key, value in
+                          self.handler.freemocap_data.other.items()}
             }
             trajectory_names_path.write_text(json.dumps(trajectory_names, indent=4))
 
@@ -81,9 +81,8 @@ class FreemocapDataSaver:
                    fmt='%s', header=all_csv_header)
         logger.debug(f"Saved all_frame_name_xyz to {csv_path / 'all_frame_name_xyz.csv'}")
 
-    def _save_npy(self, save_path):
-
-        npy_path = save_path / "npy"
+    def _save_npy(self, save_path: Union[str, Path]):
+        npy_path = Path(save_path) / "npy"
         npy_path.mkdir(parents=True, exist_ok=True)
         logger.info(f"Saving npy files to {npy_path}")
 
@@ -99,11 +98,9 @@ class FreemocapDataSaver:
         np.save(str(npy_path / "face_frame_name_xyz.npy"), self.handler.face_frame_name_xyz)
         logger.debug(f"Saved face_frame_name_xyz to {npy_path / 'face_frame_name_xyz.npy'}")
 
-        for other_component in self.handler.freemocap_data.other:
-            np.save(str(npy_path / f"{other_component.name}_frame_name_xyz.npy"),
-                    other_component.data_frame_name_xyz)
-            logger.debug(
-                f"Saved {other_component.name}_frame_name_xyz to {npy_path / f'{other_component.name}_frame_name_xyz.npy'}")
+        for name, component in self.handler.freemocap_data.other.items():
+            np.save(str(npy_path / f"{name}_frame_name_xyz.npy"), component.data)
+            logger.debug(f"Saved {name}_frame_name_xyz to {npy_path / f'{name}_frame_name_xyz.npy'}")
 
         np.save(str(save_path / "all_frame_name_xyz.npy"), self.handler.all_frame_name_xyz)
         logger.debug(f"Saved all_frame_name_xyz to {npy_path / 'all_frame_name_xyz.npy'}")
