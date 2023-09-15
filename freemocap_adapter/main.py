@@ -18,7 +18,7 @@ def main(recording_path: str,
     
     logger.info("Creating empties...")
     run_as_main.create_empties()
-
+    return
     # logger.info("Reorienting empties...")
     # run_as_main.reorient_empties()
 
@@ -41,8 +41,19 @@ def main(recording_path: str,
 
 
 if __name__ == "__main__" or __name__ == "<run_path>":
-    from freemocap_adapter.core_functions.setup_scene.get_path_to_sample_data import get_path_to_sample_data
+    try:
+        import bpy
+        from pathlib import Path
+        fmc_adapter_tool = bpy.context.scene.fmc_adapter_tool
+        recording_path = fmc_adapter_tool.recording_path
 
-    recording_path = get_path_to_sample_data()
+        if not Path(recording_path).exists():
+            raise ValueError(f"Recording path {recording_path} does not exist!")
+    except Exception as e:
+        logging.warning(f"Could not load recording path from Blender. Using default path instead. Error: {e}")
+    
+        from freemocap_adapter.core_functions.setup_scene.get_path_to_sample_data import get_path_to_sample_data
+        recording_path = get_path_to_sample_data()
+
     logging.info(f"Running {__file__} with recording_path={recording_path}")
     main(recording_path=recording_path)

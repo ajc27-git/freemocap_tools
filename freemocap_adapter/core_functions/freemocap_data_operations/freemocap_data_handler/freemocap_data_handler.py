@@ -163,8 +163,7 @@ class FreemocapDataHandler:
 
     @property
     def good_clean_frame(self) -> int:
-        lowest_trajectories = self.get_lowest_body_trajectories()
-        good_clean_frame_index = get_frame_with_lowest_velocity(lowest_trajectories)
+        
         return good_clean_frame_index
 
     @property
@@ -648,7 +647,7 @@ class FreemocapDataHandler:
         logger.success(
             "Finished putting freemocap data in inertial reference frame.\n freemocap_data(after):\n{self}")
 
-    def get_lowest_body_trajectories(self) -> Dict[str, np.ndarray]:
+    def get_body_trajectories_closest_to_the_ground(self) -> Dict[str, np.ndarray]:
         body_names = self.body_names
 
         # checking for markers from the ground up!

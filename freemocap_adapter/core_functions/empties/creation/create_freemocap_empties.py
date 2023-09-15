@@ -53,7 +53,7 @@ def create_freemocap_empties(freemocap_data_handler: FreemocapDataHandler,
         empties["other"] = {}
         empties["other"]["center_of_mass"] = create_empties(
             trajectory_frame_marker_xyz=freemocap_data_handler.center_of_mass_frame_name_xyz,
-            names_list="_center_of_mass",
+            names_list="center_of_mass",
             empty_scale=body_empty_scale * 3,
             empty_type="ARROWS",
             parent_object=parent_object,

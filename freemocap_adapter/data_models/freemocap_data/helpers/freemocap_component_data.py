@@ -11,6 +11,8 @@ class FreemocapComponentData:
     data_source: str
     trajectory_names: List[str]
     data_dimensions: List[str] = None
+    error: np.ndarray = None
+    error_type: str = "mean_reprojection_error"
 
     def __post_init__(self):
         if isinstance(self.data, list):
