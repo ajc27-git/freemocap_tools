@@ -18,7 +18,7 @@ def main(recording_path: str,
     
     logger.info("Creating empties...")
     run_as_main.create_empties()
-    return
+    
     # logger.info("Reorienting empties...")
     # run_as_main.reorient_empties()
 

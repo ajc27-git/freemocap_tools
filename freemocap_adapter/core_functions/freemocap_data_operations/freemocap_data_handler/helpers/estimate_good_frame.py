@@ -46,4 +46,4 @@ def estimate_good_frame(trajectories_with_error: Dict[str, Dict[str, np.ndarray]
     # Find the index of the good frame with the lowest velocity
     best_frame = all_good_frames[np.argmin(good_frames_velocities)]
 
-     return best_frame 
+    return best_frame 
