@@ -8,7 +8,7 @@ from freemocap_adapter.core_functions.freemocap_data_operations.load_videos impo
 
 
 class FMC_ADAPTER_load_videos(bpy.types.Operator):
-    bl_idname = 'fmc_adapter.load_videos'
+    bl_idname = 'fmc_adapter._load_videos'
     bl_label = "Load Videos as planes"
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
 

@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class FMC_ADAPTER_OT_reorient_empties(Operator):
-    bl_idname = 'fmc_adapter.reorient_empties'
+    bl_idname = 'fmc_adapter._reorient_empties'
     bl_label = 'Freemocap Adapter - Re-orient Empties'
     bl_description = "Change the position of the freemocap_origin_axes empty to so it is placed in an imaginary ground plane of the capture between the actor's feet"
     bl_options = {'REGISTER', 'UNDO_GROUPED'}

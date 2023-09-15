@@ -22,34 +22,34 @@ class VIEW3D_PT_freemocap_adapter(Panel):
 
         # Clear scene button
         clear_scene_box = layout.box()
-        clear_scene_box.operator('fmc_adapter.clear_scene', text='Clear Scene')
+        clear_scene_box.operator('fmc_adapter._clear_scene', text='Clear Scene')
 
         # Load empties Options
         load_freemocap_box = layout.box()
         row = load_freemocap_box.row()
         row.label(text="FreeMoCap Recording:")
         row.prop(fmc_adapter_tool, "recording_path", text="")
-        load_freemocap_box.operator('fmc_adapter.freemocap_data_operations', text='0. Load FreeMoCap Data')
+        load_freemocap_box.operator('fmc_adapter._freemocap_data_operations', text='0. Load FreeMoCap Data')
 
         row = load_freemocap_box.row()
         row.label(icon='FILE_MOVIE', )
-        row.operator('fmc_adapter.load_videos',
+        row.operator('fmc_adapter._load_videos',
                      text="Load videos as planes",
                      )
 
         # row = load_freemocap_box.row()
         # row.label(text="Download sample data?")
-        # row.operator('fmc_adapter.download_sample_data', text='Download')
+        # row.operator('fmc_adapter._download_sample_data', text='Download')
 
         load_freemocap_box.prop(fmc_adapter_tool,
                                 "data_parent_empty",
                                 text="Data Parent Empty")
 
-        # adjust_empties_box.operator('fmc_adapter.adjust_empties', text='1. Adjust Empties')
+        # adjust_empties_box.operator('fmc_adapter._adjust_empties', text='1. Adjust Empties')
 
         # Adjust Empties Options
         reorient_empties_box = layout.box()
-        reorient_empties_box.operator('fmc_adapter.reorient_empties', text='1. Re-orient Empties')
+        reorient_empties_box.operator('fmc_adapter._reorient_empties', text='1. Re-orient Empties')
         row = reorient_empties_box.row()
         row.prop(fmc_adapter_tool,
                  'show_reorient_empties_options',
@@ -83,7 +83,7 @@ class VIEW3D_PT_freemocap_adapter(Panel):
 
         # Reduce Bone Length Dispersion Options
         bone_length_box = layout.box()
-        bone_length_box.operator('fmc_adapter.reduce_bone_length_dispersion', text='2. Reduce Bone Length Dispersion')
+        bone_length_box.operator('fmc_adapter._reduce_bone_length_dispersion', text='2. Reduce Bone Length Dispersion')
         row = bone_length_box.row()
         row.prop(fmc_adapter_tool,
                  'show_bone_length_options',
@@ -107,11 +107,11 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         # split.column().label(text='Recording FPS')
         # split.split().column().prop(fmc_adapter_tool, 'recording_fps')
 
-        # box.operator('fmc_adapter.reduce_shakiness', text='Reduce Shakiness')
+        # box.operator('fmc_adapter._reduce_shakiness', text='Reduce Shakiness')
 
         # Add Rig Options
         add_rig_box = layout.box()
-        add_rig_box.operator('fmc_adapter.add_rig', text='3. Add Rig')
+        add_rig_box.operator('fmc_adapter._add_rig', text='3. Add Rig')
         row = add_rig_box.row()
         row.prop(fmc_adapter_tool,
                  'show_add_rig_options',
@@ -137,15 +137,15 @@ class VIEW3D_PT_freemocap_adapter(Panel):
 
         # Add Body Mesh Options
         body_mesh_box = layout.box()
-        body_mesh_box.operator('fmc_adapter.add_body_mesh', text='4. Add Body Mesh')
+        body_mesh_box.operator('fmc_adapter._add_body_mesh', text='4. Add Body Mesh')
         # box.label(text='Add Body Mesh Options')
 
         split = body_mesh_box.column().row().split(factor=0.6)
         split.column().label(text='Body Mesh Mode')
         split.split().column().prop(fmc_adapter_tool, 'body_mesh_mode')
 
-        # box.operator('fmc_adapter.actions_op', text='Add Body Mesh').action = 'ADD_BODY_MESH'
+        # box.operator('fmc_adapter._actions_op', text='Add Body Mesh').action = 'ADD_BODY_MESH'
 
         # FBX Export
         fbx_export_box = layout.box()
-        fbx_export_box.operator('fmc_adapter.export_fbx', text='5. Export FBX')
+        fbx_export_box.operator('fmc_adapter._export_fbx', text='5. Export FBX')

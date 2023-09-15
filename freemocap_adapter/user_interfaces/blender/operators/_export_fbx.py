@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class FMC_ADAPTER_OT_export_fbx(Operator):
-    bl_idname = 'fmc_adapter.export_fbx'
+    bl_idname = 'fmc_adapter._export_fbx'
     bl_label = 'Freemocap Adapter - Export FBX'
     bl_description = 'Exports a FBX file containing the rig, the mesh and the baked animation'
     bl_options = {'REGISTER', 'UNDO_GROUPED'}

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class FMC_ADAPTER_OT_add_rig(Operator):
-    bl_idname = 'fmc_adapter.add_rig'
+    bl_idname = 'fmc_adapter._add_rig'
     bl_label = 'Freemocap Adapter - Add Rig'
     bl_description = 'Add a Rig to the capture empties. The method sets the rig rest pose as a TPose'
     bl_options = {'REGISTER', 'UNDO_GROUPED'}

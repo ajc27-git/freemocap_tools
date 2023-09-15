@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class FMC_ADAPTER_OT_reduce_shakiness(Operator):
-    bl_idname = 'fmc_adapter.reduce_shakiness'
+    bl_idname = 'fmc_adapter._reduce_shakiness'
     bl_label = 'Freemocap Adapter - Reduce Shakiness'
     bl_description = 'Reduce the shakiness of the capture empties by restricting their acceleration to a defined threshold'
     bl_options = {'REGISTER', 'UNDO_GROUPED'}

@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class FMC_ADAPTER_OT_add_body_mesh(Operator):
-    bl_idname = 'fmc_adapter.add_body_mesh'
+    bl_idname = 'fmc_adapter._add_body_mesh'
     bl_label = 'Freemocap Adapter - Add Body Mesh'
     bl_description = 'Add a body mesh to the rig. The mesh can be a file or a custom mesh made with basic shapes. This method first executes Add Empties and Add Rig(if no rig available)'
     bl_options = {'REGISTER', 'UNDO_GROUPED'}

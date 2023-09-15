@@ -12,7 +12,7 @@ import bpy
 
 
 class FMC_ADAPTER_load_freemocap_data(bpy.types.Operator):  # , bpy_extras.io_utils.ImportHelper):
-    bl_idname = 'fmc_adapter.freemocap_data_operations'
+    bl_idname = 'fmc_adapter._freemocap_data_operations'
     bl_label = "Load FreeMoCap Data"
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
 

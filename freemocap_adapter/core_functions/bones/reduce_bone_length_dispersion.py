@@ -1,9 +1,10 @@
 import logging
 import math as m
-from typing import Dict, Any
+from typing import Dict, Any, Union
 
 import bpy
 import mathutils
+import numpy as np
 
 from freemocap_adapter.core_functions.bones.calculate_bone_length_statistics import calculate_bone_length_statistics
 from freemocap_adapter.core_functions.empties.translate_empty_and_its_children import translate_empty_and_its_children
@@ -12,16 +13,16 @@ from freemocap_adapter.core_functions.empties.update_empty_positions import get_
 logger = logging.getLogger(__name__)
 
 
-def reduce_bone_length_dispersion(empties: Dict[str, bpy.types.Object],
+def reduce_bone_length_dispersion(trajectories: Dict[str, Dict[str, Union[np.ndarray, Dict[str, np.ndarray]]]],
                                   bones: Dict[str, Dict[str, Any]],
                                   interval_variable: str = 'median',
                                   interval_factor: float = 0.01):
     logger.info('Reducing bone length dispersion...')
     # Update the empty positions dictionary
-    empty_positions = get_empty_positions(empties=empties)
+    # empty_positions = get_empty_positions(empties=empties)
 
     # Update the information of the virtual bones
-    bones = calculate_bone_length_statistics(empty_positions=empty_positions, bones=bones)
+    bones = calculate_bone_length_statistics(trajectories=trajectories, bones=bones)
 
     # Print the current bones length median, standard deviation and coefficient of variation
     print_virtual_bone_information(bones=bones)

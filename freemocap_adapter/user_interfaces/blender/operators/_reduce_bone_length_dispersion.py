@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class FMC_ADAPTER_OT_reduce_bone_length_dispersion(Operator):
-    bl_idname = 'fmc_adapter.reduce_bone_length_dispersion'
+    bl_idname = 'fmc_adapter._reduce_bone_length_dispersion'
     bl_label = 'Freemocap Adapter - Reduce Bone Length Dispersion'
     bl_description = 'Reduce the bone length dispersion by moving the tail empty and its children along the bone projection so the bone new length is within the interval'
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
