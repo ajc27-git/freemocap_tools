@@ -59,28 +59,7 @@ class RunAsMain:
         except Exception as e:
             logger.error(f"Failed to create keyframed empties: {e}")
 
-    def reorient_empties(self):
-        scene = bpy.context.scene
-        try:
-            logger.info('Executing Re-orient Empties...')
 
-            scene.frame_set(self.freemocap_data_handler.good_clean_frame)
-
-            reoriented_empties = reorient_empties(z_align_ref_empty=self.config.adjust_empties.vertical_align_reference,
-                                                  z_align_angle_offset=self.config.adjust_empties.vertical_align_angle_offset,
-                                                  ground_ref_empty=self.config.adjust_empties.ground_align_reference,
-                                                  z_translation_offset=self.config.adjust_empties.vertical_align_position_offset,
-                                                  correct_fingers_empties=self.config.adjust_empties.correct_fingers_empties,
-                                                  empties=self.empties,
-                                                  parent_object=self.data_parent_object,
-                                                  )
-
-            logger.success("Finished reorienting empties!")
-            return reoriented_empties
-        except Exception as e:
-            logger.error(f"Failed to reorient empties: {e}")
-            logger.exception(e)
-            raise e
 
     def save_data_to_disk(self):
         try:
