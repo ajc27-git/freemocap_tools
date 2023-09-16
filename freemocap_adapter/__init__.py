@@ -44,7 +44,7 @@ def unregister():
         bpy.utils.unregister_class(cls)
 
     logger.info(f"Unregistering property group FMC_ADAPTER_PROPERTIES")
-    del bpy.types.Scene.fmc_adapter_tool
+    del bpy.types.Scene.fmc_adapter_properties
 
 
 def register():
@@ -60,7 +60,7 @@ def register():
     logger.info(f"Registering property group FMC_ADAPTER_PROPERTIES")
 
     from freemocap_adapter.blender_interface import FMC_ADAPTER_PROPERTIES
-    bpy.types.Scene.fmc_adapter_tool = bpy.props.PointerProperty(type=FMC_ADAPTER_PROPERTIES)
+    bpy.types.Scene.fmc_adapter_properties = bpy.props.PointerProperty(type=FMC_ADAPTER_PROPERTIES)
 
     try:
         from freemocap_adapter.core_functions.export.get_io_scene_fbx_addon import get_io_scene_fbx_addon

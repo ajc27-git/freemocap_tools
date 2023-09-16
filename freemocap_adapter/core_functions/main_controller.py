@@ -3,6 +3,7 @@ from pathlib import Path
 
 import bpy
 
+from freemocap_adapter.core_functions.bones.enforce_rigid_bones import enforce_rigid_bones
 from freemocap_adapter.core_functions.create_mesh.attach_mesh_to_rig import attach_mesh_to_rig
 from freemocap_adapter.core_functions.empties.creation.create_freemocap_empties import create_freemocap_empties
 from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_saver.freemocap_data_saver import \
@@ -17,7 +18,7 @@ from freemocap_adapter.data_models.parameter_models.parameter_models import Conf
 logger = logging.getLogger(__name__)
 
 
-class RunAsMain:
+class MainController:
     """
     This class is used to run the program as a main script.
     """
@@ -35,7 +36,6 @@ class RunAsMain:
         self.empties = None
 
     def load_freemocap_data(self):
-        logger.info("Loading freemocap_data....")
         try:
             logger.info("Loading freemocap data....")
             self.freemocap_data_handler = load_freemocap_data(recording_path=self.recording_path)
@@ -45,12 +45,40 @@ class RunAsMain:
             logger.error(f"Failed to load freemocap data: {e}")
             raise e
 
+    def calculate_virtual_trajectories(self):
+        try:
+            logger.info("Calculating virtual trajectories....")
+            self.freemocap_data_handler.calculate_virtual_trajectories()
+            self.freemocap_data_handler.mark_processing_stage("add_virtual_trajectories")
+        except Exception as e:
+            logger.error(f"Failed to calculate virtual trajectories: {e}")
+            logger.exception(e)
+            raise e
+
+    def put_data_in_inertial_reference_frame(self):
+        try:
+            logger.info("Putting freemocap data in inertial reference frame....")
+            self.freemocap_data_handler.put_data_in_inertial_reference_frame()
+        except Exception as e:
+            logger.error(f"Failed when trying to put freemocap data in inertial reference frame: {e}")
+            logger.exception(e)
+            raise e
+
+    def enforce_rigid_bones(self):
+        logger.info("Enforcing rigid bones...")
+        try:
+            self.freemocap_data_handler = enforce_rigid_bones(freemocap_data_handler=self.freemocap_data_handler)
+        except Exception as e:
+            logger.error(f"Failed during `enforce rigid bones`, error: `{e}`")
+            logger.exception(e)
+            raise e
+
     def create_empties(self):
         try:
-            # estimate good clean frame (where the body is most still)
+            logger.info("Creating keyframed empties....")
             bpy.ops.screen.animation_play()
             bpy.ops.screen.animation_cancel()
-            logger.info("Creating keyframed empties....")
+
             self.empties = create_freemocap_empties(freemocap_data_handler=self.freemocap_data_handler,
                                                     parent_object=self.data_parent_object,
                                                     )
@@ -62,7 +90,7 @@ class RunAsMain:
 
     def save_data_to_disk(self):
         try:
-            # self.freemocap_data_handler.extract_data_from_empties(empties=self.empties)
+            logger.info("Saving data to disk...")
             FreemocapDataSaver(freemocap_data_handler=self.freemocap_data_handler).save(
                 recording_path=self.recording_path)
         except Exception as e:
@@ -85,15 +113,32 @@ class RunAsMain:
             raise e
 
     def attach_mesh_to_rig(self):
-        logger.info("Adding body mesh...")
-        attach_mesh_to_rig(body_mesh_mode=self.config.add_body_mesh.body_mesh_mode)
+        try:
+            logger.info("Adding body mesh...")
+            attach_mesh_to_rig(body_mesh_mode=self.config.add_body_mesh.body_mesh_mode)
+        except Exception as e:
+            logger.error(f"Failed to attach mesh to rig: {e}")
+            logger.exception(e)
+            raise e
 
     def add_videos(self):
-        logger.info("Loading videos as planes...")
-
         try:
+            logger.info("Loading videos as planes...")
             load_videos(recording_path=self.recording_path)
         except Exception as e:
             logger.error(e)
             logger.exception(e)
             raise e
+
+    def run_all(self):
+        logger.info("Running all stages...")
+        self.load_freemocap_data()
+        self.calculate_virtual_trajectories()
+        self.enforce_rigid_bones()
+        self.save_data_to_disk()
+        self.create_empties()
+        self.add_rig()
+        self.attach_mesh_to_rig()
+        self.add_videos()
+        # export_fbx(recording_path=recording_path, )
+

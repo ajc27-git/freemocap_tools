@@ -22,7 +22,7 @@ class FMC_ADAPTER_OT_add_rig(Operator):
     def execute(self, context):
         logger.info(f"Executing {__name__}...")
         scene = context.scene
-        fmc_adapter_tool = scene.fmc_adapter_tool
+        fmc_adapter_tool = scene.fmc_adapter_properties
         parent_empty = fmc_adapter_tool.data_parent_empty
         empties = freemocap_empties_from_parent_object(parent_empty)
         # Get start time

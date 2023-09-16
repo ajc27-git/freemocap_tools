@@ -18,7 +18,7 @@ class FMC_ADAPTER_OT_export_fbx(Operator):
     def execute(self, context):
         logger.info('Executing Export FBX...')
         scene = context.scene
-        fmc_adapter_tool = scene.fmc_adapter_tool
+        fmc_adapter_tool = scene.fmc_adapter_properties
 
         recording_path = fmc_adapter_tool.recording_path
         if recording_path == "":

@@ -3,10 +3,12 @@ import math
 import statistics
 from typing import Dict, List, Any
 
+import numpy as np
+
 logger = logging.getLogger(__name__)
 
 
-def calculate_bone_length_statistics(trajectories: Dict[str, Dict[str, Any]],
+def calculate_bone_length_statistics(trajectories: Dict[str, np.ndarray],
                                      bones: Dict[str, Dict[str, Any]]):
     logger.info('Calculating bone length statistics...')
 

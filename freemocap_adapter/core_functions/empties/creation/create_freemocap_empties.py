@@ -17,11 +17,7 @@ def create_freemocap_empties(freemocap_data_handler: FreemocapDataHandler,
                              body_empty_scale: float = BODY_EMPTY_SCALE,
                              ):
     hand_empty_scale = body_empty_scale * 0.5
-    logger.info(
-        "__\n"
-        "Loading freemocap trajectory freemocap data as empty markers..."
-        "__\n"
-    )
+    logger.info("Loading freemocap trajectory data as keyframed empties....")
 
     empties = {}
     try:

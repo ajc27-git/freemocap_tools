@@ -18,9 +18,11 @@ class VIEW3D_PT_freemocap_adapter(Panel):
             logger.trace('Drawing panel...')
         layout = self.layout
         scene = context.scene
-        fmc_adapter_tool = scene.fmc_adapter_tool
+        fmc_adapter_tool = scene.fmc_adapter_properties
 
         self._clear_scene_button(layout)
+
+        self._run_all_panel(fmc_adapter_tool, layout)
 
         self._load_data_panel(fmc_adapter_tool, layout)
 
@@ -31,6 +33,13 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         self._add_body_mesh_panel(fmc_adapter_tool, layout)
 
         self._fbx_export_panel(layout)
+
+    def _run_all_panel(self, fmc_adapter_tool, layout):
+        box = layout.box()
+        row = box.row()
+        row.label(text="FreeMoCap Recording:")
+        row.prop(fmc_adapter_tool, "recording_path", text="")
+        box.operator('fmc_adapter._run_all', text='RUN ALL')
 
     def _clear_scene_button(self, layout):
         # Clear scene button
@@ -98,9 +107,7 @@ class VIEW3D_PT_freemocap_adapter(Panel):
     def _load_data_panel(self, fmc_adapter_tool, layout):
         # Load empties Options
         load_freemocap_box = layout.box()
-        row = load_freemocap_box.row()
-        row.label(text="FreeMoCap Recording:")
-        row.prop(fmc_adapter_tool, "recording_path", text="")
+
         load_freemocap_box.operator('fmc_adapter._freemocap_data_operations', text='0. Load FreeMoCap Data')
         row = load_freemocap_box.row()
         row.label(icon='FILE_MOVIE', )

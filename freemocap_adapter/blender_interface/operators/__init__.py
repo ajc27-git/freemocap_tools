@@ -8,9 +8,11 @@ from freemocap_adapter.blender_interface.operators._reduce_bone_length_dispersio
     FMC_ADAPTER_OT_reduce_bone_length_dispersion
 from freemocap_adapter.blender_interface.operators._reduce_shakiness import FMC_ADAPTER_OT_reduce_shakiness
 from freemocap_adapter.blender_interface.operators._reorient_empties import FMC_ADAPTER_OT_reorient_empties
+from freemocap_adapter.blender_interface.operators._run_all import FMC_ADAPTER_run_all
 
 BLENDER_OPERATORS = [  # FMC_ADAPTER_download_sample_data,
     FMC_ADAPTER_clear_scene,
+    FMC_ADAPTER_run_all,
     FMC_ADAPTER_load_videos,
     FMC_ADAPTER_load_freemocap_data,
     FMC_ADAPTER_OT_reorient_empties,

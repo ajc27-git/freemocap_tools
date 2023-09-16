@@ -19,7 +19,7 @@ class FMC_ADAPTER_load_freemocap_data(bpy.types.Operator):  # , bpy_extras.io_ut
     def execute(self, context):
         try:
             scene = context.scene
-            fmc_adapter_tool = scene.fmc_adapter_tool
+            fmc_adapter_tool = scene.fmc_adapter_properties
 
             recording_path = fmc_adapter_tool.recording_path
             if recording_path == "":

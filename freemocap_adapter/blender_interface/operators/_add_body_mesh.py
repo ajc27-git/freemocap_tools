@@ -24,7 +24,7 @@ class FMC_ADAPTER_OT_add_body_mesh(Operator):
     def execute(self, context):
         logger.info(f"Executing {__name__}...")
         scene = context.scene
-        fmc_adapter_tool = scene.fmc_adapter_tool
+        fmc_adapter_tool = scene.fmc_adapter_properties
 
         # Get start time
         start = time.time()

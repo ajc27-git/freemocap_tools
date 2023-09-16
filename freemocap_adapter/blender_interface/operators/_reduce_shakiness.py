@@ -17,7 +17,7 @@ class FMC_ADAPTER_OT_reduce_shakiness(Operator):
 
     def execute(self, context):
         scene = context.scene
-        fmc_adapter_tool = scene.fmc_adapter_tool
+        fmc_adapter_tool = scene.fmc_adapter_properties
 
         # Get start time
         start = time.time()
