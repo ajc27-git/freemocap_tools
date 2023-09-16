@@ -344,43 +344,46 @@ class FreemocapDataHandler:
                        name: str,
                        data: np.ndarray,
                        component_type: FREEMOCAP_DATA_COMPONENT_TYPES = None):
-        if len(data.shape) == 2:
-            data = np.expand_dims(data, axis=1)
-        elif len(data.shape) == 3:
-            if data.shape[1] != 1:
-                raise ValueError(
-                    f"Data should have 1 trajectory. Got {data.shape[1]} instead.")
+        data = np.squeeze(data) #get rid of any dimensions of size 1 (aka `singleton dimensions`, aka 'you called a square a flat cube')
+        if not len(data.shape) == 2:
+            raise ValueError(
+                f"Data should have 2 dimensions. Got {data.shape} instead.")
 
         if data.shape[0] != self.number_of_frames:
             raise ValueError(
                 f"Number of frames ({data.shape[0]}) does not match number of frames in existing data ({self.number_of_frames}).")
-        if data.shape[2] != 3:
+        if data.shape[1] != 3:
             raise ValueError(
                 f"Trajectory data should have 3 dimensions. Got {data.shape[2]} instead.")
 
-        if component_type is None:
-            if name in self.body_names:
-                self.freemocap_data.body.data[:, self.body_names.index(name), :] = data
+        try:
+            if component_type is None:
+                if name in self.body_names:
+                    self.freemocap_data.body.data[:, self.body_names.index(name), :] = data
 
-            if name in self.right_hand_names:
-                self.freemocap_data.hands["right"].data[:, self.right_hand_names.index(name), :] = data
+                if name in self.right_hand_names:
+                    self.freemocap_data.hands["right"].data[:, self.right_hand_names.index(name), :] = data
 
-            if name in self.left_hand_names:
-                self.freemocap_data.hands["left"].data[:, self.left_hand_names.index(name), :] = data
+                if name in self.left_hand_names:
+                    self.freemocap_data.hands["left"].data[:, self.left_hand_names.index(name), :] = data
 
-            if name in self.face_names:
-                self.freemocap_data.face.data[:, self.face_names.index(name), :] = data
+                if name in self.face_names:
+                    self.freemocap_data.face.data[:, self.face_names.index(name), :] = data
 
-            for other_component in self.freemocap_data.other.values():
-                if name in other_component.trajectory_names:
-                    if len(other_component.data.shape) == 3:
-                        other_component.data[:, other_component.trajectory_names.index(name), :] = data
-                    elif len(other_component.data.shape) == 2:
-                        other_component.data[:, other_component.trajectory_names.index(name)] = data
-                    else:
-                        raise ValueError(
-                            f"Data shape {other_component.data.shape} is not supported. Should be 2 or 3 dimensional.")
-
+                for other_component in self.freemocap_data.other.values():
+                    if name in other_component.trajectory_names:
+                        if len(other_component.data.shape) == 3:
+                            other_component.data[:, other_component.trajectory_names.index(name), :] = data
+                        elif len(other_component.data.shape) == 2:
+                            other_component.data = data
+                        else:
+                            raise ValueError(
+                                f"Data shape {other_component.data.shape} is not supported. Should be 2 or 3 dimensional.")
+        except Exception as e:
+            logger.error(f"Error while setting trajectory `{name}`:\n error:\n {e}")
+            logger.exception(e)
+            raise Exception(f"Error while setting trajectory: {e}")
+        
     def _collect_frame_counts(self) -> dict:
         frame_counts = {
             'body': self.body_frame_name_xyz.shape[0],
@@ -718,7 +721,7 @@ class FreemocapDataHandler:
                                    metadata={"center_reference_point": center_reference_point})
         self.apply_rotation(rotation_matrix=rotation_matrix)
         self.mark_processing_stage(name="rotated_to_inertial_reference_frame",
-                                   metadata={rotation_matrix: rotation_matrix})
+                                   metadata={"rotation_matrix": rotation_matrix.tolist()})
 
         logger.success(
             "Finished putting freemocap data in inertial reference frame.\n freemocap_data(after):\n{self}")

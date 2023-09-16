@@ -1,5 +1,6 @@
 import logging
-import math as m
+import numpy as np
+
 from copy import deepcopy
 from typing import Dict, Any
 
@@ -36,7 +37,7 @@ def enforce_rigid_bones(freemocap_data_handler: FreemocapDataHandler,
         tail_name = bone['tail']
 
         for frame_number, raw_length in enumerate(bone['lengths']):
-            if m.isnan(raw_length):
+            if np.isnan(raw_length):
                 continue
 
             head_position = original_trajectories[head_name][frame_number, :]
@@ -52,7 +53,7 @@ def enforce_rigid_bones(freemocap_data_handler: FreemocapDataHandler,
 
             updated_trajectories = translate_trajectory_and_its_children(name=tail_name,
                                                                          position_delta=position_delta,
-                                                                         frame_index=frame_number,
+                                                                         frame_number=frame_number,
                                                                          updated_trajectories=updated_trajectories)
 
     logger.success('Bone lengths enforced successfully!')
@@ -76,18 +77,20 @@ def enforce_rigid_bones(freemocap_data_handler: FreemocapDataHandler,
 
 def translate_trajectory_and_its_children(name: str,
                                           position_delta: np.ndarray,
-                                          frame_index: int,
+                                          frame_number: int,
                                           updated_trajectories: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
     # recursively translate the tail empty and its children by the position delta.
     try:
-        logger.debug(f"Translating {name}...")
-        updated_trajectories[name][frame_index, :] = updated_trajectories[name][frame_index, :] + position_delta
+        updated_trajectories[name][frame_number, :] = updated_trajectories[name][frame_number, :] + position_delta
 
         if name in MEDIAPIPE_HIERARCHY.keys():
             for child_name in MEDIAPIPE_HIERARCHY[name]['children']:
-                translate_trajectory_and_its_children(name=child_name)
+                translate_trajectory_and_its_children(name=child_name,
+                                                      position_delta=position_delta,
+                                                      frame_number=frame_number,
+                                                      updated_trajectories=updated_trajectories)
     except Exception as e:
-        logger.error(f"Error while adjusting trajectory `{name}` and its children: {e}")
+        logger.error(f"Error while adjusting trajectory `{name}` and its children:\n error:\n {e}")
         logger.exception(e)
         raise Exception(f"Error while adjusting trajectory and its children: {e}")
 

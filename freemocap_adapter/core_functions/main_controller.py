@@ -134,6 +134,7 @@ class MainController:
         logger.info("Running all stages...")
         self.load_freemocap_data()
         self.calculate_virtual_trajectories()
+        self.put_data_in_inertial_reference_frame()
         self.enforce_rigid_bones()
         self.save_data_to_disk()
         self.create_empties()
