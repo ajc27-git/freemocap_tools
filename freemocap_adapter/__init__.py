@@ -38,7 +38,7 @@ def unregister():
     import bpy
 
     logger.info(f"Unregistering {__file__} as add-on")
-    from freemocap_adapter.user_interfaces.blender import BLENDER_USER_INTERFACE_CLASSES
+    from freemocap_adapter.blender_interface import BLENDER_USER_INTERFACE_CLASSES
     for cls in BLENDER_USER_INTERFACE_CLASSES:
         logger.trace(f"Unregistering class {cls.__name__}")
         bpy.utils.unregister_class(cls)
@@ -51,7 +51,7 @@ def register():
     import bpy
 
     logger.info(f"Registering {__file__} as add-on")
-    from freemocap_adapter.user_interfaces.blender import BLENDER_USER_INTERFACE_CLASSES
+    from freemocap_adapter.blender_interface import BLENDER_USER_INTERFACE_CLASSES
     logger.debug(f"Registering classes {BLENDER_USER_INTERFACE_CLASSES}")
     for cls in BLENDER_USER_INTERFACE_CLASSES:
         logger.trace(f"Registering class {cls.__name__}")
@@ -59,7 +59,7 @@ def register():
 
     logger.info(f"Registering property group FMC_ADAPTER_PROPERTIES")
 
-    from freemocap_adapter.user_interfaces.blender import FMC_ADAPTER_PROPERTIES
+    from freemocap_adapter.blender_interface import FMC_ADAPTER_PROPERTIES
     bpy.types.Scene.fmc_adapter_tool = bpy.props.PointerProperty(type=FMC_ADAPTER_PROPERTIES)
 
     try:

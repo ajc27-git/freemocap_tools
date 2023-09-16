@@ -18,8 +18,6 @@ def reduce_bone_length_dispersion(trajectories: Dict[str, Dict[str, Union[np.nda
                                   interval_variable: str = 'median',
                                   interval_factor: float = 0.01):
     logger.info('Reducing bone length dispersion...')
-    # Update the empty positions dictionary
-    # empty_positions = get_empty_positions(empties=empties)
 
     # Update the information of the virtual bones
     bones = calculate_bone_length_statistics(trajectories=trajectories, bones=bones)
@@ -63,14 +61,8 @@ def reduce_bone_length_dispersion(trajectories: Dict[str, Dict[str, Union[np.nda
                 head = bone['head']
                 tail = bone['tail']
                 # Get vector between the bone's tail and head empties
-                head_position = mathutils.Vector(
-                    [empty_positions[head]['x'][frame_index],
-                     empty_positions[head]['y'][frame_index],
-                     empty_positions[head]['z'][frame_index]])
-                tail_position = mathutils.Vector(
-                    [empty_positions[tail]['x'][frame_index],
-                     empty_positions[tail]['y'][frame_index],
-                     empty_positions[tail]['z'][frame_index]])
+                head_position = mathutils.Vector(trajectories[head][frame_index, :])
+                tail_position = mathutils.Vector(trajectories[tail][frame_index, :])
                 bone_vector = tail_position - head_position
 
                 # Get the new bone length depending of the actual length value (interval inferior or superior limit)

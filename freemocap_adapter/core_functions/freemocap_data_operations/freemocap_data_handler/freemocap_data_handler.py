@@ -37,7 +37,7 @@ class FreemocapDataHandler:
         return self.freemocap_data.metadata
 
     @property
-    def trajectories(self) -> Dict[str, np.ndarray]:
+    def trajectories(self) -> Dict[str, Dict[str, Union[np.ndarray, Dict[str, np.ndarray]]]]:
         trajectories = {}
         trajectories.update(self.body_trajectories)
         trajectories.update(self.right_hand_trajectories)
@@ -73,9 +73,8 @@ class FreemocapDataHandler:
     @property
     def other_trajectories(self) -> Dict[str, np.ndarray]:
         trajectories = {}
-        for component in self.freemocap_data.other:
-            trajectories.update({trajectory_name: component.data_frame_name_xyz[:, trajectory_number]
-                                 for trajectory_number, trajectory_name in enumerate(component.trajectory_names)})
+        for name, component in self.freemocap_data.other.items():            
+            trajectories.update({name: component.data})
         return trajectories
 
     @property
@@ -85,8 +84,8 @@ class FreemocapDataHandler:
                                    self.left_hand_frame_name_xyz,
                                    self.face_frame_name_xyz], axis=1)
 
-        for other_component in self.freemocap_data.other:
-            all_data = np.concatenate([all_data, other_component.data_frame_name_xyz], axis=1)
+        for other_component in self.freemocap_data.other.values():
+            all_data = np.concatenate([all_data, other_component.data], axis=1)
 
         if all_data.shape[0] != self.number_of_frames:
             raise ValueError(
@@ -562,8 +561,8 @@ class FreemocapDataHandler:
 
                 if "other" in empties.keys():
                     for other_name, other_component in self.freemocap_data.other.items():    
-                        if not other_name in other_components.keys():
-                            other_components[other_name] = []
+                        if not other_name in other_components_frames.keys():
+                            other_components_frames[other_name] = []
                         other_components_frames[other_name].append(np.ndarray(bpy.data.objects[other_name].location))
                            
             if len(body_frames) > 0:

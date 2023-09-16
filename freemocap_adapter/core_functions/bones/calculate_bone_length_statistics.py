@@ -6,7 +6,7 @@ from typing import Dict, List, Any
 logger = logging.getLogger(__name__)
 
 
-def calculate_bone_length_statistics(empty_positions: Dict[str, Dict[str, List[float]]],
+def calculate_bone_length_statistics(trajectories: Dict[str, Dict[str, Any]],
                                      bones: Dict[str, Dict[str, Any]]):
     logger.info('Calculating bone length statistics...')
 
@@ -19,20 +19,19 @@ def calculate_bone_length_statistics(empty_positions: Dict[str, Dict[str, List[f
 
     # Iterate through the empty_positions dictionary and calculate the distance between the head and tail and append it to the lengths list
     logger.trace(f'Calculating bone length statistics...')
-    for frame in range(0, len(empty_positions['hips_center']['x'])):
+    for frame_number in range(0, trajectories['hips_center'].shape[0]):
         # Iterate through each bone
         for bone_name, bone_dict in bones.items():
             # Calculate the length of the bone for this frame
-            head = bone_dict['head']
-            tail = bone_dict['tail']
-            head_pos = (
-                empty_positions[head]['x'][frame], empty_positions[head]['y'][frame], empty_positions[head]['z'][frame])
-            tail_pos = (
-                empty_positions[tail]['x'][frame], empty_positions[tail]['y'][frame], empty_positions[tail]['z'][frame])
+            head_name = bone_dict['head']
+            tail_name = bone_dict['tail']
+
+            head_pos = list(trajectories[head_name][frame_number, :])
+            tail_pos = list(trajectories[tail_name][frame_number, :])
 
             bone_dict['lengths'].append(math.dist(head_pos, tail_pos))
 
-    logger.info(f'Bone length statistics calculated successfully!\n\n bones: \n\n {bones.keys()}')
+    logger.success(f'Bone lengths calculated successfully!\n\n bones: \n\n {bones.keys()}')
     # Update the length median and stdev values for each bone
     for name, bone in bones.items():
         logger.trace(f'Calculating median and stdev for bone: {name}...')

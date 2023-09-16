@@ -2,7 +2,7 @@ import logging
 
 from freemocap_adapter.data_models.parameter_models.load_parameters_config import load_default_parameters_config
 from freemocap_adapter.data_models.parameter_models.parameter_models import Config
-from freemocap_adapter.user_interfaces.run_as_main_script.run_as_main import RunAsMain
+from freemocap_adapter.core_functions.run_as_main_script.run_as_main import RunAsMain
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +22,8 @@ def main(recording_path: str,
     # logger.info("Reorienting empties...")
     # run_as_main.reorient_empties()
 
-    logger.info("Reducing bone length dispersion...")
-    run_as_main.reduce_bone_length_dispersion()
+    # logger.info("Reducing bone length dispersion...")
+    # run_as_main.reduce_bone_length_dispersion()
 
     logger.info("Saving data to disk...")
     run_as_main.save_data_to_disk()

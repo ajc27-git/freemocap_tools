@@ -8,7 +8,7 @@ from freemocap_adapter.core_functions.empties.reorient_empties import reorient_e
 from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.helpers.freemocap_empties_from_parent_object import \
     freemocap_empties_from_parent_object
 from freemocap_adapter.core_functions.rig.add_rig import add_rig
-from freemocap_adapter.user_interfaces.blender.operators._add_body_mesh import REORIENT_EMPTIES_EXECUTED
+from freemocap_adapter.blender_interface.operators._add_body_mesh import REORIENT_EMPTIES_EXECUTED
 
 logger = logging.getLogger(__name__)
 
