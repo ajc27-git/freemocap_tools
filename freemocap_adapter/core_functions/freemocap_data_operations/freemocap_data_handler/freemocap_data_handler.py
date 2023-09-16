@@ -85,6 +85,8 @@ class FreemocapDataHandler:
                                    self.face_frame_name_xyz], axis=1)
 
         for other_component in self.freemocap_data.other.values():
+            if len(other_component.data.shape) == 2:
+                other_component.data = np.expand_dims(other_component.data, axis=1)
             all_data = np.concatenate([all_data, other_component.data], axis=1)
 
         if all_data.shape[0] != self.number_of_frames:
@@ -387,11 +389,15 @@ class FreemocapDataHandler:
         return self.number_of_right_hand_trajectories + self.number_of_left_hand_trajectories
 
     @property
+    def number_of_other_trajectories(self):
+        return sum([other_component.data.shape[1] for other_component in self.freemocap_data.other.values()])
+    @property
     def number_of_trajectories(self):
         return (self.number_of_body_trajectories +
                 self.number_of_right_hand_trajectories +
                 self.number_of_left_hand_trajectories +
-                self.number_of_face_trajectories)
+                self.number_of_face_trajectories+
+                self.number_of_other_trajectories)
 
     def mark_processing_stage(self,
                               name: str,
@@ -713,3 +719,26 @@ class FreemocapDataHandler:
 
         logger.error(f"Found less than 2 head trajectories. Cannot find lowest body trajectories!")
         raise Exception("Cannot find lowest body trajectories!")
+
+    def get_trajectory_names(self, component_name: str) -> List[str]:
+        if component_name == "body":
+            return self.body_names
+        elif component_name == "right_hand":
+            return self.right_hand_names
+        elif component_name == "left_hand":
+            return self.left_hand_names
+        elif component_name == "face":
+            return self.face_names
+        elif component_name == "other":
+            other_names = []
+            for other_component in self.freemocap_data.other.values():
+                other_names.extend(other_component.trajectory_names)
+            return other_names
+        else:
+            if component_name in self.freemocap_data.other.keys():
+                return self.freemocap_data.other[component_name].trajectory_names
+
+        raise ValueError(f"Component {component_name} not found.")
+
+
+

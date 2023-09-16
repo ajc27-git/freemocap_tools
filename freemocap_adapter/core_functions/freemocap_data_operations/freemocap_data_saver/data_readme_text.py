@@ -24,6 +24,7 @@ To load it, you can do:
 import pickle
 with open("freemocap_data_handler.pkl", "rb") as f:
     freemocap_data_handler = pickle.load(f)
+print(freemocap_data_handler)
 ```
 The resulting object is a `FreeMocapDataHandler` object - check the class definition for more information on how to use it.
 
@@ -45,16 +46,15 @@ All of these files share a common format - they are three-dimensional arrays wit
 - `xyz`: The x, y, and z coordinates of the trajectory at the given frame number (x = 0, y = 1, z = 2)
 
 To access a specific data point, you can think of the name (`..._frame_name_xyz`) as an 'address' for where the point lives in the 3d matrix.
-For example, to access the y data of the nose trajectory (0th name) at frame 100, you would do:
-```python
-import numpy as np
-nose_y = np.load("body_frame_name_xyz.npy")[100, 0, 1] # data from the 100th frame, of the 0th trajectory, at the 1st dimension (y)
-```
-You can also use the `.json` data as a look up table to find the index of a trajectory name, e.g. 
+
+You can also use the `trajectory_names.json` data as a look up table to find the index of a trajectory name.
+
 ```python
 import json
 trajectory_names = json.load("trajectory_names.json")
-nose_index = trajectory_names["body"].index("nose")
+nose_index = trajectory_names["body"].index("nose") # `nose_index == 0` in mediapipe data
+nose_xyz = body_frame_name_xyz[100, nose_index, :] # data from the 100th frame, of the `nose_index`th trajectory, all (:) dimensions (x, y, z)
+
 nose_y = np.load("body_frame_name_xyz.npy")[100, nose_index, 1] # data from the 100th frame, of the nose trajectory, at the 1st dimension (y)
 ```
 
