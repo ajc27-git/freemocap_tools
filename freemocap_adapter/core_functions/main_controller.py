@@ -28,9 +28,9 @@ class MainController:
                  config: Config):
         self.config = config
 
-        self.recording_path = Path(recording_path)
-        self.recording_name = self.recording_path.stem
-        self.origin_name = f"{self.recording_path.stem}_origin"
+        self.recording_path = recording_path
+        self.recording_name = Path(self.recording_path).stem
+        self.origin_name = f"{self.recording_name}_origin"
         self.data_parent_object = create_freemocap_parent_empty(name=self.origin_name)
         self.freemocap_data_handler = None
         self.empties = None

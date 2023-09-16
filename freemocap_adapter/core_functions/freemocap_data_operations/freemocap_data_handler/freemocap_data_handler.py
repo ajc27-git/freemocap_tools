@@ -26,7 +26,7 @@ class FreemocapDataHandler:
 
     @classmethod
     def from_recording_path(cls,
-                            recording_path: Union[str, Path],
+                            recording_path: str,
                             ) -> "FreemocapDataHandler":
         cls._validate_recording_path(recording_path=recording_path)
         freemocap_data = FreemocapData.from_recording_path(recording_path=recording_path)
@@ -199,9 +199,9 @@ class FreemocapDataHandler:
         if len(trajectory.shape) == 3:
             num_dimensions = trajectory.shape[2]
 
-        if num_dimensions != 3:
-            raise ValueError(
-                f"Trajectory data should have 3 dimensions. Got {trajectory.shape[2]} instead.")
+            if num_dimensions != 3:
+                raise ValueError(
+                    f"Trajectory data should have 3 dimensions. Got {trajectory.shape[2]} instead.")
 
         if component_type == "body":
             self.freemocap_data.body.data = np.concatenate([self.body_frame_name_xyz, trajectory], axis=1)
@@ -232,7 +232,7 @@ class FreemocapDataHandler:
         if not isinstance(component_type, list):
             component_types = [component_type] * len(trajectories)
         else:
-            component_types = component_type
+            component_types = [component_type]
 
         for trajectory_number, trajectory_dict in enumerate(trajectories.items()):
             trajectory_name, trajectory = trajectory_dict
@@ -455,6 +455,7 @@ class FreemocapDataHandler:
             self._intermediate_stages = {}
         if metadata is None:
             metadata = {}
+        self.add_metadata(metadata)
         if name in self._intermediate_stages.keys() and not overwrite:
             raise ValueError(f"Processing stage {name} already exists. Set overwrite=True to overwrite.")
         self._intermediate_stages[name] = FreemocapData(**deepcopy(self.freemocap_data.__dict__))
@@ -718,7 +719,7 @@ class FreemocapDataHandler:
 
         self.apply_translation(-center_reference_point)
         self.mark_processing_stage("translated_to_origin",
-                                   metadata={"center_reference_point": center_reference_point})
+                                   metadata={"original_origin_reference": center_reference_point.tolist()})
         self.apply_rotation(rotation_matrix=rotation_matrix)
         self.mark_processing_stage(name="rotated_to_inertial_reference_frame",
                                    metadata={"rotation_matrix": rotation_matrix.tolist()})

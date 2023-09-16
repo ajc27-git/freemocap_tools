@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 def load_freemocap_data(
-        recording_path: Union[str, Path],
+        recording_path: str,
 ) -> FreemocapDataHandler:
     logger.info(f"Loading freemocap_data from {recording_path}....")
 

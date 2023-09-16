@@ -167,15 +167,15 @@ class FreemocapData:
             metadata = {}
 
         return cls.from_data(
-            body_frame_name_xyz=np.load(str(data_paths.body_npy)) / scale,
-            right_hand_frame_name_xyz=np.load(str(data_paths.right_hand_npy)) / scale,
-            left_hand_frame_name_xyz=np.load(str(data_paths.left_hand_npy)) / scale,
-            face_frame_name_xyz=np.load(str(data_paths.face_npy)) / scale,
-            error=np.load(str(data_paths.reprojection_error_npy)),
+            body_frame_name_xyz=np.load(data_paths.body_npy) / scale,
+            right_hand_frame_name_xyz=np.load(data_paths.right_hand_npy) / scale,
+            left_hand_frame_name_xyz=np.load(data_paths.left_hand_npy) / scale,
+            face_frame_name_xyz=np.load(data_paths.face_npy) / scale,
+            error=np.load(data_paths.reprojection_error_npy),
 
             other={"center_of_mass": FreemocapComponentData(name="center_of_mass",
                                                             data=np.load(
-                                                                str(data_paths.center_of_mass_npy)) / scale,
+                                                                data_paths.center_of_mass_npy) / scale,
                                                             data_source="freemocap",
                                                             trajectory_names=["center_of_mass"])},
             metadata=metadata,
@@ -187,7 +187,7 @@ class FreemocapData:
                             **kwargs):
         data_paths = FreemocapDataPaths.from_recording_folder(recording_path)
         metadata = {"recording_path": recording_path,
-                    "data_paths": data_paths}
+                    "data_paths": data_paths.__dict__}
         logger.info(f"Loading data from paths {data_paths}")
         return cls.from_data_paths(data_paths=data_paths, metadata=metadata, **kwargs)
 
