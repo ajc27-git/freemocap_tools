@@ -119,6 +119,13 @@ class FreemocapDataSaver:
         info_path.mkdir(parents=True, exist_ok=True)
         self._save_pickle(info_path)
         self._save_trajectory_names(info_path)
+        self.save_metadata(info_path)
+
+    def save_metadata(self, path: Union[str, Path]):
+        metadata_path = Path(path) / "metadata.json"
+        metadata = self.handler.metadata
+        metadata_path.write_text(json.dumps(metadata, indent=4))
+        logger.debug(f"Saved metadata to {metadata_path}")
 
     def _save_trajectory_names(self, path: Union[str, Path]):
         # save trajectory names
@@ -132,3 +139,5 @@ class FreemocapDataSaver:
                       self.handler.freemocap_data.other.items()}
         }
         trajectory_names_path.write_text(json.dumps(trajectory_names, indent=4))
+        logger.debug(f"Saved trajectory names to {trajectory_names_path}")
+

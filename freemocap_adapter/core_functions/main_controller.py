@@ -72,7 +72,15 @@ class MainController:
             logger.error(f"Failed during `enforce rigid bones`, error: `{e}`")
             logger.exception(e)
             raise e
-
+    def save_data_to_disk(self):
+        try:
+            logger.info("Saving data to disk...")
+            FreemocapDataSaver(freemocap_data_handler=self.freemocap_data_handler).save(
+                recording_path=self.recording_path)
+        except Exception as e:
+            logger.error(f"Failed to save data to disk: {e}")
+            logger.exception(e)
+            raise e
     def create_empties(self):
         try:
             logger.info("Creating keyframed empties....")
@@ -88,15 +96,7 @@ class MainController:
 
 
 
-    def save_data_to_disk(self):
-        try:
-            logger.info("Saving data to disk...")
-            FreemocapDataSaver(freemocap_data_handler=self.freemocap_data_handler).save(
-                recording_path=self.recording_path)
-        except Exception as e:
-            logger.error(f"Failed to save data to disk: {e}")
-            logger.exception(e)
-            raise e
+
 
     def add_rig(self):
         try:
