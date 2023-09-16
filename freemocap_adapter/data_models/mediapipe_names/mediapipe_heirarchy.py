@@ -68,7 +68,6 @@ MEDIAPIPE_HIERARCHY = {
         'children': ['right_thumb',
                      'right_index',
                      'right_pinky',
-                     'right_hand',
                      'right_hand_middle',
                      'right_hand_wrist']
     },
@@ -95,7 +94,6 @@ MEDIAPIPE_HIERARCHY = {
         'children': ['left_thumb',
                      'left_index',
                      'left_pinky',
-                     'left_hand',
                      'left_hand_middle',
                      'left_hand_wrist']
     },
@@ -104,7 +102,6 @@ MEDIAPIPE_HIERARCHY = {
         'children': ['left_hand_thumb_cmc',
                      'left_hand_index_finger_mcp',
                      'left_hand_middle_finger_mcp',
-
                      'left_hand_ring_finger_mcp',
                      'left_hand_pinky_mcp']
     },

@@ -28,51 +28,34 @@ def enforce_rigid_bones(freemocap_data_handler: FreemocapDataHandler,
     # If the bone length is outside the interval, adjust the coordinates of the tail empty and its children so the new bone length is at the border of the interval
 
     for name, bone in bones.items():
-        logger.info(f"Reducing bone length dispersion for bone: {name}...")
-        for frame_index, original_length in enumerate(bone['lengths']):
+        logger.debug(f"Enforcing rigid length for bone: {name}...")
 
-            # If the length is equal to nan (bone head or/and tail is nan) then continue with the next length
-            if m.isnan(original_length):
+        desired_length = bone['median']
+
+        head_name = bone['head']
+        tail_name = bone['tail']
+
+        for frame_number, raw_length in enumerate(bone['lengths']):
+            if m.isnan(raw_length):
                 continue
 
-            # Get the bone median and stdev values
-            median_length = bone['median']
+            head_position = original_trajectories[head_name][frame_number, :]
+            tail_position = original_trajectories[tail_name][frame_number, :]
 
-            # Make bone length match the median length
-
-            head = bone['head']
-            tail = bone['tail']
-            # Get vector between the bone's tail and head empties
-            head_position = original_trajectories[head][frame_index, :]
-            tail_position = original_trajectories[tail][frame_index, :]
             bone_vector = tail_position - head_position
 
             # Get the normalized bone vector by dividing the bone_vector by its length
-            bone_vector_norm = bone_vector / original_length
+            bone_vector_norm = bone_vector / raw_length
 
-            # Get the tail position delta by multiplying the normalized bone vector by the substraction of new_length and original_length
-            position_delta = bone_vector_norm * (median_length - original_length)
+            # Calculate the new tail position delta by multiplying the normalized bone vector by the difference of desired_length and original_length
+            position_delta = bone_vector_norm * (desired_length - raw_length)
 
-            def translate_trajectory_and_its_children(name: str):
-                # recursively translate the tail empty and its children by the position delta.
-                try:
-                    logger.debug(f"Translating {name}...")
+            updated_trajectories = translate_trajectory_and_its_children(name=tail_name,
+                                                                         position_delta=position_delta,
+                                                                         frame_index=frame_number,
+                                                                         updated_trajectories=updated_trajectories)
 
-                    updated_trajectories[name][frame_index, :] = updated_trajectories[name][frame_index, :] + position_delta
-
-                    if name in MEDIAPIPE_HIERARCHY.keys():
-                        logger.debug(
-                            f"Translating children of {name}: {MEDIAPIPE_HIERARCHY[name]['children']}")
-                        for child_name in MEDIAPIPE_HIERARCHY[name]['children']:
-                            translate_trajectory_and_its_children(name=child_name)
-                            
-                except Exception as e:
-                    logger.error(f"Error while adjusting trajectory `{name}` and its children: {e}")
-                    logger.exception(e)
-                    raise Exception(f"Error while adjusting trajectory and its children: {e}")
-
-
-            translate_trajectory_and_its_children(name=tail)
+    logger.success('Bone lengths enforced successfully!')
 
     # Update the information of the virtual bones
     updated_bones = calculate_bone_length_statistics(trajectories=updated_trajectories, bones=bones)
@@ -80,6 +63,7 @@ def enforce_rigid_bones(freemocap_data_handler: FreemocapDataHandler,
     # Print the current bones length median, standard deviation and coefficient of variation
     log_bone_statistics(bones=updated_bones, type='updated')
 
+    logger.info('Updating freemocap data handler with the new trajectories...')
     for name, trajectory in updated_trajectories.items():
         freemocap_data_handler.set_trajectory(name=name, data=trajectory)
 
@@ -87,9 +71,27 @@ def enforce_rigid_bones(freemocap_data_handler: FreemocapDataHandler,
                                                  metadata={'bones': updated_bones,
                                                            'hierarchy': MEDIAPIPE_HIERARCHY},
                                                  )
-    logger.success('Bone lengths enforced successfully!')
     return freemocap_data_handler
 
+
+def translate_trajectory_and_its_children(name: str,
+                                          position_delta: np.ndarray,
+                                          frame_index: int,
+                                          updated_trajectories: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]:
+    # recursively translate the tail empty and its children by the position delta.
+    try:
+        logger.debug(f"Translating {name}...")
+        updated_trajectories[name][frame_index, :] = updated_trajectories[name][frame_index, :] + position_delta
+
+        if name in MEDIAPIPE_HIERARCHY.keys():
+            for child_name in MEDIAPIPE_HIERARCHY[name]['children']:
+                translate_trajectory_and_its_children(name=child_name)
+    except Exception as e:
+        logger.error(f"Error while adjusting trajectory `{name}` and its children: {e}")
+        logger.exception(e)
+        raise Exception(f"Error while adjusting trajectory and its children: {e}")
+
+    return updated_trajectories
 
 
 def log_bone_statistics(bones: Dict[str, Dict[str, Any]], type: str):
