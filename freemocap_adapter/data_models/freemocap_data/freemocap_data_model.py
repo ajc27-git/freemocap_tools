@@ -97,7 +97,7 @@ class FreemocapData:
                         raise e
             else:
                 raise ValueError(f"Component: {name} type not recognized (type: {type(component)}")
-
+        return other
     @classmethod
     def _split_up_reprojection_error(cls,
                                      error: np.ndarray,

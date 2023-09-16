@@ -72,6 +72,7 @@ class MainController:
             logger.error(f"Failed during `enforce rigid bones`, error: `{e}`")
             logger.exception(e)
             raise e
+
     def save_data_to_disk(self):
         try:
             logger.info("Saving data to disk...")
@@ -81,6 +82,7 @@ class MainController:
             logger.error(f"Failed to save data to disk: {e}")
             logger.exception(e)
             raise e
+
     def create_empties(self):
         try:
             logger.info("Creating keyframed empties....")
@@ -94,15 +96,11 @@ class MainController:
         except Exception as e:
             logger.error(f"Failed to create keyframed empties: {e}")
 
-
-
-
-
     def add_rig(self):
         try:
             logger.info("Adding rig...")
             add_rig(empties=self.empties,
-                    bone_length_method=self.config.add_rig.bone_length_method,
+                    bones=self.freemocap_data_handler.metadata['bones'],
                     keep_symmetry=self.config.add_rig.keep_symmetry,
                     add_fingers_constraints=self.config.add_rig.add_fingers_constraints,
                     use_limit_rotation=self.config.add_rig.use_limit_rotation,
@@ -142,4 +140,3 @@ class MainController:
         self.attach_mesh_to_rig()
         self.add_videos()
         # export_fbx(recording_path=recording_path, )
-

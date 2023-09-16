@@ -100,21 +100,7 @@ class FreemocapDataHandler:
 
         return all_data
 
-    @property
-    def center_of_mass_frame_name_xyz(self):
-        # add a dummy "name" dimenstion to self.center_of_mass_trajectory so it can be used with stuff made for standard trajectories
 
-        com_frame_frame_xyz = np.expand_dims(self.center_of_mass_trajectory, axis=1)
-        if com_frame_frame_xyz.shape[0] != self.number_of_frames:
-            raise ValueError(
-                f"Number of frames ({self.number_of_frames}) does not match number of frames in center_of_mass_frame_name_xyz ({com_frame_frame_xyz.shape[0]}).")
-        if com_frame_frame_xyz.shape[1] != 1:
-            raise ValueError(
-                f"Number of trajectories ({1}) does not match number of trajectories in center_of_mass_frame_name_xyz ({com_frame_frame_xyz.shape[1]}).")
-        if com_frame_frame_xyz.shape[2] != 3:
-            raise ValueError(
-                f"center_of_mass_frame_name_xyz should have 3 dimensions. Got {com_frame_frame_xyz.shape[2]} instead.")
-        return com_frame_frame_xyz
 
     @property
     def body_frame_name_xyz(self):

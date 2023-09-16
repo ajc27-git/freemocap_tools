@@ -1,6 +1,7 @@
 import logging
 
 import bpy
+import numpy as np
 
 from freemocap_adapter.core_functions.empties.creation.create_empty_from_trajectory import \
     create_empties
@@ -48,7 +49,7 @@ def create_freemocap_empties(freemocap_data_handler: FreemocapDataHandler,
 
         empties["other"] = {}
         empties["other"]["center_of_mass"] = create_empties(
-            trajectory_frame_marker_xyz=freemocap_data_handler.center_of_mass_frame_name_xyz,
+            trajectory_frame_marker_xyz=freemocap_data_handler.center_of_mass_trajectory,
             names_list="center_of_mass",
             empty_scale=body_empty_scale * 3,
             empty_type="ARROWS",
@@ -57,5 +58,7 @@ def create_freemocap_empties(freemocap_data_handler: FreemocapDataHandler,
         return empties
 
     except Exception as e:
-        logger.exception(f"Error loading empty markers: {e}!")
-        raise
+        logger.error(f"Failed to load freemocap trajectory data as keyframed empties: {e}")
+        logger.exception(f"{e}")
+
+        raise e
