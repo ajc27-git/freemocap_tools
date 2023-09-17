@@ -3,6 +3,8 @@ import math as m
 
 import bpy
 
+from freemocap_adapter.core_functions.mesh.create_mesh.create_mesh import create_mesh
+
 logger = logging.getLogger(__name__)
 
 
@@ -19,7 +21,7 @@ def attach_mesh_to_rig(rig_name: str,
 
         elif body_mesh_mode == "custom":
 
-            create_custom_mesh(rig)
+            create_custom_mesh_orginal(rig)
 
             # Deselect all
             bpy.ops.object.select_all(action='DESELECT')
@@ -35,7 +37,10 @@ def attach_mesh_to_rig(rig_name: str,
         raise e
 
 
-def create_custom_mesh(rig):
+
+
+
+def create_custom_mesh_orginal(rig):
     # Change to edit mode
     bpy.ops.object.mode_set(mode='EDIT')
     ### Add cylinders and spheres for the major bones

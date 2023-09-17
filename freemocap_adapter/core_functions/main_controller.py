@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 
 from freemocap_adapter.core_functions.bones.enforce_rigid_bones import enforce_rigid_bones
-from freemocap_adapter.core_functions.create_mesh.attach_mesh_to_rig import attach_mesh_to_rig
+from freemocap_adapter.core_functions.mesh.attach_mesh_to_rig import attach_mesh_to_rig
 from freemocap_adapter.core_functions.empties.creation.create_freemocap_empties import create_freemocap_empties
 from freemocap_adapter.core_functions.freemocap_data_handler.helpers.saver import \
     FreemocapDataSaver
@@ -33,7 +33,7 @@ class MainController:
         self.recording_path = recording_path
         self.recording_name = Path(self.recording_path).stem
         self.origin_name = f"{self.recording_name}_origin"
-        self.rig_name = f"{self.recording_name}_rig"
+        self.rig_name = "rig"
         self._create_parent_empties()
         self.freemocap_data_handler = None
         self.empties = None
@@ -42,8 +42,6 @@ class MainController:
         self.data_parent_object = create_freemocap_parent_empty(name=self.origin_name)
         self._empty_parent_object = create_freemocap_parent_empty(name=f"empties",
                                                                   parent_object=self.data_parent_object)
-        self._rig_parent_object = create_freemocap_parent_empty(name=f"rig",
-                                                                parent_object=self.data_parent_object)
         self._video_parent_object = create_freemocap_parent_empty(name=f"videos",
                                                                   parent_object=self.data_parent_object)
 
@@ -121,7 +119,7 @@ class MainController:
             add_rig(empties=self.empties,
                     bones=self.freemocap_data_handler.metadata['bones'],
                     rig_name=self.rig_name,
-                    parent_object=self._rig_parent_object,
+                    parent_object=self.data_parent_object,
                     keep_symmetry=self.config.add_rig.keep_symmetry,
                     add_fingers_constraints=self.config.add_rig.add_fingers_constraints,
                     use_limit_rotation=self.config.add_rig.use_limit_rotation,
