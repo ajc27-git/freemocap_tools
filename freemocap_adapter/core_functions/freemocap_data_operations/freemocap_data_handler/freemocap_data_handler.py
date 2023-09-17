@@ -28,7 +28,6 @@ class FreemocapDataHandler:
     def from_recording_path(cls,
                             recording_path: str,
                             ) -> "FreemocapDataHandler":
-        cls._validate_recording_path(recording_path=recording_path)
         freemocap_data = FreemocapData.from_recording_path(recording_path=recording_path)
         return cls(freemocap_data=freemocap_data)
 
@@ -642,14 +641,6 @@ class FreemocapDataHandler:
             logger.exception(e)
             raise e
 
-    @staticmethod
-    def _validate_recording_path(recording_path: Union[str, Path]):
-        if recording_path == "":
-            logger.error("No recording path specified")
-            raise FileNotFoundError("No recording path specified")
-        if not Path(recording_path).exists():
-            logger.error(f"Recording path {recording_path} does not exist")
-            raise FileNotFoundError(f"Recording path {recording_path} does not exist")
 
 
     def get_trajectory_names(self, component_name: str) -> List[str]:
