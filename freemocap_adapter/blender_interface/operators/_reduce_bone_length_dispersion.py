@@ -5,7 +5,7 @@ import time
 from bpy.types import Operator
 
 from freemocap_adapter.core_functions.bones.enforce_rigid_bones import enforce_rigid_bones
-from freemocap_adapter.core_functions.freemocap_data_operations.load_freemocap_data import load_freemocap_data
+from freemocap_adapter.core_functions.load_data.load_freemocap_data import load_freemocap_data
 
 logger = logging.getLogger(__name__)
 

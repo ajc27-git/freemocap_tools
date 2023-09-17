@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 
 def main(recording_path: str,
          config: Config = load_default_parameters_config()):
-
     controller = MainController(recording_path=recording_path,
                                 config=config)
 

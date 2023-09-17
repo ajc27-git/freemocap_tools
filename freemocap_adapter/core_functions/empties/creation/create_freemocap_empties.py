@@ -1,11 +1,10 @@
 import logging
 
 import bpy
-import numpy as np
 
 from freemocap_adapter.core_functions.empties.creation.create_empty_from_trajectory import \
     create_empties
-from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.freemocap_data_handler import \
+from freemocap_adapter.core_functions.freemocap_data_operations.classes.freemocap_data_handler import \
     FreemocapDataHandler
 
 logger = logging.getLogger(__name__)

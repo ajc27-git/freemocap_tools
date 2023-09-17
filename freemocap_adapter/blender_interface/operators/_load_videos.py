@@ -4,7 +4,7 @@ import bpy
 
 logger = logging.getLogger(__name__)
 
-from freemocap_adapter.core_functions.freemocap_data_operations.load_videos import load_videos
+from freemocap_adapter.core_functions.load_data.load_videos import load_videos
 
 
 class FMC_ADAPTER_load_videos(bpy.types.Operator):

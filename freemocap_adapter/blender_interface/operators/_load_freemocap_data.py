@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 
 from freemocap_adapter.core_functions.empties.creation.create_freemocap_empties import create_freemocap_empties
-from freemocap_adapter.core_functions.freemocap_data_operations.load_freemocap_data import load_freemocap_data
+from freemocap_adapter.core_functions.load_data.load_freemocap_data import load_freemocap_data
 from freemocap_adapter.core_functions.setup_scene.make_parent_empties import create_freemocap_parent_empty
 from freemocap_adapter.core_functions.setup_scene.set_start_end_frame import set_start_end_frame
 

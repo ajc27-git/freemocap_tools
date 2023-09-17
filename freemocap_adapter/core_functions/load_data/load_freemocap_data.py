@@ -1,8 +1,6 @@
 import logging
-from pathlib import Path
-from typing import Union
 
-from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.freemocap_data_handler import \
+from freemocap_adapter.core_functions.freemocap_data_operations.classes.freemocap_data_handler import \
     FreemocapDataHandler
 
 logger = logging.getLogger(__name__)

@@ -23,7 +23,7 @@ def validate_marker_definitions(virtual_marker_definitions: dict):
 
 
 def calculate_virtual_trajectory(all_trajectories: np.ndarray,
-                                all_names: list,
+                                 all_names: list,
                                  component_names: List,
                                  weights: List) -> np.ndarray:
     """
@@ -79,6 +79,6 @@ def calculate_virtual_trajectories(body_frame_name_xyz: np.ndarray,
                 f"Virtual marker {virtual_trajectory_name} has shape {virtual_trajectory_frame_xyz.shape} but should have shape ({body_frame_name_xyz.shape[0]}, {body_frame_name_xyz.shape[2]})"
             )
         virtual_trajectories[virtual_trajectory_name] = virtual_trajectory_frame_xyz
-        
+
         logger.success(f"Finished calculating virtual marker trajectory: {virtual_trajectories.keys()}")
     return virtual_trajectories

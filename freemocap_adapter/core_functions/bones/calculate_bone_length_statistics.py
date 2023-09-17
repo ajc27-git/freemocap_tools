@@ -1,7 +1,7 @@
 import logging
 import math
 import statistics
-from typing import Dict, List, Any
+from typing import Dict, Any
 
 import numpy as np
 

@@ -1,9 +1,10 @@
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Union
 
-import logging
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class FreemocapDataPaths:
@@ -31,9 +32,11 @@ class FreemocapDataPaths:
             center_of_mass_npy=str(output_data_path / "center_of_mass" / "total_body_center_of_mass_xyz.npy"),
             segment_centers_of_mass_npy=str(output_data_path / "center_of_mass" / "segmentCOM_frame_joint_xyz.npy"),
 
-            reprojection_error_npy=str(output_data_path / "raw_data" / "mediapipe3dData_numFrames_numTrackedPoints_reprojectionError.npy"),
+            reprojection_error_npy=str(
+                output_data_path / "raw_data" / "mediapipe3dData_numFrames_numTrackedPoints_reprojectionError.npy"),
 
         )
+
     @staticmethod
     def _validate_recording_path(recording_path: Union[str, Path]):
         if recording_path == "":

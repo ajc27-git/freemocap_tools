@@ -4,7 +4,7 @@ from typing import List
 import numpy as np
 from numpy import dot
 
-from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.freemocap_data_handler import \
+from freemocap_adapter.core_functions.freemocap_data_operations.classes.freemocap_data_handler import \
     FreemocapDataHandler
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,8 @@ def fix_hand_data(freemocap_data_handler: FreemocapDataHandler):
     2. rotate hand data so "right/left_index_finger_mcp" trajectory (hand data) is on top of the "right/left_index" trajectory (hand data)
     3. rotate hand data so "right/left_pinky_mcp" trajectory (hand data) is on top of the "right/left_pinky" trajectory (hand data)
     """
-    logger.info("Fixing hand data (i.e. aligning the `left/right_hand...` data with the body's more impoverished hand data)")
+    logger.info(
+        "Fixing hand data (i.e. aligning the `left/right_hand...` data with the body's more impoverished hand data)")
 
     hand_data_frame_name_xyz = {"right": freemocap_data_handler.right_hand_frame_name_xyz,
                                 "left": freemocap_data_handler.left_hand_frame_name_xyz}
@@ -41,7 +42,7 @@ def fix_hand_data(freemocap_data_handler: FreemocapDataHandler):
             index_finger_rotation_matricies = calculate_rotation_matricies(hand_index_finger_mcp_vector,
                                                                            body_index_finger_vector)
             freemocap_data_handler.apply_rotations(rotation_matricies=index_finger_rotation_matricies,
-                                                    component_name=f"{side}_hand")
+                                                   component_name=f"{side}_hand")
 
             hand_pinky_finger_mcp_frame_xyz = freemocap_data_handler.trajectories[f"{side}_hand_pinky_mcp"]
             body_hand_pinky_frame_xyz = freemocap_data_handler.trajectories[f"{side}_pinky"]
@@ -50,9 +51,9 @@ def fix_hand_data(freemocap_data_handler: FreemocapDataHandler):
 
             # Calculate rotation matrix to align pinky finger
             pinky_finger_rotation_matricies = calculate_rotation_matricies(hand_pinky_finger_mcp_vector,
-                                                                            body_pinky_finger_vector)
+                                                                           body_pinky_finger_vector)
             freemocap_data_handler.apply_rotations(rotation_matricies=pinky_finger_rotation_matricies,
-                                                    component_name=f"{side}_hand")
+                                                   component_name=f"{side}_hand")
 
         freemocap_data_handler.mark_processing_stage("fixed_hand_data")
         logger.success("Finished fixing hand data!")
@@ -61,7 +62,6 @@ def fix_hand_data(freemocap_data_handler: FreemocapDataHandler):
         logger.error(f"Error while fixing hand data:\n error:\n {e}")
         logger.exception(e)
         raise e
-
 
 
 def calculate_rotation_matricies(data1_frame_xyz: np.ndarray,
@@ -89,7 +89,6 @@ def calculate_rotation_matricies(data1_frame_xyz: np.ndarray,
 
 def calculate_rotation_matrix(data1_frame_xyz: np.ndarray,
                               data2_frame_xyz: np.ndarray) -> np.ndarray:
-
     if data1_frame_xyz.shape != data2_frame_xyz.shape:
         raise Exception(
             f"Error while calculating rotation matrix: data1_frame_xyz.shape != data2_frame_xyz.shape: {data1_frame_xyz.shape} != {data2_frame_xyz.shape}")

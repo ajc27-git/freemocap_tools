@@ -5,7 +5,7 @@ import time
 from bpy.types import Operator
 
 from freemocap_adapter.core_functions.empties.reorient_empties import reorient_empties
-from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.helpers.freemocap_empties_from_parent_object import \
+from freemocap_adapter.core_functions.freemocap_data_operations.operations import \
     freemocap_empties_from_parent_object
 
 logger = logging.getLogger(__name__)

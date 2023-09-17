@@ -1,15 +1,14 @@
+import logging
 import math as m
 from typing import Dict
 
 import bpy
 import mathutils
 
-from freemocap_adapter.core_functions.empties.update_empty_positions import get_empty_positions
 from freemocap_adapter.data_models.bones.bone_constraints import BONES_CONSTRAINTS
 
-
-import logging
 logger = logging.getLogger(__name__)
+
 
 def add_rig(empties: Dict[str, bpy.types.Object],
             bones: Dict[str, Dict[str, float]],
@@ -43,9 +42,6 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         # Get reference to the renamed armature
         rig = bpy.data.objects[rig_name]
 
-
-
-
         # Deselect all objects
         bpy.ops.object.select_all(action='DESELECT')
         # Select the only the rig
@@ -54,7 +50,7 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         # Get rig height as the sum of the major bones length in a standing position. Assume foot declination angle of 23º
         avg_ankle_projection_length = (m.sin(m.radians(23)) * bones['foot.R']['median'] + m.sin(
             m.radians(23)) *
-                                    bones['foot.L']['median']) / 2
+                                       bones['foot.L']['median']) / 2
         avg_shin_length = (bones['shin.R']['median'] + bones['shin.L']['median']) / 2
         avg_thigh_length = (bones['thigh.R']['median'] + bones['thigh.L']['median']) / 2
 
@@ -602,7 +598,7 @@ def add_rig(empties: Dict[str, bpy.types.Object],
 
         # Create a palm bones list and phalanges dictionary to continue the finger adjustment
         palm_bones = [thumb_carpal_R, thumb_carpal_L, palm_01_R, palm_01_L, palm_02_R, palm_02_L, palm_03_R, palm_03_L,
-                    palm_04_R, palm_04_L]
+                      palm_04_R, palm_04_L]
         phalanges = {
             'thumb.carpal.R': [thumb_01_R, thumb_02_R, thumb_03_R],
             'thumb.carpal.L': [thumb_01_L, thumb_02_L, thumb_03_L],
@@ -695,7 +691,6 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         # Change mode to object mode
         bpy.ops.object.mode_set(mode='OBJECT')
 
-
         ### Add bone constrains ###
         print('Adding bone constraints...')
 
@@ -724,7 +719,7 @@ def add_rig(empties: Dict[str, bpy.types.Object],
             # If it is a finger bone amd add_fingers_constraints is False continue with the next bone
             if not add_fingers_constraints and len(
                     [finger_part for finger_part in ['palm', 'thumb', 'index', 'middle', 'ring', 'pinky'] if
-                    finger_part in bone]) > 0:
+                     finger_part in bone]) > 0:
                 continue
 
             for cons in BONES_CONSTRAINTS[bone]:

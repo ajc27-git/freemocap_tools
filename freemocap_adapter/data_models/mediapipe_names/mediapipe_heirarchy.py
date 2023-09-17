@@ -56,8 +56,8 @@ MEDIAPIPE_HIERARCHY = {
         'children': ['left_foot_index',
                      'left_heel']},
 
-    #ARMS
-    #RIGHT ARM
+    # ARMS
+    # RIGHT ARM
     'right_shoulder': {
         'children': ['right_elbow']
     },

@@ -1,11 +1,11 @@
 import logging
-import numpy as np
-
 from copy import deepcopy
 from typing import Dict, Any
 
+import numpy as np
+
 from freemocap_adapter.core_functions.bones.calculate_bone_length_statistics import calculate_bone_length_statistics
-from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.freemocap_data_handler import \
+from freemocap_adapter.core_functions.freemocap_data_operations.classes.freemocap_data_handler import \
     FreemocapDataHandler
 from freemocap_adapter.data_models.bones.bone_definitions import BONE_DEFINITIONS
 from freemocap_adapter.data_models.mediapipe_names.mediapipe_heirarchy import MEDIAPIPE_HIERARCHY

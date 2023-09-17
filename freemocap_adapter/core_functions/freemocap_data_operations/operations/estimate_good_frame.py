@@ -5,7 +5,8 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-def estimate_good_frame(trajectories_with_error: Dict[str, Dict[str, np.ndarray]], ignore_first_n_frames: int=30):
+
+def estimate_good_frame(trajectories_with_error: Dict[str, Dict[str, np.ndarray]], ignore_first_n_frames: int = 30):
     names = list(trajectories_with_error.keys())
     all_good_frames = None
 
@@ -46,4 +47,4 @@ def estimate_good_frame(trajectories_with_error: Dict[str, Dict[str, np.ndarray]
     # Find the index of the good frame with the lowest velocity
     best_frame = all_good_frames[np.argmin(good_frames_velocities)]
 
-    return best_frame 
+    return best_frame

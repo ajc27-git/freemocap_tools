@@ -1,16 +1,14 @@
 import logging
-from typing import Dict, List
+from typing import Dict
 
 import numpy as np
 
-from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.freemocap_data_handler import \
+from freemocap_adapter.core_functions.freemocap_data_operations.classes.freemocap_data_handler import \
     FreemocapDataHandler
-from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.helpers.estimate_good_frame import \
+from freemocap_adapter.core_functions.freemocap_data_operations.operations.estimate_good_frame import \
     estimate_good_frame
 
 logger = logging.getLogger(__name__)
-
-
 
 
 def put_skeleton_on_ground(freemocap_data_handler: FreemocapDataHandler):
@@ -29,12 +27,14 @@ def put_skeleton_on_ground(freemocap_data_handler: FreemocapDataHandler):
     center_reference_point = np.nanmean(list(original_reference_trajectories.values()), axis=0)
 
     x_forward_reference_points = []
-    for trajectory in freemocap_data_handler.get_trajectories(trajectory_names=["left_foot_index", "right_foot_index"]).values():
+    for trajectory in freemocap_data_handler.get_trajectories(
+            trajectory_names=["left_foot_index", "right_foot_index"]).values():
         x_forward_reference_points.append(trajectory[good_frame, :])
     x_forward_reference_point = np.nanmean(x_forward_reference_points, axis=0)
 
     y_leftward_reference_points = []
-    for trajectory in freemocap_data_handler.get_trajectories(trajectory_names=["left_heel", "left_foot_index"]).values():
+    for trajectory in freemocap_data_handler.get_trajectories(
+            trajectory_names=["left_heel", "left_foot_index"]).values():
         y_leftward_reference_points.append(trajectory[good_frame, :])
     y_leftward_reference_point = np.nanmean(y_leftward_reference_points, axis=0)
 
@@ -70,10 +70,11 @@ def put_skeleton_on_ground(freemocap_data_handler: FreemocapDataHandler):
 
     freemocap_data_handler.apply_translation(vector=-center_reference_point)
     freemocap_data_handler.mark_processing_stage("translated_to_origin",
-                               metadata={"original_origin_reference": center_reference_point.tolist()})
+                                                 metadata={
+                                                     "original_origin_reference": center_reference_point.tolist()})
     freemocap_data_handler.apply_rotation(rotation_matrix=rotation_matrix)
     freemocap_data_handler.mark_processing_stage(name="rotated_to_inertial_reference_frame",
-                               metadata={"rotation_matrix": rotation_matrix.tolist()})
+                                                 metadata={"rotation_matrix": rotation_matrix.tolist()})
 
     logger.success(
         "Finished putting freemocap data in inertial reference frame.\n freemocap_data(after):\n{freemocap_data_handler}")
