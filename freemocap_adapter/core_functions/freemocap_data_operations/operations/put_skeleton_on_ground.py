@@ -68,11 +68,11 @@ def put_skeleton_on_ground(freemocap_data_handler: FreemocapDataHandler):
     assert np.allclose(rotation_matrix @ z_hat, [0, 0, 1]), "z_hat is not rotated to [0, 0, 1]"
     assert np.allclose(np.linalg.det(rotation_matrix), 1), "rotation matrix is not a rotation matrix"
 
-    freemocap_data_handler.apply_translation(vector=-center_reference_point)
+    freemocap_data_handler.translate(translation = -center_reference_point)
     freemocap_data_handler.mark_processing_stage("translated_to_origin",
                                                  metadata={
                                                      "original_origin_reference": center_reference_point.tolist()})
-    freemocap_data_handler.apply_rotation(rotation_matrix=rotation_matrix)
+    freemocap_data_handler.rotate(rotation=rotation_matrix)
     freemocap_data_handler.mark_processing_stage(name="rotated_to_inertial_reference_frame",
                                                  metadata={"rotation_matrix": rotation_matrix.tolist()})
 

@@ -4,8 +4,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from freemocap_adapter.core_functions.freemocap_data_operations.classes.freemocap_data_handler import \
-    FREEMOCAP_DATA_COMPONENT_TYPES
+from freemocap_adapter.data_models.freemocap_data.freemocap_data_model import FREEMOCAP_DATA_COMPONENT_TYPES
 
 logger = logging.getLogger(__name__)
 
@@ -47,19 +46,23 @@ class FreemocapDataTransformer:
         logger.info(f"Applying rotation matrix {rotation_matrix}")
         if component_name == "body" or component_name is None:
             self.handler.body_frame_name_xyz = self._rotate_component(self.handler.body_frame_name_xyz, rotation_matrix)
-        elif component_name == "right_hand" or component_name is None:
+        
+        if component_name == "right_hand" or component_name is None:
             self.handler.right_hand_frame_name_xyz = self._rotate_component(self.handler.right_hand_frame_name_xyz,
                                                                             rotation_matrix)
-        elif component_name == "left_hand" or component_name is None:
+        
+        if component_name == "left_hand" or component_name is None:
             self.handler.left_hand_frame_name_xyz = self._rotate_component(self.left_hand_frame_name_xyz,
                                                                            rotation_matrix)
-        elif component_name == "face" or component_name is None:
+        
+        if component_name == "face" or component_name is None:
             self.handler.face_frame_name_xyz = self._rotate_component(self.handler.face_frame_name_xyz, rotation_matrix)
-        elif component_name == "other" or component_name is None:
+        
+        if component_name == "other" or component_name is None:
             for name, other_component in self.handler.freemocap_data.other.items():
                 other_component.data = self._rotate_component(other_component.data, rotation_matrix)
-        else:
-            raise ValueError(f"Component name {component_name} not recognized.")
+        
+
 
     def _rotate_component(self,
                           data_frame_name_xyz: Union[np.ndarray, List[float]],
@@ -104,10 +107,7 @@ class FreemocapDataTransformer:
     def apply_translation(self,
                           vector: Union[np.ndarray, List[float]],
                           component_name: FREEMOCAP_DATA_COMPONENT_TYPES = None):
-        if component_name == "left_eye":
-            f = 0
-        if component_name == "left_hip":
-            f = 0
+
 
         logger.info(f"Translating by vector {vector}")
         if isinstance(vector, list):
@@ -117,19 +117,18 @@ class FreemocapDataTransformer:
 
         if component_name == "body" or component_name is None:
             self.handler.body_frame_name_xyz = self._translate_component_data(self.handler.body_frame_name_xyz, vector)
-        elif component_name == "right_hand" or component_name is None:
+        if component_name == "right_hand" or component_name is None:
             self.handler.right_hand_frame_name_xyz = self._translate_component_data(
                 self.handler.right_hand_frame_name_xyz, vector)
-        elif component_name == "left_hand" or component_name is None:
+        if component_name == "left_hand" or component_name is None:
             self.handler.left_hand_frame_name_xyz = self._translate_component_data(
                 self.handler.left_hand_frame_name_xyz, vector)
-        elif component_name == "face" or component_name is None:
+        if component_name == "face" or component_name is None:
             self.handler.face_frame_name_xyz = self._translate_component_data(self.handler.face_frame_name_xyz, vector)
-        elif component_name == "other" or component_name is None:
+        if component_name == "other" or component_name is None:
             for name, other_component in self.handler.freemocap_data.other.items():
                 self._translate_component_data(other_component.data, vector)
-        else:
-            raise ValueError(f"Component name {component_name} not recognized")
+
 
     def _translate_component_data(self, component: np.ndarray, vector: np.ndarray):
         if len(component.shape) == 2:

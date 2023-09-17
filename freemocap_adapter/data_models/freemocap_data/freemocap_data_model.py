@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, Literal
 
 import numpy as np
 
@@ -11,6 +11,8 @@ from freemocap_adapter.data_models.mediapipe_names.mediapipe_trajectory_names im
     HumanTrajectoryNames
 
 logger = logging.getLogger(__name__)
+
+FREEMOCAP_DATA_COMPONENT_TYPES = Literal["body", "right_hand", "left_hand", "face", "other"]
 
 
 @dataclass

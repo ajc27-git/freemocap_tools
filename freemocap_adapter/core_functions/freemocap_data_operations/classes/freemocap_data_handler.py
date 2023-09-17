@@ -7,10 +7,10 @@ import numpy as np
 from freemocap_adapter.core_functions.empties.creation.create_virtual_trajectories import calculate_virtual_trajectories
 from freemocap_adapter.core_functions.freemocap_data_operations.classes.freemocap_data_transformer import \
     FreemocapDataTransformer
-from freemocap_adapter.data_models.freemocap_data.freemocap_data_model import FreemocapData
+from freemocap_adapter.data_models.freemocap_data.freemocap_data_model import FreemocapData, \
+    FREEMOCAP_DATA_COMPONENT_TYPES
 from freemocap_adapter.data_models.freemocap_data.helpers.freemocap_component_data import FreemocapComponentData
 
-FREEMOCAP_DATA_COMPONENT_TYPES = Literal["body", "right_hand", "left_hand", "face", "other"]
 
 logger = logging.getLogger(__name__)
 
@@ -535,7 +535,7 @@ class FreemocapDataHandler:
                rotation: Union[np.ndarray, List[np.ndarray]],
                component_name: FREEMOCAP_DATA_COMPONENT_TYPES = None,
                ):
-        if not isinstance(rotation, list):
+        if isinstance(rotation, list):
             self._transformer.apply_rotations(rotation_matricies=[rotation],
                                               component_name=component_name)
         elif isinstance(rotation, np.ndarray):
@@ -552,7 +552,7 @@ class FreemocapDataHandler:
         if isinstance(translation, np.ndarray):
             self._transformer.apply_translation(vector=translation,
                                                 component_name=component_name)
-        elif not isinstance(translation, list):
+        elif isinstance(translation, list):
             self._transformer.apply_translations(vectors=translation,
                                                  component_name=component_name)
 
