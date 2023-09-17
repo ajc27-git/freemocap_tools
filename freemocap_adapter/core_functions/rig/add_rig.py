@@ -12,24 +12,17 @@ logger = logging.getLogger(__name__)
 
 def add_rig(empties: Dict[str, bpy.types.Object],
             bones: Dict[str, Dict[str, float]],
+            rig_name: str,
+            parent_object: bpy.types.Object,
             keep_symmetry: bool = False,
             add_fingers_constraints: bool = False,
             use_limit_rotation: bool = False,
-            rig_name: str = 'root',
+
             ):
     try:
         # Deselect all objects
         for object in bpy.data.objects:
             object.select_set(False)
-
-        # # If there is an existing metarig, delete it
-        # try:
-        #     print('Deleting previous metarigs...')
-        #     for object in bpy.data.objects:
-        #         if object.type == "ARMATURE":
-        #             bpy.data.objects.remove(object, do_unlink=True)
-        # except:
-        #     print('No existing metarigs to delete')
 
         # Add normal human armature
         bpy.ops.object.armature_human_metarig_add()
@@ -41,6 +34,7 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         rig.name = rig_name
         # Get reference to the renamed armature
         rig = bpy.data.objects[rig_name]
+        rig.parent = parent_object
 
         # Deselect all objects
         bpy.ops.object.select_all(action='DESELECT')

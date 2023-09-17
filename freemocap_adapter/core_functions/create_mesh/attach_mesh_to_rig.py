@@ -6,7 +6,11 @@ import bpy
 logger = logging.getLogger(__name__)
 
 
-def attach_mesh_to_rig(body_mesh_mode: str = "custom"):
+def attach_mesh_to_rig(rig_name: str,
+                       body_mesh_mode: str = "custom",
+                       ):
+    rig = bpy.data.objects[rig_name]
+
     if body_mesh_mode == "file":
 
         try:
@@ -17,7 +21,6 @@ def attach_mesh_to_rig(body_mesh_mode: str = "custom"):
             return
 
         # Get reference to the rig
-        rig = bpy.data.objects['root']
 
         # Get the rig z dimension
         rig_z_dimension = rig.dimensions.z

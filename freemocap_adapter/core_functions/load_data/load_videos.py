@@ -60,14 +60,14 @@ def add_videos_to_scene(videos_path: Union[Path, str],
         video_as_plane.parent = parent_object
 
 
-def load_videos(recording_path: str):
+def load_videos(recording_path: str,
+                parent_object: bpy.types.Object = None,):
     """
     ############################
     Load videos into scene using `videos_as_planes` addon
     """
 
     recording_path = Path(recording_path)
-    parent_empty = create_video_parent_empty(name=f"{Path(recording_path).stem}_video_anchor")
 
     if Path(recording_path / "annotated_videos").is_dir():
         videos_path = Path(recording_path / "annotated_videos")
@@ -84,7 +84,7 @@ def load_videos(recording_path: str):
             logger.error("Error enabling `io_import_images_as_planes` addon: ")
             logger.exception(e)
         try:
-            add_videos_to_scene(videos_path=videos_path, parent_object=parent_empty)
+            add_videos_to_scene(videos_path=videos_path, parent_object=parent_object)
         except Exception as e:
             logger.error("Error adding videos to scene: ")
             logger.exception(e)

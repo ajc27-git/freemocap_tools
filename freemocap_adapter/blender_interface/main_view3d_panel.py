@@ -24,15 +24,15 @@ class VIEW3D_PT_freemocap_adapter(Panel):
 
         self._run_all_panel(fmc_adapter_tool, layout)
 
-        self._load_data_panel(fmc_adapter_tool, layout)
-
-        self._reduce_bone_dispersion_panel(fmc_adapter_tool, layout)
-
-        self._add_rig_panel(fmc_adapter_tool, layout)
-
-        self._add_body_mesh_panel(fmc_adapter_tool, layout)
-
-        self._fbx_export_panel(layout)
+        # self._load_data_panel(fmc_adapter_tool, layout)
+        #
+        # self._reduce_bone_dispersion_panel(fmc_adapter_tool, layout)
+        #
+        # self._add_rig_panel(fmc_adapter_tool, layout)
+        #
+        # self._add_body_mesh_panel(fmc_adapter_tool, layout)
+        #
+        # self._fbx_export_panel(layout)
 
     def _run_all_panel(self, fmc_adapter_tool, layout):
         box = layout.box()

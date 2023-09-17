@@ -33,9 +33,19 @@ class MainController:
         self.recording_path = recording_path
         self.recording_name = Path(self.recording_path).stem
         self.origin_name = f"{self.recording_name}_origin"
-        self.data_parent_object = create_freemocap_parent_empty(name=self.origin_name)
+        self.rig_name = f"{self.recording_name}_rig"
+        self._create_parent_empties()
         self.freemocap_data_handler = None
         self.empties = None
+
+    def _create_parent_empties(self):
+        self.data_parent_object = create_freemocap_parent_empty(name=self.origin_name)
+        self._empty_parent_object = create_freemocap_parent_empty(name=f"empties",
+                                                                  parent_object=self.data_parent_object)
+        self._rig_parent_object = create_freemocap_parent_empty(name=f"rig",
+                                                                parent_object=self.data_parent_object)
+        self._video_parent_object = create_freemocap_parent_empty(name=f"videos",
+                                                                  parent_object=self.data_parent_object)
 
     def load_freemocap_data(self):
         try:
@@ -99,7 +109,7 @@ class MainController:
             logger.info("Creating keyframed empties....")
 
             self.empties = create_freemocap_empties(handler=self.freemocap_data_handler,
-                                                    parent_object=self.data_parent_object,
+                                                    parent_object=self._empty_parent_object,
                                                     )
             logger.success(f"Finished creating keyframed empties: {self.empties.keys()}")
         except Exception as e:
@@ -110,6 +120,8 @@ class MainController:
             logger.info("Adding rig...")
             add_rig(empties=self.empties,
                     bones=self.freemocap_data_handler.metadata['bones'],
+                    rig_name=self.rig_name,
+                    parent_object=self._rig_parent_object,
                     keep_symmetry=self.config.add_rig.keep_symmetry,
                     add_fingers_constraints=self.config.add_rig.add_fingers_constraints,
                     use_limit_rotation=self.config.add_rig.use_limit_rotation,
@@ -122,7 +134,8 @@ class MainController:
     def attach_mesh_to_rig(self):
         try:
             logger.info("Adding body mesh...")
-            attach_mesh_to_rig(body_mesh_mode=self.config.add_body_mesh.body_mesh_mode)
+            attach_mesh_to_rig(body_mesh_mode=self.config.add_body_mesh.body_mesh_mode,
+                               rig_name=self.rig_name,)
         except Exception as e:
             logger.error(f"Failed to attach mesh to rig: {e}")
             logger.exception(e)
@@ -131,7 +144,8 @@ class MainController:
     def add_videos(self):
         try:
             logger.info("Loading videos as planes...")
-            load_videos(recording_path=self.recording_path)
+            load_videos(recording_path=self.recording_path,
+                        parent_object=self._video_parent_object,)
         except Exception as e:
             logger.error(e)
             logger.exception(e)
