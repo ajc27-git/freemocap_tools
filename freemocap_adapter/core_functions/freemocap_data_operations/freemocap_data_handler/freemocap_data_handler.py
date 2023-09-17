@@ -1,7 +1,7 @@
 import logging
 from copy import deepcopy
 from pathlib import Path
-from typing import List, Union, Literal, Dict, Any
+from typing import List, Union, Dict, Any, Literal
 
 import numpy as np
 
@@ -99,8 +99,6 @@ class FreemocapDataHandler:
             raise ValueError(f"all_frame_name_xyz should have 3 dimensions. Got {all_data.shape[2]} instead.")
 
         return all_data
-
-
 
     @property
     def body_frame_name_xyz(self):
@@ -206,12 +204,14 @@ class FreemocapDataHandler:
             for other_component in self.freemocap_data.other.values():
                 if other_component.name == group_name:
                     other_component.data = np.concatenate([other_component.data, trajectory], axis=1)
-                    other_component.trajectory_names.append(trajectory_name)
-                    return
-
+                    other_component.trajectory_names.append(trajectory_name)                    
+        else:
+            raise ValueError(
+                f"Component type {component_type} not recognized.")
+        
     def add_trajectories(self,
                          trajectories: Dict[str, np.ndarray],
-                         component_type: Union[FREEMOCAP_DATA_COMPONENT_TYPES, List[FREEMOCAP_DATA_COMPONENT_TYPES]],
+                         component_type: Union[str, List[str]],
                          source: str = None,
                          group_name: str = None):
 
@@ -228,31 +228,7 @@ class FreemocapDataHandler:
                                 component_type=component_types[trajectory_number],
                                 source=source,
                                 group_name=group_name)
-        #
-        #
-        # if component_type == "body":
-        #     # extend the body data with the new trajectories
-        #     self.freemocap_data.body.data = np.concatenate(
-        #         [self.freemocap_data.body.data, incoming_trajectory_frame_name_xyz], axis=1)
-        #     self.freemocap_data.body.trajectory_names.extend(incoming_trajectory_names)
-        # elif component_type == "right_hand":
-        #     self.freemocap_data.hands["right"].data = np.concatenate(
-        #         [self.freemocap_data.hands["right"].data, incoming_trajectory_frame_name_xyz], axis=1)
-        #     self.freemocap_data.hands["right"].trajectory_names.extend(incoming_trajectory_names)
-        # elif component_type == "left_hand":
-        #     self.freemocap_data.hands["left"].data = np.concatenate(
-        #         [self.freemocap_data.hands["left"].data, incoming_trajectory_frame_name_xyz], axis=1)
-        #     self.freemocap_data.hands["left"].trajectory_names.extend(incoming_trajectory_names)
-        # elif component_type == "face":
-        #     self.freemocap_data.face.data = np.concatenate(
-        #         [self.freemocap_data.face.data, incoming_trajectory_frame_name_xyz], axis=1)
-        #     self.freemocap_data.face.trajectory_names.extend(incoming_trajectory_names)
-        # elif component_type == "other":
-        #     self.add_other_component(FreemocapComponentData(name=group_name if group_name is not None else "unknown",
-        #                                                     data=incoming_trajectory_frame_name_xyz,
-        #                                                     data_source=source if source is not None else "unknown",
-        #                                                     trajectory_names=incoming_trajectory_names))
-
+       
     def get_trajectories(self, trajectory_names: List[str], components=None, with_error: bool = False) -> Union[
         Dict[str, np.ndarray], Dict[str, Dict[str, np.ndarray]]]:
 
@@ -330,7 +306,8 @@ class FreemocapDataHandler:
                        name: str,
                        data: np.ndarray,
                        component_type: FREEMOCAP_DATA_COMPONENT_TYPES = None):
-        data = np.squeeze(data) #get rid of any dimensions of size 1 (aka `singleton dimensions`, aka 'you called a square a flat cube')
+        data = np.squeeze(
+            data)  # get rid of any dimensions of size 1 (aka `singleton dimensions`, aka 'you called a square a flat cube')
         if not len(data.shape) == 2:
             raise ValueError(
                 f"Data should have 2 dimensions. Got {data.shape} instead.")
@@ -369,7 +346,7 @@ class FreemocapDataHandler:
             logger.error(f"Error while setting trajectory `{name}`:\n error:\n {e}")
             logger.exception(e)
             raise Exception(f"Error while setting trajectory: {e}")
-        
+
     def _collect_frame_counts(self) -> dict:
         frame_counts = {
             'body': self.body_frame_name_xyz.shape[0],
@@ -455,22 +432,41 @@ class FreemocapDataHandler:
 
         return FreemocapData.from_data(**self._intermediate_stages[name])
 
-    def apply_rotation(self, rotation_matrix: Union[np.ndarray, List[List[float]]]):
+    def apply_rotations(self,
+                        rotation_matricies: List[np.ndarray],
+                        component_name:str = None):
 
-        if isinstance(rotation_matrix, list):
+        if not len(rotation_matricies) == self.number_of_frames:
+            raise ValueError(f"Number of rotation matricies ({len(rotation_matricies)}) does not match number of frames ({self.number_of_frames}).")
+
+        for rotation_matrix in rotation_matricies:
+            self.apply_rotation(rotation_matrix=rotation_matrix,
+                                component_name=component_name)
+
+    def apply_rotation(self,
+                       rotation_matrix: Union[np.ndarray, List[List[float]]],
+                       component_name: str = None):
+
+        if isinstance(rotation_matrix, list) or isinstance(rotation_matrix, tuple):
             rotation_matrix = np.array(rotation_matrix)
 
         if rotation_matrix.shape != (3, 3):
             raise ValueError(f"Rotation matrix must be a 3x3 matrix. Got {rotation_matrix.shape} instead.")
 
         logger.info(f"Applying rotation matrix {rotation_matrix}")
-        self.body_frame_name_xyz = self._rotate_component(self.body_frame_name_xyz, rotation_matrix)
-        self.right_hand_frame_name_xyz = self._rotate_component(self.right_hand_frame_name_xyz, rotation_matrix)
-        self.left_hand_frame_name_xyz = self._rotate_component(self.left_hand_frame_name_xyz, rotation_matrix)
-        self.face_frame_name_xyz = self._rotate_component(self.face_frame_name_xyz, rotation_matrix)
-
-        for name, other_component in self.freemocap_data.other.items():
-            other_component.data = self._rotate_component(other_component.data, rotation_matrix)
+        if component_name == "body" or component_name is None:
+            self.body_frame_name_xyz = self._rotate_component(self.body_frame_name_xyz, rotation_matrix)
+        elif component_name == "right_hand" or component_name is None:
+            self.right_hand_frame_name_xyz = self._rotate_component(self.right_hand_frame_name_xyz, rotation_matrix)
+        elif component_name == "left_hand" or component_name is None:
+            self.left_hand_frame_name_xyz = self._rotate_component(self.left_hand_frame_name_xyz, rotation_matrix)
+        elif component_name == "face" or component_name is None:
+            self.face_frame_name_xyz = self._rotate_component(self.face_frame_name_xyz, rotation_matrix)
+        elif component_name == "other" or component_name is None:
+            for name, other_component in self.freemocap_data.other.items():
+                other_component.data = self._rotate_component(other_component.data, rotation_matrix)
+        else:
+            raise ValueError(f"Component name {component_name} not recognized.")
 
     def _rotate_component(self,
                           data_frame_name_xyz: Union[np.ndarray, List[float]],
@@ -502,20 +498,36 @@ class FreemocapDataHandler:
                                            :]
         return rotated_data_frame_name_xyz
 
-    def apply_translation(self, vector: Union[np.ndarray, List[float]]):
+    def apply_translations(self,
+                            vectors: Union[List[np.ndarray], List[List[float]]],
+                            component_name: str = None):
+        if not len(vectors) == self.number_of_frames:
+            raise ValueError(f"Number of vectors ({len(vectors)}) does not match number of frames ({self.number_of_frames}).")
+        for vector in vectors:
+            self.apply_translation(vector=vector,
+                                    component_name=component_name)
+    def apply_translation(self,
+                          vector: Union[np.ndarray, List[float]],
+                          component_name: FREEMOCAP_DATA_COMPONENT_TYPES = None):
         logger.info(f"Translating by vector {vector}")
         if isinstance(vector, list):
             vector = np.array(vector)
         if vector.shape != (3,):
             raise ValueError(f"Vector must be a 3D vector. Got {vector.shape} instead.")
 
-        self.body_frame_name_xyz = self._translate_component_data(self.body_frame_name_xyz, vector)
-        self.right_hand_frame_name_xyz = self._translate_component_data(self.right_hand_frame_name_xyz, vector)
-        self.left_hand_frame_name_xyz = self._translate_component_data(self.left_hand_frame_name_xyz, vector)
-        self.face_frame_name_xyz = self._translate_component_data(self.face_frame_name_xyz, vector)
-
-        for name, other_component in self.freemocap_data.other.items():
-            self._translate_component_data(other_component.data, vector)
+        if component_name == "body" or component_name is None:
+            self.body_frame_name_xyz = self._translate_component_data(self.body_frame_name_xyz, vector)
+        elif component_name == "right_hand" or component_name is None:
+            self.right_hand_frame_name_xyz = self._translate_component_data(self.right_hand_frame_name_xyz, vector)
+        elif component_name == "left_hand" or component_name is None:
+            self.left_hand_frame_name_xyz = self._translate_component_data(self.left_hand_frame_name_xyz, vector)
+        elif component_name == "face" or component_name is None:
+            self.face_frame_name_xyz = self._translate_component_data(self.face_frame_name_xyz, vector)
+        elif component_name == "other" or component_name is None:
+            for name, other_component in self.freemocap_data.other.items():
+                self._translate_component_data(other_component.data, vector)
+        else:
+            raise ValueError(f"Component name {component_name} not recognized")
 
     def _translate_component_data(self, component: np.ndarray, vector: np.ndarray):
         if len(component.shape) == 2:
@@ -538,25 +550,6 @@ class FreemocapDataHandler:
         self.face_frame_name_xyz *= scale
         for other_component in self.freemocap_data.other:
             other_component.data_frame_name_xyz *= scale
-
-    def apply_affine_transformations(self, transform: Union[np.ndarray, List[List[float]]]):
-        # Separate rotation matrix and translation vector
-        if isinstance(transform, list):
-            transform = np.array(transform)
-        if transform.shape != (4, 4):
-            raise ValueError(f"Transform must be a 4x4 matrix. Got {transform.shape} instead.")
-        rotation_matrix = transform[:3, :3]
-        translation_vector = transform[:3, 3]
-        scale = transform[3, 3]
-
-        # Apply rotation
-        self.apply_rotation(rotation_matrix)
-
-        # Apply translation
-        self.apply_translation(translation_vector)
-
-        # Apply scale
-        self.apply_scale(scale)
 
     def add_metadata(self, metadata: dict):
         logger.info(f"Adding metadata {metadata.keys()}")
@@ -772,3 +765,4 @@ class FreemocapDataHandler:
 
     def __str__(self):
         return str(self.freemocap_data)
+

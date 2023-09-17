@@ -1,11 +1,12 @@
 import logging
 from pathlib import Path
 
-import bpy
 
 from freemocap_adapter.core_functions.bones.enforce_rigid_bones import enforce_rigid_bones
 from freemocap_adapter.core_functions.create_mesh.attach_mesh_to_rig import attach_mesh_to_rig
 from freemocap_adapter.core_functions.empties.creation.create_freemocap_empties import create_freemocap_empties
+from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.helpers.fix_hand_data import \
+    fix_hand_data
 from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_saver.freemocap_data_saver import \
     FreemocapDataSaver
 from freemocap_adapter.core_functions.freemocap_data_operations.load_freemocap_data import load_freemocap_data
@@ -73,6 +74,14 @@ class MainController:
             logger.exception(e)
             raise e
 
+    def fix_hand_data(self):
+        try:
+            logger.info("Fixing hand data...")
+            self.freemocap_data_handler =  fix_hand_data(freemocap_data_handler=self.freemocap_data_handler)
+        except Exception as e:
+            logger.error(f"Failed during `fix hand data`, error: `{e}`")
+            logger.exception(e)
+            raise e
     def save_data_to_disk(self):
         try:
             logger.info("Saving data to disk...")
@@ -86,8 +95,6 @@ class MainController:
     def create_empties(self):
         try:
             logger.info("Creating keyframed empties....")
-            bpy.ops.screen.animation_play()
-            bpy.ops.screen.animation_cancel()
 
             self.empties = create_freemocap_empties(freemocap_data_handler=self.freemocap_data_handler,
                                                     parent_object=self.data_parent_object,
@@ -134,6 +141,7 @@ class MainController:
         self.calculate_virtual_trajectories()
         self.put_data_in_inertial_reference_frame()
         self.enforce_rigid_bones()
+        # self.fix_hand_data()
         self.save_data_to_disk()
         self.create_empties()
         self.add_rig()
