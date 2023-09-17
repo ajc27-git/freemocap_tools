@@ -59,7 +59,7 @@ class MainController:
     def put_data_in_inertial_reference_frame(self):
         try:
             logger.info("Putting freemocap data in inertial reference frame....")
-            self.freemocap_data_handler.put_data_in_inertial_reference_frame()
+            self.freemocap_data_handler.put_skeleton_on_ground()
         except Exception as e:
             logger.error(f"Failed when trying to put freemocap data in inertial reference frame: {e}")
             logger.exception(e)
