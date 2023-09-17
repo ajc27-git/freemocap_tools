@@ -1,5 +1,5 @@
 import logging
-from typing import Dict
+from typing import Dict, List
 
 import numpy as np
 
@@ -9,6 +9,10 @@ from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_h
     estimate_good_frame
 
 logger = logging.getLogger(__name__)
+
+
+
+
 def put_skeleton_on_ground(freemocap_data_handler: FreemocapDataHandler):
     logger.info(
         f"Putting freemocap data in inertial reference frame...")

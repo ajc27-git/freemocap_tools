@@ -7,6 +7,8 @@ from freemocap_adapter.core_functions.create_mesh.attach_mesh_to_rig import atta
 from freemocap_adapter.core_functions.empties.creation.create_freemocap_empties import create_freemocap_empties
 from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.helpers.fix_hand_data import \
     fix_hand_data
+from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_handler.helpers.put_skeleton_on_ground import \
+    put_skeleton_on_ground
 from freemocap_adapter.core_functions.freemocap_data_operations.freemocap_data_saver.freemocap_data_saver import \
     FreemocapDataSaver
 from freemocap_adapter.core_functions.freemocap_data_operations.load_freemocap_data import load_freemocap_data
@@ -59,7 +61,7 @@ class MainController:
     def put_data_in_inertial_reference_frame(self):
         try:
             logger.info("Putting freemocap data in inertial reference frame....")
-            self.freemocap_data_handler.put_skeleton_on_ground()
+            put_skeleton_on_ground(freemocap_data_handler=self.freemocap_data_handler)
         except Exception as e:
             logger.error(f"Failed when trying to put freemocap data in inertial reference frame: {e}")
             logger.exception(e)
