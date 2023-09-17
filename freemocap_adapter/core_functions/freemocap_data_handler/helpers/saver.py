@@ -2,19 +2,21 @@ import json
 import logging
 import pickle
 from pathlib import Path
-from typing import Union
+from typing import Union, TYPE_CHECKING
 
 import numpy as np
 
-from freemocap_adapter.core_functions.freemocap_data_operations.classes.freemocap_data_handler import \
-    FreemocapDataHandler
-
 logger = logging.getLogger(__name__)
+
+# this allows us to import the `FreemocapDataHandler` class for type hinting without causing a circular import
+if TYPE_CHECKING:
+    from freemocap_adapter.core_functions.freemocap_data_handler.handler import \
+        FreemocapDataHandler
 
 
 class FreemocapDataSaver:
-    def __init__(self, freemocap_data_handler: FreemocapDataHandler):
-        self.handler = freemocap_data_handler
+    def __init__(self, handler: "FreemocapDataHandler"):
+        self.handler = handler
 
     def save(self, recording_path: str):
         recording_path = Path(recording_path)
@@ -165,7 +167,7 @@ To load it, you can do:
 ```python
 import pickle
 with open("freemocap_data_handler.pkl", "rb") as f:
-    freemocap_data_handler = pickle.load(f)
+    handler = pickle.load(f)
 print(freemocap_data_handler)
 ```
 The resulting object is a `FreeMocapDataHandler` object - check the class definition for more information on how to use it.

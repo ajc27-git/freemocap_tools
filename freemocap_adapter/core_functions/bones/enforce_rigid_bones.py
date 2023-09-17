@@ -5,7 +5,7 @@ from typing import Dict, Any
 import numpy as np
 
 from freemocap_adapter.core_functions.bones.calculate_bone_length_statistics import calculate_bone_length_statistics
-from freemocap_adapter.core_functions.freemocap_data_operations.classes.freemocap_data_handler import \
+from freemocap_adapter.core_functions.freemocap_data_handler.handler import \
     FreemocapDataHandler
 from freemocap_adapter.data_models.bones.bone_definitions import BONE_DEFINITIONS
 from freemocap_adapter.data_models.mediapipe_names.mediapipe_heirarchy import MEDIAPIPE_HIERARCHY
@@ -13,10 +13,10 @@ from freemocap_adapter.data_models.mediapipe_names.mediapipe_heirarchy import ME
 logger = logging.getLogger(__name__)
 
 
-def enforce_rigid_bones(freemocap_data_handler: FreemocapDataHandler,
+def enforce_rigid_bones(handler: FreemocapDataHandler,
                         bones: Dict[str, Dict[str, Any]] = BONE_DEFINITIONS):
     logger.info('Enforcing rigid bones - altering bone lengths to ensure they are the same length on each frame...')
-    original_trajectories = freemocap_data_handler.trajectories
+    original_trajectories = handler.trajectories
     updated_trajectories = deepcopy(original_trajectories)
 
     # Update the information of the virtual bones
@@ -66,13 +66,13 @@ def enforce_rigid_bones(freemocap_data_handler: FreemocapDataHandler,
 
     logger.info('Updating freemocap data handler with the new trajectories...')
     for name, trajectory in updated_trajectories.items():
-        freemocap_data_handler.set_trajectory(name=name, data=trajectory)
+        handler.set_trajectory(name=name, data=trajectory)
 
-    freemocap_data_handler.mark_processing_stage(name='enforced_rigid_bones',
-                                                 metadata={'bones': updated_bones,
-                                                           'hierarchy': MEDIAPIPE_HIERARCHY},
-                                                 )
-    return freemocap_data_handler
+    handler.mark_processing_stage(name='enforced_rigid_bones',
+                                  metadata={'bones': updated_bones,
+                                            'hierarchy': MEDIAPIPE_HIERARCHY},
+                                  )
+    return handler
 
 
 def translate_trajectory_and_its_children(name: str,

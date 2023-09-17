@@ -4,11 +4,11 @@ from pathlib import Path
 from freemocap_adapter.core_functions.bones.enforce_rigid_bones import enforce_rigid_bones
 from freemocap_adapter.core_functions.create_mesh.attach_mesh_to_rig import attach_mesh_to_rig
 from freemocap_adapter.core_functions.empties.creation.create_freemocap_empties import create_freemocap_empties
-from freemocap_adapter.core_functions.freemocap_data_operations.classes.freemocap_data_saver import \
+from freemocap_adapter.core_functions.freemocap_data_handler.helpers.saver import \
     FreemocapDataSaver
-from freemocap_adapter.core_functions.freemocap_data_operations.operations.fix_hand_data import \
+from freemocap_adapter.core_functions.freemocap_data_handler.operations.fix_hand_data import \
     fix_hand_data
-from freemocap_adapter.core_functions.freemocap_data_operations.operations.put_skeleton_on_ground import \
+from freemocap_adapter.core_functions.freemocap_data_handler.operations.put_skeleton_on_ground import \
     put_skeleton_on_ground
 from freemocap_adapter.core_functions.load_data.load_freemocap_data import load_freemocap_data
 from freemocap_adapter.core_functions.load_data.load_videos import load_videos
@@ -60,7 +60,7 @@ class MainController:
     def put_data_in_inertial_reference_frame(self):
         try:
             logger.info("Putting freemocap data in inertial reference frame....")
-            put_skeleton_on_ground(freemocap_data_handler=self.freemocap_data_handler)
+            put_skeleton_on_ground(handler=self.freemocap_data_handler)
         except Exception as e:
             logger.error(f"Failed when trying to put freemocap data in inertial reference frame: {e}")
             logger.exception(e)
@@ -69,7 +69,7 @@ class MainController:
     def enforce_rigid_bones(self):
         logger.info("Enforcing rigid bones...")
         try:
-            self.freemocap_data_handler = enforce_rigid_bones(freemocap_data_handler=self.freemocap_data_handler)
+            self.freemocap_data_handler = enforce_rigid_bones(handler=self.freemocap_data_handler)
         except Exception as e:
             logger.error(f"Failed during `enforce rigid bones`, error: `{e}`")
             logger.exception(e)
@@ -78,7 +78,7 @@ class MainController:
     def fix_hand_data(self):
         try:
             logger.info("Fixing hand data...")
-            self.freemocap_data_handler = fix_hand_data(freemocap_data_handler=self.freemocap_data_handler)
+            self.freemocap_data_handler = fix_hand_data(handler=self.freemocap_data_handler)
         except Exception as e:
             logger.error(f"Failed during `fix hand data`, error: `{e}`")
             logger.exception(e)
@@ -87,7 +87,7 @@ class MainController:
     def save_data_to_disk(self):
         try:
             logger.info("Saving data to disk...")
-            FreemocapDataSaver(freemocap_data_handler=self.freemocap_data_handler).save(
+            FreemocapDataSaver(handler=self.freemocap_data_handler).save(
                 recording_path=self.recording_path)
         except Exception as e:
             logger.error(f"Failed to save data to disk: {e}")
@@ -98,7 +98,7 @@ class MainController:
         try:
             logger.info("Creating keyframed empties....")
 
-            self.empties = create_freemocap_empties(freemocap_data_handler=self.freemocap_data_handler,
+            self.empties = create_freemocap_empties(handler=self.freemocap_data_handler,
                                                     parent_object=self.data_parent_object,
                                                     )
             logger.success(f"Finished creating keyframed empties: {self.empties.keys()}")
@@ -143,7 +143,7 @@ class MainController:
         self.calculate_virtual_trajectories()
         self.put_data_in_inertial_reference_frame()
         self.enforce_rigid_bones()
-        # self.fix_hand_data()
+        self.fix_hand_data()
         self.save_data_to_disk()
         self.create_empties()
         self.add_rig()

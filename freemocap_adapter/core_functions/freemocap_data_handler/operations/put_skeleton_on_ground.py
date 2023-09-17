@@ -3,23 +3,24 @@ from typing import Dict
 
 import numpy as np
 
-from freemocap_adapter.core_functions.freemocap_data_operations.classes.freemocap_data_handler import \
+from freemocap_adapter.core_functions.freemocap_data_handler.handler import \
     FreemocapDataHandler
-from freemocap_adapter.core_functions.freemocap_data_operations.operations.estimate_good_frame import \
+from freemocap_adapter.core_functions.freemocap_data_handler.operations.estimate_good_frame import \
     estimate_good_frame
 
 logger = logging.getLogger(__name__)
 
 
-def put_skeleton_on_ground(freemocap_data_handler: FreemocapDataHandler):
+def put_skeleton_on_ground(handler: FreemocapDataHandler):
     logger.info(
         f"Putting freemocap data in inertial reference frame...")
 
-    ground_reference_trajectories_with_error = freemocap_data_handler.get_trajectories(
+    ground_reference_trajectories_with_error = handler.get_trajectories(
         trajectory_names=["right_heel", "left_heel", "right_foot_index", "left_foot_index"],
         with_error=True)
 
     good_frame = estimate_good_frame(trajectories_with_error=ground_reference_trajectories_with_error)
+
     original_reference_trajectories = {trajectory_name: trajectory["trajectory"][good_frame, :]
                                        for trajectory_name, trajectory in
                                        ground_reference_trajectories_with_error.items()}
@@ -27,18 +28,18 @@ def put_skeleton_on_ground(freemocap_data_handler: FreemocapDataHandler):
     center_reference_point = np.nanmean(list(original_reference_trajectories.values()), axis=0)
 
     x_forward_reference_points = []
-    for trajectory in freemocap_data_handler.get_trajectories(
+    for trajectory in handler.get_trajectories(
             trajectory_names=["left_foot_index", "right_foot_index"]).values():
         x_forward_reference_points.append(trajectory[good_frame, :])
     x_forward_reference_point = np.nanmean(x_forward_reference_points, axis=0)
 
     y_leftward_reference_points = []
-    for trajectory in freemocap_data_handler.get_trajectories(
+    for trajectory in handler.get_trajectories(
             trajectory_names=["left_heel", "left_foot_index"]).values():
         y_leftward_reference_points.append(trajectory[good_frame, :])
     y_leftward_reference_point = np.nanmean(y_leftward_reference_points, axis=0)
 
-    z_upward_reference_point = freemocap_data_handler.get_trajectory("head_center")[good_frame, :]
+    z_upward_reference_point = handler.get_trajectory("head_center")[good_frame, :]
 
     x_forward = x_forward_reference_point - center_reference_point
     y_left = y_leftward_reference_point - center_reference_point
@@ -68,20 +69,20 @@ def put_skeleton_on_ground(freemocap_data_handler: FreemocapDataHandler):
     assert np.allclose(rotation_matrix @ z_hat, [0, 0, 1]), "z_hat is not rotated to [0, 0, 1]"
     assert np.allclose(np.linalg.det(rotation_matrix), 1), "rotation matrix is not a rotation matrix"
 
-    freemocap_data_handler.translate(translation = -center_reference_point)
-    freemocap_data_handler.mark_processing_stage("translated_to_origin",
-                                                 metadata={
-                                                     "original_origin_reference": center_reference_point.tolist()})
-    freemocap_data_handler.rotate(rotation=rotation_matrix)
-    freemocap_data_handler.mark_processing_stage(name="rotated_to_inertial_reference_frame",
-                                                 metadata={"rotation_matrix": rotation_matrix.tolist()})
+    handler.translate(translation=-center_reference_point)
+    handler.mark_processing_stage("translated_to_origin",
+                                  metadata={
+                                      "original_origin_reference": center_reference_point.tolist()})
+    handler.rotate(rotation=rotation_matrix)
+    handler.mark_processing_stage(name="rotated_to_inertial_reference_frame",
+                                  metadata={"rotation_matrix": rotation_matrix.tolist()})
 
     logger.success(
-        "Finished putting freemocap data in inertial reference frame.\n freemocap_data(after):\n{freemocap_data_handler}")
+        "Finished putting freemocap data in inertial reference frame.\n freemocap_data(after):\n{handler}")
 
 
-def get_body_trajectories_closest_to_the_ground(freemocap_data_handler: FreemocapDataHandler) -> Dict[str, np.ndarray]:
-    body_names = freemocap_data_handler.body_names
+def get_body_trajectories_closest_to_the_ground(handler: FreemocapDataHandler) -> Dict[str, np.ndarray]:
+    body_names = handler.body_names
 
     # checking for markers from the ground up!
     body_parts_from_low_to_high = [
@@ -100,7 +101,7 @@ def get_body_trajectories_closest_to_the_ground(freemocap_data_handler: Freemoca
     for part_name, part_list in body_parts_from_low_to_high:
         if all([part in body_names for part in part_list]):
             logger.debug(f"Trying to use {part_name} trajectories to define ground plane.")
-            part_trajectories = freemocap_data_handler.get_trajectories(part_list)
+            part_trajectories = handler.get_trajectories(part_list)
 
             for trajectory_name, trajectory in part_trajectories.items():
                 if np.isnan(trajectory).all():

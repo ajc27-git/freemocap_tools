@@ -4,13 +4,13 @@ from typing import List
 import numpy as np
 from numpy import dot
 
-from freemocap_adapter.core_functions.freemocap_data_operations.classes.freemocap_data_handler import \
+from freemocap_adapter.core_functions.freemocap_data_handler.handler import \
     FreemocapDataHandler
 
 logger = logging.getLogger(__name__)
 
 
-def fix_hand_data(freemocap_data_handler: FreemocapDataHandler):
+def fix_hand_data(handler: FreemocapDataHandler):
     """
     fix hand data by...
 
@@ -22,42 +22,43 @@ def fix_hand_data(freemocap_data_handler: FreemocapDataHandler):
     logger.info(
         "Fixing hand data (i.e. aligning the `left/right_hand...` data with the body's more impoverished hand data)")
 
-    hand_data_frame_name_xyz = {"right": freemocap_data_handler.right_hand_frame_name_xyz,
-                                "left": freemocap_data_handler.left_hand_frame_name_xyz}
+    hand_data_frame_name_xyz = {"right": handler.right_hand_frame_name_xyz,
+                                "left": handler.left_hand_frame_name_xyz}
 
     try:
         for side, hand_data_frame_name_xyz in hand_data_frame_name_xyz.items():
             # 1. translate hand data so "right/left_hand_wrist" trajectory (hand data) is on top of the "right/left_wrist" trajectory (body data)
-            hand_wrist_frame_xyz = freemocap_data_handler.trajectories[f"{side}_hand_wrist"]
-            body_wrist_frame_xyz = freemocap_data_handler.trajectories[f"{side}_wrist"]
+            hand_wrist_frame_xyz = handler.trajectories[f"{side}_hand_wrist"]
+            body_wrist_frame_xyz = handler.trajectories[f"{side}_wrist"]
             position_delta = body_wrist_frame_xyz - hand_wrist_frame_xyz
-            freemocap_data_handler.apply_translations(vectors=position_delta.tolist(), component_name=f"{side}_hand")
+            handler.translate(translation=position_delta.tolist(),
+                              component_name=f"{side}_hand")
+            #
+            # hand_index_finger_mcp_frame_xyz = handler.trajectories[f"{side}_hand_index_finger_mcp"]
+            # body_hand_index_frame_xyz = handler.trajectories[f"{side}_index"]
+            # hand_index_finger_mcp_vector = hand_index_finger_mcp_frame_xyz - hand_wrist_frame_xyz
+            # body_index_finger_vector = body_hand_index_frame_xyz - hand_wrist_frame_xyz
+            #
+            # # Calculate rotation matrix to align index finger
+            # index_finger_rotation_matricies = calculate_rotation_matricies(hand_index_finger_mcp_vector,
+            #                                                                body_index_finger_vector)
+            # handler.rotate(rotation=index_finger_rotation_matricies,
+            #                component_name=f"{side}_hand")
+            #
+            # hand_pinky_finger_mcp_frame_xyz = handler.trajectories[f"{side}_hand_pinky_mcp"]
+            # body_hand_pinky_frame_xyz = handler.trajectories[f"{side}_pinky"]
+            # hand_pinky_finger_mcp_vector = hand_pinky_finger_mcp_frame_xyz - hand_wrist_frame_xyz
+            # body_pinky_finger_vector = body_hand_pinky_frame_xyz - hand_wrist_frame_xyz
+            #
+            # # Calculate rotation matrix to align pinky finger
+            # pinky_finger_rotation_matricies = calculate_rotation_matricies(hand_pinky_finger_mcp_vector,
+            #                                                                body_pinky_finger_vector)
+            # handler.rotate(rotation=pinky_finger_rotation_matricies,
+            #                component_name=f"{side}_hand")
 
-            hand_index_finger_mcp_frame_xyz = freemocap_data_handler.trajectories[f"{side}_hand_index_finger_mcp"]
-            body_hand_index_frame_xyz = freemocap_data_handler.trajectories[f"{side}_index"]
-            hand_index_finger_mcp_vector = hand_index_finger_mcp_frame_xyz - hand_wrist_frame_xyz
-            body_index_finger_vector = body_hand_index_frame_xyz - hand_wrist_frame_xyz
-
-            # Calculate rotation matrix to align index finger
-            index_finger_rotation_matricies = calculate_rotation_matricies(hand_index_finger_mcp_vector,
-                                                                           body_index_finger_vector)
-            freemocap_data_handler.apply_rotations(rotation_matricies=index_finger_rotation_matricies,
-                                                   component_name=f"{side}_hand")
-
-            hand_pinky_finger_mcp_frame_xyz = freemocap_data_handler.trajectories[f"{side}_hand_pinky_mcp"]
-            body_hand_pinky_frame_xyz = freemocap_data_handler.trajectories[f"{side}_pinky"]
-            hand_pinky_finger_mcp_vector = hand_pinky_finger_mcp_frame_xyz - hand_wrist_frame_xyz
-            body_pinky_finger_vector = body_hand_pinky_frame_xyz - hand_wrist_frame_xyz
-
-            # Calculate rotation matrix to align pinky finger
-            pinky_finger_rotation_matricies = calculate_rotation_matricies(hand_pinky_finger_mcp_vector,
-                                                                           body_pinky_finger_vector)
-            freemocap_data_handler.apply_rotations(rotation_matricies=pinky_finger_rotation_matricies,
-                                                   component_name=f"{side}_hand")
-
-        freemocap_data_handler.mark_processing_stage("fixed_hand_data")
+        handler.mark_processing_stage("fixed_hand_data")
         logger.success("Finished fixing hand data!")
-        return freemocap_data_handler
+        return handler
     except Exception as e:
         logger.error(f"Error while fixing hand data:\n error:\n {e}")
         logger.exception(e)
