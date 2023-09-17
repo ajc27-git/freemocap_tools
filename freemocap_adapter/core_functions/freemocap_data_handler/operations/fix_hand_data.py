@@ -33,6 +33,10 @@ def fix_hand_data(handler: FreemocapDataHandler):
             position_delta = body_wrist_frame_xyz - hand_wrist_frame_xyz
             handler.translate(translation=position_delta.tolist(),
                               component_name=f"{side}_hand")
+
+            # TODO - consider implementing or removing this - its not clear if this is a good idea,
+            #  it's possible that the body/hand data is less accurate about rotation than hand/hand data? like, I think
+            #  it underestimates wrist rotation amplitudes?
             #
             # hand_index_finger_mcp_frame_xyz = handler.trajectories[f"{side}_hand_index_finger_mcp"]
             # body_hand_index_frame_xyz = handler.trajectories[f"{side}_index"]
