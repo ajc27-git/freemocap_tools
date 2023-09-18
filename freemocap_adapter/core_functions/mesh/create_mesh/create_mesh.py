@@ -16,9 +16,8 @@ def create_mesh(rig: bpy.types.Object,
     for bone in rig.data.edit_bones:
         edit_bones[bone.name] = bone
 
-    meshes = []
+    bone_mesh_definitions = {}
     for bone_name, bone_dict in bones.items():
-        bpy.ops.object.mode_set(mode="OBJECT")
 
         color = get_mesh_color(bone_dict)
         scale = get_sphere_scale(bone_dict)
@@ -27,24 +26,35 @@ def create_mesh(rig: bpy.types.Object,
             logger.warning(f"Bone {bone_name} not found in rig")
             continue
 
-        head_location = list(edit_bones[bone_name].head)
-        tail_location = list(edit_bones[bone_name].tail)
+        bone_mesh_definitions[bone_name] = {"head": edit_bones[bone_name].head,
+                                            "tail": edit_bones[bone_name].tail,
+                                            "color": color,
+                                            "scale": scale,
+                                            }
 
-        meshes.append(put_sphere_mesh_at_location(name=bone_name + "_head",
-                                                  location=head_location,
-                                                  sphere_scale=scale,
-                                                  color=color,
-                                                  )
-                      )
-        meshes.append(put_sphere_mesh_at_location(name=bone_name + "_tail",
-                                                  location=tail_location,
-                                                  sphere_scale=scale*.5,
-                                                  )
-                      )
+
+
+    meshes = []
+    for bone_name, bone_mesh in bone_mesh_definitions.items():
+        bpy.ops.object.mode_set(mode="OBJECT")
+        put_sphere_mesh_at_location(name=bone_name + "_head",
+                                    location=list(bone_mesh["head"]),
+                                    sphere_scale=bone_mesh["scale"],
+                                    color=bone_mesh["color"],
+                                    )
+        meshes.append(bpy.context.editable_objects[-1])
+
+        put_sphere_mesh_at_location(name=bone_name + "_tail",
+                                    location=list(bone_mesh["tail"]),
+                                    sphere_scale=bone_mesh["scale"],
+                                    color=bone_mesh["color"],
+                                    )
+        meshes.append(bpy.context.editable_objects[-1])
 
     ### Join all the body_meshes into one mesh
     # Rename the first body_mesh to "mesh"
     meshes[0].name = "mesh"
+
     # Deselect all
     bpy.ops.object.select_all(action='DESELECT')
     # Select all body meshes
@@ -54,6 +64,7 @@ def create_mesh(rig: bpy.types.Object,
     bpy.context.view_layer.objects.active = meshes[0]
     # Join the body meshes
     bpy.ops.object.join()
+
     ### Parent the mesh with the rig
     # Select the rig
     rig.select_set(True)

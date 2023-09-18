@@ -31,9 +31,9 @@ def put_sphere_mesh_at_location(
     bpy.ops.mesh.primitive_uv_sphere_add(segments=8,
                                          ring_count=8,
                                          scale=(sphere_scale, sphere_scale, sphere_scale),
-                                         location=location)
+                                         location=location,
+                                         align='WORLD',
+                                         enter_editmode=False,)
     sphere = bpy.context.editable_objects[-1]
     sphere.name = f"{name}"
     sphere.data.materials.append(material)
-
-    return sphere

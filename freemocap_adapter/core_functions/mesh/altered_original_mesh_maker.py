@@ -1,42 +1,8 @@
-import logging
 import math as m
+
 import bpy
 
-from freemocap_adapter.core_functions.mesh.create_mesh.create_mesh import create_mesh
-
-logger = logging.getLogger(__name__)
-
-
-def attach_mesh_to_rig(rig_name: str,
-                       body_mesh_mode: str = "custom",
-                       mesh_path: str = None,
-                       ):
-    try:
-        rig = bpy.data.objects[rig_name]
-
-        if body_mesh_mode == "file":
-
-            mesh_from_file(mesh_path, rig)
-
-        elif body_mesh_mode == "custom":
-
-            create_custom_mesh_orginal(rig)
-
-            # Deselect all
-            bpy.ops.object.select_all(action='DESELECT')
-            logger.success("Body mesh added successfully.")
-            return rig
-
-        else:
-            logger.error(f"Invalid body_mesh_mode: {body_mesh_mode}")
-            raise ValueError(f"Invalid body_mesh_mode: {body_mesh_mode}")
-    except Exception as e:
-        logger.error(f"Failed to attach mesh to rig: {e}")
-        logger.exception(e)
-        raise e
-
-
-def create_custom_mesh_orginal(rig):
+def altered_original_mesh_maker(rig):
     # Change to edit mode
     bpy.ops.object.mode_set(mode='EDIT')
     ### Add cylinders and spheres for the major bones
@@ -54,44 +20,58 @@ def create_custom_mesh_orginal(rig):
     shin_L = rig.data.edit_bones['shin.L']
     foot_R = rig.data.edit_bones['foot.R']
     foot_L = rig.data.edit_bones['foot.L']
+
     # Calculate parameters of the different body meshes
-    base_cylinder_radius = 0.05
+    base_cylinder_radius = 0.025
+
     trunk_mesh_radius = base_cylinder_radius
     trunk_mesh_length = spine_001.tail[2] - spine.head[2] + 0.02
     trunk_mesh_location = (spine.head[0], spine.head[1], spine.head[2] + trunk_mesh_length / 2)
+
     neck_mesh_radius = base_cylinder_radius / 2
     neck_mesh_length = neck.length
     neck_mesh_location = (neck.head[0], neck.head[1], neck.head[2] + neck.length / 2)
+
     head_mesh_location = (neck.tail[0], neck.tail[1], neck.tail[2])
     head_mesh_radius = base_cylinder_radius * 2
+
     right_eye_mesh_location = (neck.tail[0] - 0.04, neck.tail[1] - head_mesh_radius, neck.tail[2] + 0.02)
     right_eye_mesh_radius = head_mesh_radius / 3
+
     left_eye_mesh_location = (neck.tail[0] + 0.04, neck.tail[1] - head_mesh_radius, neck.tail[2] + 0.02)
     left_eye_mesh_radius = head_mesh_radius / 3
+
     nose_mesh_location = (neck.tail[0], neck.tail[1] - head_mesh_radius, neck.tail[2] - 0.02)
     nose_mesh_radius = head_mesh_radius / 3.5
+
     right_arm_mesh_length = shoulder_R.tail[0] - hand_R.head[0]
     right_arm_mesh_location = (
         shoulder_R.tail[0] - right_arm_mesh_length / 2, shoulder_R.tail[1], shoulder_R.tail[2] - 0.02)
     right_arm_mesh_radius = base_cylinder_radius
+
     left_arm_mesh_length = hand_L.head[0] - shoulder_L.tail[0]
     left_arm_mesh_location = (
         shoulder_L.tail[0] + left_arm_mesh_length / 2, shoulder_L.tail[1], shoulder_L.tail[2] - 0.02)
     left_arm_mesh_radius = base_cylinder_radius
+
     right_hand_mesh_location = (hand_R.tail[0], hand_R.tail[1], hand_R.tail[2])
     right_hand_mesh_radius = base_cylinder_radius
     right_thumb_mesh_location = (hand_R.tail[0], hand_R.tail[1] - right_hand_mesh_radius, hand_R.tail[2])
     right_thumb_mesh_radius = right_hand_mesh_radius / 8
+
     left_hand_mesh_location = (hand_L.tail[0], hand_L.tail[1], hand_L.tail[2])
     left_hand_mesh_radius = base_cylinder_radius
     left_thumb_mesh_location = (hand_L.tail[0], hand_L.tail[1] - left_hand_mesh_radius, hand_L.tail[2])
     left_thumb_mesh_radius = right_hand_mesh_radius / 8
+
     right_leg_mesh_radius = thigh_R.head[2] - shin_R.tail[2]
     right_leg_mesh_location = (thigh_R.head[0], thigh_R.head[1], thigh_R.head[2] - right_leg_mesh_radius / 2)
     left_leg_mesh_radius = thigh_L.head[2] - shin_L.tail[2]
     left_leg_mesh_location = (thigh_L.head[0], thigh_L.head[1], thigh_L.head[2] - left_leg_mesh_radius / 2)
+
     right_foot_mesh_location = (foot_R.tail[0], foot_R.tail[1], foot_R.tail[2])
     left_foot_mesh_location = (foot_L.tail[0], foot_L.tail[1], foot_L.tail[2])
+
     # Create and append the body meshes to the list
     # Define the list that will contain the different meshes of the body
     body_meshes = []
@@ -309,35 +289,4 @@ def create_custom_mesh_orginal(rig):
     # Set rig as active
     bpy.context.view_layer.objects.active = rig
     # Parent the mesh and the rig with automatic weights
-    bpy.ops.object.parent_set(type='ARMATURE_AUTO')
-
-def mesh_from_file(mesh_path, rig):
-    try:
-        bpy.ops.import_mesh.ply(filepath=mesh_path)
-    except Exception as e:
-        logger.error(f"Could not find body_mesh file at {mesh_path}, Error: `{e}`")
-        raise FileNotFoundError("Could not find body_mesh file ")
-    # Get reference to the rig
-    # Get the rig z dimension
-    rig_z_dimension = rig.dimensions.z
-    # Get the body_mesh z dimension
-    body_mesh = bpy.data.objects['body_mesh']
-    body_mesh_z_dimension = body_mesh.dimensions.z
-    # Calculate the proportion between the rig and the body_mesh
-    rig_to_body_mesh = rig_z_dimension / body_mesh_z_dimension
-    # Scale the mesh by the rig and body_mesh proportion multiplied by a scale factor
-    body_mesh.scale = (rig_to_body_mesh * 1.04, rig_to_body_mesh * 1.04, rig_to_body_mesh * 1.04)
-    # Apply transformations to body_mesh (scale must be (1, 1, 1) so it doesn't fail on send2ue export
-    # Deselect all
-    bpy.ops.object.select_all(action='DESELECT')
-    bpy.context.view_layer.objects.active = body_mesh
-    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-    ### Parent the body_mesh with the rig
-    # Select the body_mesh
-    body_mesh.select_set(True)
-    # Select the rig
-    rig.select_set(True)
-    # Set rig as active
-    bpy.context.view_layer.objects.active = rig
-    # Parent the body_mesh and the rig with automatic weights
     bpy.ops.object.parent_set(type='ARMATURE_AUTO')
