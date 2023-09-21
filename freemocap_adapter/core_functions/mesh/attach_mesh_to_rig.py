@@ -1,8 +1,9 @@
 import logging
 import math as m
+
 import bpy
 
-from freemocap_adapter.core_functions.mesh.create_mesh.create_mesh import create_mesh
+from freemocap_adapter.core_functions.mesh.altered_original_mesh_maker import create_custom_mesh_altered
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ def attach_mesh_to_rig(rig_name: str,
 
         elif body_mesh_mode == "custom":
 
-            create_custom_mesh_orginal(rig)
+            create_custom_mesh_altered(rig)
 
             # Deselect all
             bpy.ops.object.select_all(action='DESELECT')
@@ -36,7 +37,7 @@ def attach_mesh_to_rig(rig_name: str,
         raise e
 
 
-def create_custom_mesh_orginal(rig):
+def create_custom_mesh_og(rig):
     # Change to edit mode
     bpy.ops.object.mode_set(mode='EDIT')
     ### Add cylinders and spheres for the major bones
@@ -302,7 +303,6 @@ def create_custom_mesh_orginal(rig):
     bpy.context.view_layer.objects.active = body_meshes[0]
     # Join the body meshes
     bpy.ops.object.join()
-
     ### Parent the fmc_mesh with the rig
     # Select the rig
     rig.select_set(True)
@@ -310,6 +310,7 @@ def create_custom_mesh_orginal(rig):
     bpy.context.view_layer.objects.active = rig
     # Parent the mesh and the rig with automatic weights
     bpy.ops.object.parent_set(type='ARMATURE_AUTO')
+
 
 def mesh_from_file(mesh_path, rig):
     try:
