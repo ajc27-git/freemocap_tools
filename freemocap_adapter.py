@@ -2419,8 +2419,8 @@ def add_rig(keep_symmetry: bool=False,
     # Get the empties ending frame
     ending_frame = int(bpy.data.actions[0].frame_range[1])
     # Bake animation
-    # bpy.ops.nla.bake(frame_start=1, frame_end=ending_frame, bake_types={'POSE'})
-    # bpy.ops.nla.bake(frame_start=1, frame_end=ending_frame, only_selected=False, visual_keying=True, clear_constraints=False, bake_types={'POSE'})
+    # bpy.ops.nla.bake(frame_start=0, frame_end=ending_frame, bake_types={'POSE'})
+    bpy.ops.nla.bake(frame_start=0, frame_end=ending_frame, only_selected=False, visual_keying=True, clear_constraints=False, bake_types={'POSE'})
 
     # Change back to Object Mode
     bpy.ops.object.mode_set(mode='OBJECT')
