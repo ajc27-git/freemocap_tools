@@ -1,7 +1,7 @@
 bl_info = {
     'name'          : 'Freemocap Adapter',
     'author'        : 'ajc27',
-    'version'       : (1, 1, 9),
+    'version'       : (1, 1, 10),
     'blender'       : (3, 0, 0),
     'location'      : '3D Viewport > Sidebar > Freemocap Adapter',
     'description'   : 'Add-on to adapt the Freemocap Blender output',
@@ -1372,7 +1372,8 @@ def reduce_shakiness(recording_fps: float=30):
 def add_rig(keep_symmetry: bool=False,
             add_fingers_constraints: bool=False,
             add_ik_constraints: bool=False,
-            use_limit_rotation: bool=False):
+            use_limit_rotation: bool=False,
+            clear_constraints: bool=False):
 
     # Get the scene context
     scene = bpy.context.scene
@@ -2420,7 +2421,7 @@ def add_rig(keep_symmetry: bool=False,
     ending_frame = int(bpy.data.actions[0].frame_range[1])
     # Bake animation
     # bpy.ops.nla.bake(frame_start=0, frame_end=ending_frame, bake_types={'POSE'})
-    bpy.ops.nla.bake(frame_start=0, frame_end=ending_frame, only_selected=False, visual_keying=True, clear_constraints=False, bake_types={'POSE'})
+    bpy.ops.nla.bake(frame_start=0, frame_end=ending_frame, only_selected=False, visual_keying=True, clear_constraints=clear_constraints, bake_types={'POSE'})
 
     # Change back to Object Mode
     bpy.ops.object.mode_set(mode='OBJECT')
@@ -3503,6 +3504,11 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         default     = False,
         description = 'Add rotation limits (human skeleton) to the bones constraints (experimental)'
     )
+    clear_constraints: bpy.props.BoolProperty(
+        name        = '',
+        default     = False,
+        description = 'Clear added constraints after baking animation'
+    )
     
     # Add Body Mesh Options
     body_mesh_mode: bpy.props.EnumProperty(
@@ -3602,6 +3608,10 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         split = box.column().row().split(factor=0.6)
         split.column().label(text='Add rotation limits')
         split.split().column().prop(fmc_adapter_tool, 'use_limit_rotation')
+
+        split = box.column().row().split(factor=0.6)
+        split.column().label(text='Clear constraints')
+        split.split().column().prop(fmc_adapter_tool, 'clear_constraints')
         
         box.operator('fmc_adapter.add_rig', text='3. Add Rig')
         
@@ -3726,7 +3736,8 @@ class FMC_ADAPTER_OT_add_rig(Operator):
         add_rig(keep_symmetry=fmc_adapter_tool.keep_symmetry,
                 add_fingers_constraints=fmc_adapter_tool.add_fingers_constraints,
                 add_ik_constraints=fmc_adapter_tool.add_ik_constraints,
-                use_limit_rotation=fmc_adapter_tool.use_limit_rotation)
+                use_limit_rotation=fmc_adapter_tool.use_limit_rotation,
+                clear_constraints=fmc_adapter_tool.clear_constraints)
 
         # Get end time and print execution time
         end = time.time()
