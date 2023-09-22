@@ -162,4 +162,15 @@ class MainController:
         self.add_rig()
         self.attach_mesh_to_rig()
         self.add_videos()
+        self.setup_scene()
         # export_fbx(recording_path=recording_path, )
+
+    def setup_scene(self):
+        import bpy
+        for window in bpy.context.window_manager.windows:
+            for area in window.screen.areas:  # iterate through areas in current screen
+                if area.type == "VIEW_3D":
+                    for space in area.spaces:  # iterate through spaces in current VIEW_3D area
+                        if space.type == "VIEW_3D":  # check if space is a 3D view
+                            space.shading.type = "MATERIAL"
+

@@ -40,9 +40,9 @@ def put_skeleton_on_ground(handler: FreemocapDataHandler):
     y_leftward_reference_point = np.nanmean(y_leftward_reference_points, axis=0)
 
     z_upward_reference_point = handler.get_trajectory("head_center")[good_frame, :]
-
-    x_forward = x_forward_reference_point - center_reference_point
-    y_left = y_leftward_reference_point - center_reference_point
+    
+    x_forward = center_reference_point - y_leftward_reference_point
+    y_left = x_forward_reference_point - center_reference_point
     z_up = z_upward_reference_point - center_reference_point
 
     # Make them orthogonal

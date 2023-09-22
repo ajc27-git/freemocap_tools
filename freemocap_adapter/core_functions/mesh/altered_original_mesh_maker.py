@@ -1,8 +1,7 @@
-import json
 import logging
-import math as m
-from typing import Any, Dict
+from typing import Dict
 
+import bmesh
 import bpy
 
 from freemocap_adapter.core_functions.mesh.create_mesh.helpers.put_sphere_at_location import put_sphere_mesh_at_location
@@ -10,502 +9,35 @@ from freemocap_adapter.data_models.mediapipe_names.mediapipe_heirarchy import ME
 
 logger = logging.getLogger(__name__)
 
-BASE_CYLINDER_RADIUS = 0.05
-
-MESH_DEFINITIONS = {
-    "trunk": {"mesh_type": "cylinder",
-              "radius": BASE_CYLINDER_RADIUS,
-              "length": {"start": {"name": "spine",
-                                   "head_tail": "head",
-                                   "dimension": 2,
-                                   "offset": 0},
-                         "end": {"name": "spine",
-                                 "head_tail": "tail",
-                                 "dimension": 2,
-                                 "offset": 0},
-                         "offset": 0.02},
-              "location": {"x": {"bone": "spine",
-                                 "head_tail": "head",
-                                 "dimension": 0,
-                                 "offset": 0},
-                           "y": {"bone": "spine",
-                                 "head_tail": "head",
-                                 "dimension": 1,
-                                 "offset": 0},
-                           "z": {"bone": "spine",
-                                 "head_tail": "head",
-                                 "dimension": 2,
-                                 "offset": 0.02}},
-              "rotation": {"x": 0,
-                           "y": 0,
-                           "z": 0}},
-    "neck": {"mesh_type": "cylinder",
-             "radius": BASE_CYLINDER_RADIUS / 2,
-             "length": {"start": {"name": "neck",
-                                  "head_tail": "head",
-                                  "dimension": 2,
-                                  "offset": 0},
-                        "end": {"name": "neck",
-                                "head_tail": "tail",
-                                "dimension": 2,
-                                "offset": 0},
-                        "offset": 0},
-             "location": {"x": {"bone": "neck",
-                                "head_tail": "head",
-                                "dimension": 0,
-                                "offset": 0},
-                          "y": {"bone": "neck",
-                                "head_tail": "head",
-                                "dimension": 1,
-                                "offset": 0},
-                          "z": {"bone": "neck",
-                                "head_tail": "head",
-                                "dimension": 2,
-                                "offset": 0}},
-             "rotation": {"x": 0,
-                          "y": 0,
-                          "z": 0}},
-    "head": {"mesh_type": "sphere",
-             "radius": BASE_CYLINDER_RADIUS * 2,
-             "location": {"x": {"bone": "neck",
-                                "head_tail": "tail",
-                                "dimension": 0,
-                                "offset": 0},
-                          "y": {"bone": "neck",
-                                "head_tail": "tail",
-                                "dimension": 1,
-                                "offset": 0},
-                          "z": {"bone": "neck",
-                                "head_tail": "tail",
-                                "dimension": 2,
-                                "offset": 0}},
-             "rotation": {"x": 0,
-                          "y": 0,
-                          "z": 0}},
-    "right_eye": {"mesh_type": "sphere",
-                  "radius": BASE_CYLINDER_RADIUS / 3,
-                  "location": {"x": {"bone": "neck",
-                                     "head_tail": "tail",
-                                     "dimension": 0,
-                                     "offset": -0.04},
-                               "y": {"bone": "neck",
-                                     "head_tail": "tail",
-                                     "dimension": 1,
-                                     "offset": -BASE_CYLINDER_RADIUS},
-                               "z": {"bone": "neck",
-                                     "head_tail": "tail",
-                                     "dimension": 2,
-                                     "offset": 0.02}},
-                  "rotation": {"x": 0,
-                               "y": 0,
-                               "z": 0}},
-    "left_eye": {"mesh_type": "sphere",
-                 "radius": BASE_CYLINDER_RADIUS / 3,
-                 "location": {"x": {"bone": "neck",
-                                    "head_tail": "tail",
-                                    "dimension": 0,
-                                    "offset": 0.04},
-                              "y": {"bone": "neck",
-                                    "head_tail": "tail",
-                                    "dimension": 1,
-                                    "offset": -BASE_CYLINDER_RADIUS},
-                              "z": {"bone": "neck",
-                                    "head_tail": "tail",
-                                    "dimension": 2,
-                                    "offset": 0.02}},
-                 "rotation": {"x": 0,
-                              "y": 0,
-                              "z": 0}},
-    "nose": {"mesh_type": "sphere",
-             "radius": BASE_CYLINDER_RADIUS / 3.5,
-             "location": {"x": {"bone": "neck",
-                                "head_tail": "tail",
-                                "dimension": 0,
-                                "offset": 0},
-                          "y": {"bone": "neck",
-                                "head_tail": "tail",
-                                "dimension": 1,
-                                "offset": -BASE_CYLINDER_RADIUS},
-                          "z": {"bone": "neck",
-                                "head_tail": "tail",
-                                "dimension": 2,
-                                "offset": -0.02}},
-             "rotation": {"x": 0,
-                          "y": 0,
-                          "z": 0}},
-    "right_arm": {"mesh_type": "cylinder",
-                  "radius": BASE_CYLINDER_RADIUS,
-                  "length": {"start": {"name": "shoulder_R",
-                                       "head_tail": "head",
-                                       "dimension": 0,
-                                       "offset": 0},
-                             "end": {"name": "hand_R",
-                                     "head_tail": "tail",
-                                     "dimension": 0,
-                                     "offset": 0},
-                             "offset": 0},
-                  "location": {"x": {"bone": "shoulder_R",
-                                     "head_tail": "tail",
-                                     "dimension": 0,
-                                     "offset": 0},
-                               "y": {"bone": "shoulder_R",
-                                     "head_tail": "tail",
-                                     "dimension": 1,
-                                     "offset": 0},
-                               "z": {"bone": "shoulder_R",
-                                     "head_tail": "tail",
-                                     "dimension": 2,
-                                     "offset": -0.02}},
-                  "rotation": {"x": 0,
-                               "y": m.radians(90),
-                               "z": 0}},
-    "left_arm": {"mesh_type": "cylinder",
-                 "radius": BASE_CYLINDER_RADIUS,
-                 "length": {"start": {"name": "shoulder_L",
-                                      "head_tail": "head",
-                                      "dimension": 0,
-                                      "offset": 0},
-                            "end": {"name": "hand_L",
-                                    "head_tail": "tail",
-                                    "dimension": 0,
-                                    "offset": 0},
-                            "offset": 0},
-                 "location": {"x": {"bone": "shoulder_L",
-                                    "head_tail": "tail",
-                                    "dimension": 0,
-                                    "offset": 0},
-                              "y": {"bone": "shoulder_L",
-                                    "head_tail": "tail",
-                                    "dimension": 1,
-                                    "offset": 0},
-                              "z": {"bone": "shoulder_L",
-                                    "head_tail": "tail",
-                                    "dimension": 2,
-                                    "offset": -0.02}},
-                 "rotation": {"x": 0,
-                              "y": m.radians(90),
-                              "z": 0}},
-    "right_hand": {"mesh_type": "sphere",
-                   "radius": BASE_CYLINDER_RADIUS,
-                   "location": {"x": {"bone": "hand_R",
-                                      "head_tail": "tail",
-                                      "dimension": 0,
-                                      "offset": 0},
-                                "y": {"bone": "hand_R",
-                                      "head_tail": "tail",
-                                      "dimension": 1,
-                                      "offset": 0},
-                                "z": {"bone": "hand_R",
-                                      "head_tail": "tail",
-                                      "dimension": 2,
-                                      "offset": 0}},
-                   "rotation": {"x": 0,
-                                "y": 0,
-                                "z": 0}},
-    "left_hand": {"mesh_type": "sphere",
-                  "radius": BASE_CYLINDER_RADIUS,
-                  "location": {"x": {"bone": "hand_L",
-                                     "head_tail": "tail",
-                                     "dimension": 0,
-                                     "offset": 0},
-                               "y": {"bone": "hand_L",
-                                     "head_tail": "tail",
-                                     "dimension": 1,
-                                     "offset": 0},
-                               "z": {"bone": "hand_L",
-                                     "head_tail": "tail",
-                                     "dimension": 2,
-                                     "offset": 0}},
-                  "rotation": {"x": 0,
-                               "y": 0,
-                               "z": 0}},
-    "right_thumb": {"mesh_type": "sphere",
-                    "radius": BASE_CYLINDER_RADIUS / 8,
-                    "location": {"x": {"bone": "hand_R",
-                                       "head_tail": "tail",
-                                       "dimension": 0,
-                                       "offset": 0},
-                                 "y": {"bone": "hand_R",
-                                       "head_tail": "tail",
-                                       "dimension": 1,
-                                       "offset": -BASE_CYLINDER_RADIUS},
-                                 "z": {"bone": "hand_R",
-                                       "head_tail": "tail",
-                                       "dimension": 2,
-                                       "offset": 0}},
-                    "rotation": {"x": 0,
-                                 "y": 0,
-                                 "z": 0}},
-    "left_thumb": {"mesh_type": "sphere",
-                   "radius": BASE_CYLINDER_RADIUS / 8,
-                   "location": {"x": {"bone": "hand_L",
-                                      "head_tail": "tail",
-                                      "dimension": 0,
-                                      "offset": 0},
-                                "y": {"bone": "hand_L",
-                                      "head_tail": "tail",
-                                      "dimension": 1,
-                                      "offset": -BASE_CYLINDER_RADIUS},
-                                "z": {"bone": "hand_L",
-                                      "head_tail": "tail",
-                                      "dimension": 2,
-                                      "offset": 0}},
-                   "rotation": {"x": 0,
-                                "y": 0,
-                                "z": 0}},
-    "right_leg": {"mesh_type": "cylinder",
-                  "radius": BASE_CYLINDER_RADIUS,
-                  "length": {"start": {"name": "thigh_R",
-                                       "head_tail": "head",
-                                       "dimension": 0,
-                                       "offset": 0},
-                             "end": {"name": "shin_R",
-                                     "head_tail": "tail",
-                                     "dimension": 0,
-                                     "offset": 0},
-                             "offset": 0},
-                  "location": {"x": {"bone": "thigh_R",
-                                     "head_tail": "head",
-                                     "dimension": 0,
-                                     "offset": 0},
-                               "y": {"bone": "thigh_R",
-                                     "head_tail": "head",
-                                     "dimension": 1,
-                                     "offset": 0},
-                               "z": {"bone": "thigh_R",
-                                     "head_tail": "head",
-                                     "dimension": 2,
-                                     "offset": -BASE_CYLINDER_RADIUS / 2}},
-                  "rotation": {"x": 0,
-                               "y": 0,
-                               "z": 0}},
-    "left_leg": {"mesh_type": "cylinder",
-                 "radius": BASE_CYLINDER_RADIUS,
-                 "length": {"start": {"name": "thigh_L",
-                                      "head_tail": "head",
-                                      "dimension": 0,
-                                      "offset": 0},
-                            "end": {"name": "shin_L",
-                                    "head_tail": "tail",
-                                    "dimension": 0,
-                                    "offset": 0},
-                            "offset": 0},
-                 "location": {"x": {"bone": "thigh_L",
-                                    "head_tail": "head",
-                                    "dimension": 0,
-                                    "offset": 0},
-                              "y": {"bone": "thigh_L",
-                                    "head_tail": "head",
-                                    "dimension": 1,
-                                    "offset": 0},
-                              "z": {"bone": "thigh_L",
-                                    "head_tail": "head",
-                                    "dimension": 2,
-                                    "offset": -BASE_CYLINDER_RADIUS / 2}},
-                 "rotation": {"x": 0,
-                              "y": 0,
-                              "z": 0}},
-    "right_foot": {"mesh_type": "sphere",
-                   "radius": BASE_CYLINDER_RADIUS,
-                   "location": {"x": {"bone": "foot_R",
-                                      "head_tail": "tail",
-                                      "dimension": 0,
-                                      "offset": 0},
-                                "y": {"bone": "foot_R",
-                                      "head_tail": "tail",
-                                      "dimension": 1,
-                                      "offset": 0},
-                                "z": {"bone": "foot_R",
-                                      "head_tail": "tail",
-                                      "dimension": 2,
-                                      "offset": 0}},
-                   "rotation": {"x": 0,
-                                "y": 0,
-                                "z": 0}},
-    "left_foot": {"mesh_type": "sphere",
-                  "radius": BASE_CYLINDER_RADIUS,
-                  "location": {"x": {"bone": "foot_L",
-                                     "head_tail": "tail",
-                                     "dimension": 0,
-                                     "offset": 0},
-                               "y": {"bone": "foot_L",
-                                     "head_tail": "tail",
-                                     "dimension": 1,
-                                     "offset": 0},
-                               "z": {"bone": "foot_L",
-                                     "head_tail": "tail",
-                                     "dimension": 2,
-                                     "offset": 0}},
-                  "rotation": {"x": 0,
-                               "y": 0,
-                               "z": 0}},
-}
-
-
-def calculate_mesh_rotation(mesh_dict):
-    dimension_string_map = {0: "x", 1: "y", 2: "z"}
-    rotation = []
-    for dimension in [0, 1, 2]:
-        dimension_string = dimension_string_map[dimension]
-        rotation.append(mesh_dict["rotation"][dimension_string])
-    return rotation
-
-
-def calculate_mesh_location(edit_bones, mesh_dict):
-    dimension_string_map = {0: "x", 1: "y", 2: "z"}
-    location = []
-    for dimension in [0, 1, 2]:
-        dimension_string = dimension_string_map[dimension]
-        bone_name = mesh_dict["location"][dimension_string]["bone"]
-        head_tail = mesh_dict["location"][dimension_string]["head_tail"]
-        bone_dimension = mesh_dict["location"][dimension_string]["dimension"]
-        offset = mesh_dict["location"][dimension_string]["offset"]
-        if head_tail == "head":
-            location.append(edit_bones[bone_name].head[bone_dimension] + offset)
-        elif head_tail == "tail":
-            location.append(edit_bones[bone_name].tail[bone_dimension] + offset)
-        else:
-            raise ValueError(f"start_part must be either 'head' or 'tail', not {head_tail}")
-    return location
-
-
-def calculate_mesh_length(edit_bones,
-                          mesh_dict
-                          ):
-    position = {"start": None, "end": None}
-    for start_end in ["start", "end"]:
-        bone_name = mesh_dict["length"][start_end]["name"]
-        head_tail = mesh_dict["length"][start_end]["head_tail"]
-        dimension = mesh_dict["length"][start_end]["dimension"]
-        offset = mesh_dict["length"][start_end]["offset"]
-        if head_tail == "head":
-            position[start_end] = edit_bones[bone_name].head[dimension] + offset
-        elif head_tail == "tail":
-            position[start_end] = edit_bones[bone_name].tail[dimension] + offset
-        else:
-            raise ValueError(f"start_part must be either 'head' or 'tail', not {start_end}")
-
-    offset = mesh_dict["length"]["offset"]
-
-    length = position["end"] - position["start"] + offset
-    return length
-
-
-def calculate_mesh_definitions(edit_bones: Dict[str, Any]):
-    logger.info("Calculating mesh definitions...")
-    mesh_defintions = {}
-    for mesh_name, mesh_dict in MESH_DEFINITIONS.items():
-        mesh_defintions[mesh_name] = {}
-        mesh_defintions[mesh_name]["mesh_type"] = mesh_dict["mesh_type"]
-        if mesh_dict["mesh_type"] == "cylinder":
-            mesh_defintions[mesh_name]["radius"] = mesh_dict["radius"]
-            mesh_defintions[mesh_name]["length"] = calculate_mesh_length(edit_bones, mesh_dict)
-            mesh_defintions[mesh_name]["location"] = calculate_mesh_location(edit_bones, mesh_dict)
-            mesh_defintions[mesh_name]["rotation"] = calculate_mesh_rotation(mesh_dict)
-        elif mesh_dict["mesh_type"] == "sphere":
-            mesh_defintions[mesh_name]["radius"] = mesh_dict["radius"]
-            mesh_defintions[mesh_name]["location"] = calculate_mesh_location(edit_bones, mesh_dict)
-            mesh_defintions[mesh_name]["rotation"] = calculate_mesh_rotation(mesh_dict)
-        else:
-            raise ValueError(f"mesh_type must be either 'cylinder' or 'sphere', not {mesh_dict['mesh_type']}")
-        logger.debug(f"mesh_defintions[{mesh_name}]:|n {json.dumps(mesh_defintions[mesh_name])}")
-
-    logger.success("Done calculating mesh definitions")
-    return mesh_defintions
-
-
-def create_segment_meshes(mesh_definitions):
-    body_meshes = []
-    # Set basic cylinder properties
-    cylinder_cuts = 20
-    vertices = 16
-    for mesh_name, mesh_dict in mesh_definitions.items():
-        logger.info(f"Creating mesh: {mesh_name}")
-        if mesh_dict["mesh_type"] == "cylinder":
-            bpy.ops.mesh.primitive_cylinder_add(
-                vertices=vertices,
-                radius=mesh_dict["radius"],
-                depth=mesh_dict["length"],
-                end_fill_type='NGON',
-                calc_uvs=True,
-                enter_editmode=False,
-                align='WORLD',
-                location=mesh_dict["location"],
-                rotation=mesh_dict["rotation"]
-            )
-        elif mesh_dict["mesh_type"] == "sphere":
-            bpy.ops.mesh.primitive_uv_sphere_add(
-                radius=mesh_dict["radius"],
-                enter_editmode=False,
-                align='WORLD',
-                location=mesh_dict["location"],
-                scale=(1, 1, 1)
-            )
-        else:
-            raise ValueError(f"mesh_type must be either 'cylinder' or 'sphere', not {mesh_dict['mesh_type']}")
-        mesh = bpy.context.active_object
-        mesh.name = mesh_name
-        body_meshes.append(mesh)
-        # Add subdivisions to the mesh so it bends properly
-        bpy.ops.object.mode_set(mode="EDIT")
-        bpy.ops.mesh.subdivide(number_cuts=cylinder_cuts)
-        bpy.ops.object.mode_set(mode="OBJECT")
-    return body_meshes
-
 
 def parent_mesh_to_rig(meshes, rig):
     logger.info("Parenting mesh to rig...")
-    meshes[0].name = "mesh"
-    # Deselect all
-    bpy.ops.object.select_all(action='DESELECT')
-    # Select all body meshes
-    for body_mesh in meshes:
-        body_mesh.select_set(True)
-    # Set fmc_mesh as active
-    bpy.context.view_layer.objects.active = meshes[0]
-    # Join the body meshes
-    bpy.ops.object.join()
-    ### Parent the fmc_mesh with the rig
-    # Select the rig
-    rig.select_set(True)
-    # Set rig as active
-    bpy.context.view_layer.objects.active = rig
-    # Parent the mesh and the rig with automatic weights
-    bpy.ops.object.parent_set(type='BONE')
-
-
-def put_spheres_on_joint_centers(rig: bpy.types.Object):
     try:
-        edit_bones = rig.data.edit_bones
-        bpy.ops.object.mode_set(mode='OBJECT')
+        meshes[0].name = "mesh"
+        # Deselect all
         bpy.ops.object.select_all(action='DESELECT')
-        for edit_bone in edit_bones:
-            logger.info(f"Creating sphere for {edit_bone.name}")
-            bpy.ops.mesh.primitive_uv_sphere_add(
-                radius=1,
-                enter_editmode=False,
-                align='WORLD',
-                location=edit_bone.head,
-                scale=(1, 1, 1)
-            )
-            sphere = bpy.context.active_object
-            sphere.name = f"{edit_bone.name}_sphere"
-            bpy.ops.object.select_all(action='DESELECT')
-            sphere.select_set(True)
-            rig.select_set(True)  # Select the rig
-            bpy.context.view_layer.objects.active = rig  # Set the rig as the active object
-            bpy.context.view_layer.objects.active = sphere
-            bpy.ops.object.parent_set(type='BONE', keep_transform=True)
-            sphere.select_set(False)
+        # Select all body meshes
+        for body_mesh in meshes:
+            body_mesh.select_set(True)
+        # Set fmc_mesh as active
+        bpy.context.view_layer.objects.active = meshes[0]
+        # Join the body meshes
+        bpy.ops.object.join()
+        ### Parent the fmc_mesh with the rig
+        # Select the rig
+        rig.select_set(True)
+        # Set rig as active
+        bpy.context.view_layer.objects.active = rig
+        # Parent the mesh and the rig with automatic weights
+        bpy.ops.object.parent_set(type='ARMATURE_AUTO')
     except Exception as e:
-        logger.error(f"Failed to create spheres on joint centers: {e}")
-        logger.exception(e)
+        logger.error(f"Failed to parent mesh to rig: {e}")
         raise e
 
 
 def put_spheres_on_empties(empties: Dict[str, bpy.types.Object]):
     meshes = []
-    
+
     components = {}
     components["body"] = empties["body"]
     components["right_hand"] = empties["hands"]["right"]
@@ -516,26 +48,26 @@ def put_spheres_on_empties(empties: Dict[str, bpy.types.Object]):
             components["other"][name] = empty
 
     for component_name, component_dict in components.items():
+        emission_strength = 1.0
 
         if component_name == "body":
-            if "right" in  component_name:
+            if "right" in component_name:
                 color = "#FF0000"
             elif "left" in component_name:
                 color = "#0000FF"
             else:
-                color = "#00aaFF"
-            sphere_scale = .04
+                color = "#002244"
+            sphere_scale = .025
         elif component_name == "left_hand":
-            color = "#00FFFF"
+            color = "#00FF44"
             sphere_scale = .01
         elif component_name == "right_hand":
-            color = "#aa00aa"
+            color = "#aa0000"
             sphere_scale = .01
         elif component_name == "other":
-
             color = "#FF00FF"
-            sphere_scale = .08
-
+            sphere_scale = .04
+            emission_strength = 100
 
         for empty_name, empty in component_dict.items():
             bpy.ops.object.mode_set(mode="OBJECT")
@@ -543,21 +75,26 @@ def put_spheres_on_empties(empties: Dict[str, bpy.types.Object]):
                                         location=empty.location,
                                         sphere_scale=sphere_scale,
                                         color=color,
-                                        )
+                                        emission_strength=emission_strength)
 
             bpy.ops.object.mode_set(mode="OBJECT")
             sphere_mesh = bpy.context.active_object
             constraint = sphere_mesh.constraints.new(type="COPY_LOCATION")
             constraint.target = empty
-            meshes.append(sphere_mesh)
 
-            # if empty_name in MEDIAPIPE_HIERARCHY.keys():
-            #     bpy.ops.object.mode_set(mode="EDIT")
-            #     for child_name in MEDIAPIPE_HIERARCHY[empty_name]["children"]:
-            #          create_bone_stick(child_name=child_name,
-            #                           child_empty=empties[child_name],
-            #                           parent_empty=empty,
-            #                           parent_name=empty_name)
+
+            if empty_name in MEDIAPIPE_HIERARCHY.keys():
+                bpy.ops.object.mode_set(mode="EDIT")
+                for child_name in MEDIAPIPE_HIERARCHY[empty_name]["children"]:
+                    if "hand_wrist" in child_name:
+                        continue
+
+                    stick_mesh = create_bone_stick(child_name=child_name,
+                                                   child_empty=component_dict[child_name],
+                                                   parent_empty=empty,
+                                                   parent_name=empty_name)
+
+
 
     return meshes
 
@@ -566,25 +103,36 @@ def create_bone_stick(child_name: str,
                       child_empty: bpy.types.Object,
                       parent_name: str,
                       parent_empty: bpy.types.Object,
+                      skin_radius: float = .005,
                       ):
-    stick_mesh_name = f"{parent_name}_{child_name}_stick"
-    child_location = child_empty.location
-    parent_location = parent_empty.location
-    stick_mesh = bpy.data.meshes.new(name=f"{parent_name}_{child_name}_stick")
-    stick_mesh.modifiers.new(type="SKIN")
+    bone_name = f"{parent_name}_{child_name}_bone"
+    stick_mesh = bpy.data.meshes.new(name=bone_name)
+    mesh_obj = bpy.data.objects.new(bone_name, stick_mesh)
+    bpy.context.collection.objects.link(mesh_obj)
+
+    bm = bmesh.new()
+
+    parent_vertex = bm.verts.new(parent_empty.location)
+    child_vertex = bm.verts.new(child_empty.location)
+
+    bm.edges.new([parent_vertex, child_vertex])
+
+    bm.to_mesh(stick_mesh)
+    bm.free()
+
+    modifier = mesh_obj.modifiers.new(name="Skin", type='SKIN')
+    modifier.use_smooth_shade = True
+
+    for vertex in stick_mesh.skin_vertices[0].data:
+        vertex.radius = skin_radius, skin_radius
+
+    return mesh_obj
 
 
 def create_custom_mesh_altered(rig: bpy.types.Object,
                                empties: Dict[str, bpy.types.Object], ):
+    return
     # Change to edit mode
     meshes = put_spheres_on_empties(empties=empties)
-    # parent_mesh_to_rig(meshes, rig)
-    ### Join all the body_meshes into one mesh
-    # Rename the first body_mesh to "mesh"
 
-    # edit_bones = get_edit_bones(rig)
-    # mesh_definitions = calculate_mesh_definitions(edit_bones)
-    #
-    # # Create and append the body meshes to the list
-    # # Define the list that will contain the different meshes of the body
-    # body_meshes = create_segment_meshes(mesh_definitions)
+    parent_mesh_to_rig(meshes, rig)
