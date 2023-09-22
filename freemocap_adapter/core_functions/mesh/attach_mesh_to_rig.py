@@ -1,5 +1,6 @@
 import logging
 import math as m
+from typing import Dict
 
 import bpy
 
@@ -11,6 +12,7 @@ logger = logging.getLogger(__name__)
 def attach_mesh_to_rig(rig_name: str,
                        body_mesh_mode: str = "custom",
                        mesh_path: str = None,
+                       empties: Dict[str, bpy.types.Object] = None,
                        ):
     try:
         rig = bpy.data.objects[rig_name]
@@ -20,8 +22,11 @@ def attach_mesh_to_rig(rig_name: str,
             mesh_from_file(mesh_path, rig)
 
         elif body_mesh_mode == "custom":
+            if empties is None:
+                logger.error(f"Must provide empties for custom body mesh")
+                raise ValueError(f"Must provide empties for custom body mesh")
 
-            create_custom_mesh_altered(rig)
+            create_custom_mesh_altered(rig = rig, empties = empties)
 
             # Deselect all
             bpy.ops.object.select_all(action='DESELECT')
@@ -32,7 +37,7 @@ def attach_mesh_to_rig(rig_name: str,
             logger.error(f"Invalid body_mesh_mode: {body_mesh_mode}")
             raise ValueError(f"Invalid body_mesh_mode: {body_mesh_mode}")
     except Exception as e:
-        logger.error(f"Failed to attach mesh to rig: {e}")
+        logger.error(f"Failed to attach mesh to rig: {type(e).__name__}: {e}")
         logger.exception(e)
         raise e
 

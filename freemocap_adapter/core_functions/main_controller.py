@@ -133,7 +133,8 @@ class MainController:
         try:
             logger.info("Adding body mesh...")
             attach_mesh_to_rig(body_mesh_mode=self.config.add_body_mesh.body_mesh_mode,
-                               rig_name=self.rig_name,)
+                               rig_name=self.rig_name,
+                               empties = self.empties,)
         except Exception as e:
             logger.error(f"Failed to attach mesh to rig: {e}")
             logger.exception(e)
