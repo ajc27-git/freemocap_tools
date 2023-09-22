@@ -6,6 +6,7 @@ from typing import Any, Dict
 import bpy
 
 from freemocap_adapter.core_functions.mesh.create_mesh.helpers.put_sphere_at_location import put_sphere_mesh_at_location
+from freemocap_adapter.data_models.mediapipe_names.mediapipe_heirarchy import MEDIAPIPE_HIERARCHY
 
 logger = logging.getLogger(__name__)
 
@@ -470,7 +471,7 @@ def parent_mesh_to_rig(meshes, rig):
     # Set rig as active
     bpy.context.view_layer.objects.active = rig
     # Parent the mesh and the rig with automatic weights
-    bpy.ops.object.parent_set(type='ARMATURE_AUTO')
+    bpy.ops.object.parent_set(type='BONE')
 
 
 def put_spheres_on_joint_centers(rig: bpy.types.Object):
@@ -504,50 +505,82 @@ def put_spheres_on_joint_centers(rig: bpy.types.Object):
 
 def put_spheres_on_empties(empties: Dict[str, bpy.types.Object]):
     meshes = []
+    
     components = {}
-
     components["body"] = empties["body"]
     components["right_hand"] = empties["hands"]["right"]
     components["left_hand"] = empties["hands"]["left"]
+    components["other"] = {}
+    for other_name, other_component_dict in empties["other"].items():
+        for name, empty in other_component_dict.items():
+            components["other"][name] = empty
 
-    for component_name, empties in components.items():
+    for component_name, component_dict in components.items():
+
         if component_name == "body":
-            color = "#00FF00"
-            sphere_scale = .02
+            if "right" in  component_name:
+                color = "#FF0000"
+            elif "left" in component_name:
+                color = "#0000FF"
+            else:
+                color = "#00aaFF"
+            sphere_scale = .04
         elif component_name == "left_hand":
-            color = "#FF0000"
+            color = "#00FFFF"
             sphere_scale = .01
         elif component_name == "right_hand":
-            color = "#0000FF"
+            color = "#aa00aa"
             sphere_scale = .01
-        else:
-            color = "#FF00FF"
-            sphere_scale = .01
+        elif component_name == "other":
 
-        for empty_name, empty in empties.items():
+            color = "#FF00FF"
+            sphere_scale = .08
+
+
+        for empty_name, empty in component_dict.items():
             bpy.ops.object.mode_set(mode="OBJECT")
             put_sphere_mesh_at_location(name=empty_name,
                                         location=empty.location,
                                         sphere_scale=sphere_scale,
                                         color=color,
                                         )
-            mesh = bpy.context.active_object
-            constraint = mesh.constraints.new(type="COPY_LOCATION")
+
+            bpy.ops.object.mode_set(mode="OBJECT")
+            sphere_mesh = bpy.context.active_object
+            constraint = sphere_mesh.constraints.new(type="COPY_LOCATION")
             constraint.target = empty
-            meshes.append(mesh)
+            meshes.append(sphere_mesh)
+
+            # if empty_name in MEDIAPIPE_HIERARCHY.keys():
+            #     bpy.ops.object.mode_set(mode="EDIT")
+            #     for child_name in MEDIAPIPE_HIERARCHY[empty_name]["children"]:
+            #          create_bone_stick(child_name=child_name,
+            #                           child_empty=empties[child_name],
+            #                           parent_empty=empty,
+            #                           parent_name=empty_name)
 
     return meshes
+
+
+def create_bone_stick(child_name: str,
+                      child_empty: bpy.types.Object,
+                      parent_name: str,
+                      parent_empty: bpy.types.Object,
+                      ):
+    stick_mesh_name = f"{parent_name}_{child_name}_stick"
+    child_location = child_empty.location
+    parent_location = parent_empty.location
+    stick_mesh = bpy.data.meshes.new(name=f"{parent_name}_{child_name}_stick")
+    stick_mesh.modifiers.new(type="SKIN")
 
 
 def create_custom_mesh_altered(rig: bpy.types.Object,
                                empties: Dict[str, bpy.types.Object], ):
     # Change to edit mode
-
     meshes = put_spheres_on_empties(empties=empties)
     # parent_mesh_to_rig(meshes, rig)
     ### Join all the body_meshes into one mesh
     # Rename the first body_mesh to "mesh"
-
 
     # edit_bones = get_edit_bones(rig)
     # mesh_definitions = calculate_mesh_definitions(edit_bones)
@@ -555,4 +588,3 @@ def create_custom_mesh_altered(rig: bpy.types.Object,
     # # Create and append the body meshes to the list
     # # Define the list that will contain the different meshes of the body
     # body_meshes = create_segment_meshes(mesh_definitions)
-
