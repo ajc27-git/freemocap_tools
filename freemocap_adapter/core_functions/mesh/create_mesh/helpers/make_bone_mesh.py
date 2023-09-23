@@ -12,9 +12,9 @@ def make_cone_mesh(name: str = "cone_mesh",
                    emission_strength: float = 1.0,
                    transmittance: float = 0.0,
                    vertices: int = 8,
-                   radius1: float = 0.2,
+                   radius1: float = 0.05,
                    radius2: float = 0.05,
-                   depth: float = 2,
+                   depth: float = 1,
                    end_fill_type: str = 'TRIFAN',
                    align: str = 'WORLD',
                    location: tuple = (0, 0, 0),
@@ -75,7 +75,7 @@ def make_cone_mesh(name: str = "cone_mesh",
 
 def make_joint_sphere_mesh(name: str = "joint_sphere_mesh",
                            subdivisions: int = 2,
-                           radius: float = 0.3,
+                           radius: float = 0.1,
                            align: str = 'WORLD',
                            location: tuple = (0, 0, 0),
                            scale: tuple = (1, 1, 1),
@@ -102,7 +102,7 @@ def make_bone_mesh(name: str = "bone_mesh",
                    joint_color: Union[str, Tuple, List, np.ndarray] = "#aa0055",
                    cone_color: Union[str, Tuple, List, np.ndarray] = "#00FFFF",
                    axis_visible: bool = True,
-                   squished_scale: tuple = (.8, 1, 1),
+                   squish_scale: tuple = (.8, 1, 1),
                    length: float = 1,
                    ) -> bpy.types.Object:
 
@@ -122,7 +122,7 @@ def make_bone_mesh(name: str = "bone_mesh",
     if axis_visible:
         bone_mesh_object.show_axis = True
 
-    bone_mesh_object.scale = squished_scale
+    bone_mesh_object.scale = squish_scale
     bone_mesh_object.scale *= length
     # apply scale
     bpy.ops.object.transform_apply(scale=True)
