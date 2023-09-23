@@ -1,13 +1,13 @@
 import bmesh
 import bpy
 
-def create_bone_stick(child_name: str,
-                      child_empty: bpy.types.Object,
-                      parent_name: str,
-                      parent_empty: bpy.types.Object,
-                      skin_radius: float = .005,
-                      ):
-    bone_name = f"{parent_name}_{child_name}_bone"
+
+def create_bone_mesh(child_empty: bpy.types.Object,
+                     parent_name: str,
+                     parent_empty: bpy.types.Object,
+                     skin_radius: float = .005,
+                     ):
+    bone_name = f"{parent_name}_bone_mesh"
     stick_mesh = bpy.data.meshes.new(name=bone_name)
     mesh_obj = bpy.data.objects.new(bone_name, stick_mesh)
     mesh_obj.location = parent_empty.location

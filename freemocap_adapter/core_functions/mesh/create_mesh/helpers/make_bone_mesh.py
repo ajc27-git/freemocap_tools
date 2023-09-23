@@ -1,3 +1,5 @@
+from typing import List, Tuple, Union
+
 import bmesh
 import bpy
 import numpy as np
@@ -10,7 +12,7 @@ def make_cone_mesh(name: str = "cone_mesh",
                    emission_strength: float = 1.0,
                    transmittance: float = 0.0,
                    vertices: int = 8,
-                   radius1: float = 0.1,
+                   radius1: float = 0.2,
                    radius2: float = 0.05,
                    depth: float = 2,
                    end_fill_type: str = 'TRIFAN',
@@ -32,15 +34,13 @@ def make_cone_mesh(name: str = "cone_mesh",
     cone = bpy.context.active_object
     cone.name = name
 
-    material = create_material(
-        color=color,
-        name=name,
-        emission_strength=emission_strength,
-        transmittance=transmittance,
-    )
+    material = create_material(name=f"{name}_material",
+                               color=color,
+                               )
 
     cone_object = bpy.data.objects[name]
     cone_mesh = cone_object.data
+    cone_mesh.materials.append(material)
 
     # Go into edit mode
     bpy.context.view_layer.objects.active = cone_object
@@ -78,30 +78,66 @@ def make_joint_sphere_mesh(name: str = "joint_sphere_mesh",
                            radius: float = 0.3,
                            align: str = 'WORLD',
                            location: tuple = (0, 0, 0),
-                           scale: tuple = (1, 1, 1)
+                           scale: tuple = (1, 1, 1),
+                           color: Union[str, Tuple, List, np.ndarray] = "#00FFFF",
                            ):
     bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=subdivisions,
                                           radius=radius,
                                           align=align,
                                           location=location,
                                           scale=scale)
-    joint_sphere = bpy.context.active_object
-    joint_sphere.name = name
-    return joint_sphere
+    object = bpy.context.active_object
+    mesh = object.data
+    object.name = name
+
+    material = create_material(name=f"{name}_material",
+                               color=color,
+                               )
+    mesh.materials.append(material)
+
+    return object
 
 
-def make_bone_mesh(name: str = "bone_mesh"):
-    cone = make_cone_mesh(name=f"{name}_cone_mesh")
-    joint_sphere = make_joint_sphere_mesh(name=f"{name}_joint_sphere_mesh")
+def make_bone_mesh(name: str = "bone_mesh",
+                   joint_color: Union[str, Tuple, List, np.ndarray] = "#aa0055",
+                   cone_color: Union[str, Tuple, List, np.ndarray] = "#00FFFF",
+                   axis_visible: bool = True,
+                   squished_scale: tuple = (.8, 1, 1),
+                   length: float = 1,
+                   ) -> bpy.types.Object:
+
+    cone = make_cone_mesh(name=f"{name}_cone_mesh",
+                          color=cone_color, )
+
+    joint_sphere = make_joint_sphere_mesh(name=f"{name}_joint_sphere_mesh",
+                                          color=joint_color, )
     bpy.ops.object.select_all(action='DESELECT')
     cone.select_set(True)
     joint_sphere.select_set(True)
     bpy.context.view_layer.objects.active = cone
     bpy.ops.object.join()
-    bone_mesh = bpy.context.active_object
-    bone_mesh.name = name
-    return bone_mesh
+    bone_mesh_object = bpy.context.active_object
+    bone_mesh_object.name = name
+
+    if axis_visible:
+        bone_mesh_object.show_axis = True
+
+    bone_mesh_object.scale = squished_scale
+    bone_mesh_object.scale *= length
+    # apply scale
+    bpy.ops.object.transform_apply(scale=True)
+
+
+
+    return bone_mesh_object
 
 
 if __name__ == "__main__" or __name__ == "<run_path>":
-    make_bone_mesh()
+    bone_mesh = make_bone_mesh(name="bone_mesh")
+    bone_mesh.location = (0, 0, 0)
+    bone_mesh_small = make_bone_mesh(name="bone_mesh_small",
+                                     length=.5)
+    bone_mesh_small.location = (-2, 0, 0)
+    bone_mesh_large = make_bone_mesh(name="bone_mesh_large",
+                                        length=1.5)
+    bone_mesh_large.location = (2, 0, 0)

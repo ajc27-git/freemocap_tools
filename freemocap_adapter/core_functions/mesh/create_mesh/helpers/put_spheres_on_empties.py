@@ -1,10 +1,11 @@
 from typing import Dict
 
+import bpy
+
+from freemocap_adapter.core_functions.mesh.create_mesh.helpers.create_bone_stick import create_bone_mesh
 from freemocap_adapter.core_functions.mesh.create_mesh.helpers.put_sphere_at_location import put_sphere_mesh_at_location
-from freemocap_adapter.core_functions.mesh.create_mesh.helpers.create_bone_stick import create_bone_stick
 from freemocap_adapter.data_models.mediapipe_names.mediapipe_heirarchy import MEDIAPIPE_HIERARCHY
 
-import bpy
 
 def put_spheres_on_empties(empties: Dict[str, bpy.types.Object]):
     meshes = []
@@ -26,16 +27,15 @@ def put_spheres_on_empties(empties: Dict[str, bpy.types.Object]):
         for empty_name, empty in component_dict.items():
             bpy.ops.object.mode_set(mode="OBJECT")
             sphere_mesh = put_sphere_mesh_at_location(name=empty_name,
-                                        location=empty.location,
-                                        sphere_scale=sphere_scale,
-                                        color=color,
-                                        emission_strength=emission_strength)
+                                                      location=empty.location,
+                                                      sphere_scale=sphere_scale,
+                                                      color=color,
+                                                      emission_strength=emission_strength)
 
             bpy.ops.object.mode_set(mode="OBJECT")
             sphere_mesh = bpy.context.active_object
             constraint = sphere_mesh.constraints.new(type="COPY_LOCATION")
             constraint.target = empty
-
 
             if empty_name in MEDIAPIPE_HIERARCHY.keys():
                 bpy.ops.object.mode_set(mode="EDIT")
@@ -43,12 +43,10 @@ def put_spheres_on_empties(empties: Dict[str, bpy.types.Object]):
                     if "hand_wrist" in child_name:
                         continue
 
-                    stick_mesh = create_bone_stick(child_name=child_name,
-                                                   child_empty=component_dict[child_name],
-                                                   parent_empty=empty,
-                                                   parent_name=empty_name)
-
-
+                    stick_mesh = create_bone_mesh(child_name=child_name,
+                                                  child_empty=component_dict[child_name],
+                                                  parent_empty=empty,
+                                                  parent_name=empty_name)
 
     return meshes
 

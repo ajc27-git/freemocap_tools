@@ -36,6 +36,6 @@ def put_sphere_mesh_at_location(
                                          align='WORLD',
                                          enter_editmode=False,)
     sphere = bpy.context.editable_objects[-1]
-    sphere.name = f"{name}"
+    sphere.name = f"{name}_joint_mesh"
     sphere.data.materials.append(material)
     return sphere
