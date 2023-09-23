@@ -1,7 +1,7 @@
 bl_info = {
     'name'          : 'Freemocap Adapter',
     'author'        : 'ajc27',
-    'version'       : (1, 1, 10),
+    'version'       : (1, 1, 11),
     'blender'       : (3, 0, 0),
     'location'      : '3D Viewport > Sidebar > Freemocap Adapter',
     'description'   : 'Add-on to adapt the Freemocap Blender output',
@@ -1281,7 +1281,6 @@ def reduce_bone_length_dispersion(interval_variable: str='capture_median', inter
 
     print('Total empties positions corrected: ' + str(empties_positions_corrected))
     
-
 # Function to translate the empties recursively
 def translate_empty(empties_dict, empty, frame_index, delta):
 
@@ -1363,7 +1362,6 @@ def reduce_shakiness(recording_fps: float=30):
                 # print(direction_addition)
                 # print(m.dist((0,0,0), direction_addition))
                 # print('right_wrist frame ' + str(frame_index + 1) + ' speed: ' + str(empty_speed) + ' acceleration: ' + str(acceleration))
-
 
 ######################################################################
 ############################# ADD RIG ################################
@@ -1544,7 +1542,7 @@ def add_rig(keep_symmetry: bool=False,
     pelvis.head = spine.head
     pelvis.tail = spine.head + mathutils.Vector([0, 0.1, 0])
 
-    # Change the pelvis.R, pelvis.L, thigh.R, thigh.L and spine parent to the new pelvis bone
+    # Change the spine, pelvis.R, pelvis.L, thigh.R and thigh.L bones parents
     pelvis_R.parent         = pelvis
     pelvis_R.use_connect    = False
     pelvis_L.parent         = pelvis
@@ -1682,6 +1680,12 @@ def add_rig(keep_symmetry: bool=False,
             bone.tail[1] += hand_L_y_offset
         else:
             bone.tail[1] += hand_L_y_offset
+
+    # Connect the unparented bones
+    shoulder_R.use_connect = True
+    shoulder_L.use_connect = True
+    upper_arm_R.use_connect = True
+    upper_arm_L.use_connect = True
 
     # Change to Pose Mode to rotate the arms and make a T Pose for posterior retargeting
     bpy.ops.object.mode_set(mode='POSE')
@@ -1865,6 +1869,8 @@ def add_rig(keep_symmetry: bool=False,
     face.tail[1] = face.head[1] - (virtual_bones['head_nose']['median'] * m.cos(m.radians(18)) / 2)
     face.tail[2] = face.head[2] - (virtual_bones['head_nose']['median'] * m.sin(m.radians(18)) / 2)
 
+    # Connect the spine.004 bone to the spine.001 bone
+    spine_004.use_connect = True
     # Rename spine.004 to neck
     rig.data.edit_bones['spine.004'].name = "neck"
 
@@ -2482,7 +2488,7 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
 
         try:
             # Import the skelly mesh
-            bpy.ops.import_scene.fbx(filepath='skelly_fullbody_med_def.fbx')
+            bpy.ops.import_scene.fbx(filepath='skelly_lowpoly_mesh.fbx')
             
         except:
             print("\nCould not find skelly mesh file.")
@@ -2495,6 +2501,9 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
         # Get reference to armature
         rig = bpy.data.objects['root']
 
+        # Get the rig z dimension
+        rig_z_dimension = rig.dimensions.z
+
         # Select the rig
         rig.select_set(True)
         bpy.context.view_layer.objects.active = rig
@@ -2503,7 +2512,7 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
         bpy.ops.object.mode_set(mode='EDIT')
 
         # Get reference to the neck bone
-        neck        = rig.data.edit_bones['neck']
+        neck = rig.data.edit_bones['neck']
 
         # Get the neck bone tail position and save it as the head position
         head_location = (neck.tail[0], neck.tail[1], neck.tail[2])
@@ -2512,10 +2521,19 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
         bpy.ops.object.mode_set(mode='OBJECT')
 
         # Get the skelly mesh
-        skelly_mesh = bpy.data.objects['Skelly_Fullbody_Med_Def']
+        skelly_mesh = bpy.data.objects['Skelly_LowPoly_Mesh']
+
+        # Get the body mesh z dimension
+        body_mesh_z_dimension = skelly_mesh.dimensions.z
         
         # Set the location of the skelly mesh
         skelly_mesh.location = head_location
+
+        # Calculate the proportion between the rig and the mesh
+        rig_to_body_mesh = rig_z_dimension / body_mesh_z_dimension
+
+        # Scale the mesh by the rig and body_mesh proportions multiplied by a scale factor
+        # skelly_mesh.scale = (rig_to_body_mesh * 1.0, rig_to_body_mesh * 1.0, rig_to_body_mesh * 1.0)
 
         # Set rig as active
         bpy.context.view_layer.objects.active = skelly_mesh
@@ -2563,6 +2581,8 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
         neck        = rig.data.edit_bones['neck']
         hand_R      = rig.data.edit_bones['hand.R']
         hand_L      = rig.data.edit_bones['hand.L']
+        pelvis_R    = rig.data.edit_bones['pelvis.R']
+        pelvis_L    = rig.data.edit_bones['pelvis.L']
         thigh_R     = rig.data.edit_bones['thigh.R']
         thigh_L     = rig.data.edit_bones['thigh.L']
         shin_R      = rig.data.edit_bones['shin.R']
@@ -2576,6 +2596,8 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
         trunk_mesh_location         = (spine.head[0], spine.head[1], spine.head[2] + trunk_mesh_depth / 2 - 0.025 * body_height)
         neck_mesh_depth             = neck.length
         neck_mesh_location          = (neck.head[0], neck.head[1], neck.head[2] + neck.length / 2)
+        shoulders_mesh_depth        = shoulder_R.length + shoulder_L.length + 0.05
+        shoulders_mesh_location     = (neck.head[0], neck.head[1], neck.head[2])
         head_mesh_location          = (neck.tail[0], neck.tail[1], neck.tail[2])
         head_mesh_radius            = neck.length / 2
         right_eye_mesh_location     = (neck.tail[0] - 0.04, neck.tail[1] - head_mesh_radius, neck.tail[2] + 0.02)
@@ -2598,12 +2620,14 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
         left_hand_mesh_radius       = left_arm_mesh_depth / 8
         left_thumb_mesh_location    = (hand_L.tail[0], hand_L.tail[1] - left_hand_mesh_radius, hand_L.tail[2])
         left_thumb_mesh_radius      = left_hand_mesh_radius / 3
+        hips_mesh_depth             = pelvis_R.length + pelvis_L.length + 0.05
+        hips_mesh_location          = (pelvis_R.head[0], pelvis_R.head[1], pelvis_R.head[2])
         right_leg_mesh_depth        = thigh_R.head[2] - shin_R.tail[2]
         right_leg_mesh_location     = (thigh_R.head[0], thigh_R.head[1], thigh_R.head[2] - right_leg_mesh_depth / 2)
         left_leg_mesh_depth         = thigh_L.head[2] - shin_L.tail[2]
         left_leg_mesh_location      = (thigh_L.head[0], thigh_L.head[1], thigh_L.head[2] - left_leg_mesh_depth / 2)
-        right_foot_mesh_location    = (foot_R.tail[0], foot_R.tail[1], foot_R.tail[2])
-        left_foot_mesh_location     = (foot_L.tail[0], foot_L.tail[1], foot_L.tail[2])
+        right_foot_mesh_location    = (foot_R.head[0], (foot_R.head[1] + foot_R.tail[1]) / 2, (foot_R.head[2] + foot_R.tail[2]) / 2)
+        left_foot_mesh_location     = (foot_L.head[0], (foot_L.head[1] + foot_L.tail[1]) / 2, (foot_L.head[2] + foot_L.tail[2]) / 2)
 
         # Create and append the body meshes to the list
         # Define the list that will contain the different meshes of the body
@@ -2641,6 +2665,24 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
             align           = 'WORLD',
             location        = neck_mesh_location,
             rotation        = (0.0, 0.0, 0.0)
+        )
+        body_meshes.append(bpy.context.active_object)
+        # Add subdivisions to the mesh so it bends properly
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.subdivide(number_cuts=cylinder_cuts)
+        bpy.ops.object.mode_set(mode="OBJECT")
+
+        # Shoulders
+        bpy.ops.mesh.primitive_cylinder_add(
+            vertices        = vertices,
+            radius          = 0.05,
+            depth           = shoulders_mesh_depth,
+            end_fill_type   = 'NGON',
+            calc_uvs        = True,
+            enter_editmode  = False,
+            align           = 'WORLD',
+            location        = shoulders_mesh_location,
+            rotation        = (0.0, m.pi/2, 0.0)
         )
         body_meshes.append(bpy.context.active_object)
         # Add subdivisions to the mesh so it bends properly
@@ -2780,6 +2822,24 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
         )
         body_meshes.append(bpy.context.active_object)
 
+        # Hips
+        bpy.ops.mesh.primitive_cylinder_add(
+            vertices        = vertices,
+            radius          = 0.05,
+            depth           = hips_mesh_depth,
+            end_fill_type   = 'NGON',
+            calc_uvs        = True,
+            enter_editmode  = False,
+            align           = 'WORLD',
+            location        = hips_mesh_location,
+            rotation        = (0.0, m.pi/2, 0.0)
+        )
+        body_meshes.append(bpy.context.active_object)
+        # Add subdivisions to the mesh so it bends properly
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.subdivide(number_cuts=cylinder_cuts)
+        bpy.ops.object.mode_set(mode="OBJECT")
+        
         # Right Leg
         bpy.ops.mesh.primitive_cylinder_add(
             vertices        = vertices,
@@ -2822,7 +2882,7 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
             enter_editmode  = False,
             align           = 'WORLD',
             location        = right_foot_mesh_location,
-            scale           = (1.0, 2.3, 1.2)
+            scale           = (1.5, 5.0, 1.7)
         )
         body_meshes.append(bpy.context.active_object)
 
@@ -2832,7 +2892,7 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
             enter_editmode  = False,
             align           = 'WORLD',
             location        = left_foot_mesh_location,
-            scale           = (1.0, 2.3, 1.2)
+            scale           = (1.5, 5.0, 1.7)
         )
         body_meshes.append(bpy.context.active_object)
 
@@ -2870,7 +2930,8 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
 ########################### EXPORT TO FBX ############################
 ######################################################################
 
-def export_fbx(self: Operator):
+def export_fbx(self: Operator,
+               fbx_type: str='standard'):
 
     # Deselect all
     bpy.ops.object.select_all(action='DESELECT')
@@ -3380,11 +3441,12 @@ def export_fbx(self: Operator):
         ).to_4x4()
     )
 
-    # Replace the modified functions temporarily
-    export_fbx_bin.fbx_animations_do            = fbx_animations_do
-    export_fbx_bin.fbx_data_armature_elements   = fbx_data_armature_elements
-    export_fbx_bin.fbx_data_object_elements     = fbx_data_object_elements
-    export_fbx_bin.fbx_data_bindpose_element    = fbx_data_bindpose_element
+    # Replace the modified functions temporarily in the FBX type is unreal engine
+    if fbx_type == 'unreal_engine':
+        export_fbx_bin.fbx_animations_do            = fbx_animations_do
+        export_fbx_bin.fbx_data_armature_elements   = fbx_data_armature_elements
+        export_fbx_bin.fbx_data_object_elements     = fbx_data_object_elements
+        export_fbx_bin.fbx_data_bindpose_element    = fbx_data_bindpose_element
     
     # Simulate the FBX Export Operator Class
     self = type(
@@ -3396,11 +3458,12 @@ def export_fbx(self: Operator):
     # Export the FBX file
     export_fbx_bin.save(self, bpy.context, **export_parameters)
 
-    # Restore the modified functions with the saved backups
-    export_fbx_bin.fbx_animations_do            = backup_fbx_animations_do
-    export_fbx_bin.fbx_data_armature_elements   = backup_fbx_data_armature_elements
-    export_fbx_bin.fbx_data_object_elements     = backup_fbx_data_object_elements
-    export_fbx_bin.fbx_data_bindpose_element    = backup_fbx_data_bindpose_element
+    # Restore the modified functions with the saved backups if the FBX type is unreal engine
+    if fbx_type == 'unreal_engine':
+        export_fbx_bin.fbx_animations_do            = backup_fbx_animations_do
+        export_fbx_bin.fbx_data_armature_elements   = backup_fbx_data_armature_elements
+        export_fbx_bin.fbx_data_object_elements     = backup_fbx_data_object_elements
+        export_fbx_bin.fbx_data_bindpose_element    = backup_fbx_data_bindpose_element
 
 # Class with the different properties of the methods
 class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
@@ -3513,10 +3576,20 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
     # Add Body Mesh Options
     body_mesh_mode: bpy.props.EnumProperty(
         name        = '',
+        default     = 'can_man',
         description = 'Mode (source) for adding the mesh to the rig',
         items       = [('can_man', 'Custom', ''),
                        #('skelly', 'Skelly', ''),
                        #('file', 'File', '')
+                       ]
+    )
+
+    # Export FBX Options
+    fbx_type: bpy.props.EnumProperty(
+        name        = '',
+        description = 'Type of the FBX file',
+        items       = [('standard', 'Standard', ''),
+                       ('unreal_engine', 'Unreal Engine', '')
                        ]
     )
     
@@ -3623,11 +3696,14 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         split.column().label(text='Body Mesh Mode')
         split.split().column().prop(fmc_adapter_tool, 'body_mesh_mode')
         
-        #box.operator('fmc_adapter.actions_op', text='Add Body Mesh').action = 'ADD_BODY_MESH'
         box.operator('fmc_adapter.add_body_mesh', text='4. Add Body Mesh')
 
         # FBX Export
         box = layout.box()
+        split = box.column().row().split(factor=0.6)
+        split.column().label(text='FBX Export Type')
+        split.split().column().prop(fmc_adapter_tool, 'fbx_type')
+
         box.operator('fmc_adapter.export_fbx', text='5. Export FBX')
 
 # Operator classes that executes the methods
@@ -3798,13 +3874,17 @@ class FMC_ADAPTER_OT_export_fbx(Operator):
 
     def execute(self, context):
 
+        scene               = context.scene
+        fmc_adapter_tool    = scene.fmc_adapter_tool
+
         # Get start time
         start = time.time()
 
         print('Executing Export FBX...')
 
         # Execute export fbx function
-        export_fbx(self)
+        export_fbx(self,
+                   fbx_type=fmc_adapter_tool.fbx_type)
 
         # Get end time and print execution time
         end = time.time()
