@@ -4,7 +4,7 @@ from typing import Dict
 
 import bpy
 
-from freemocap_adapter.core_functions.mesh.altered_original_mesh_maker import create_custom_mesh_altered
+from freemocap_adapter.core_functions.mesh.create_mesh.create_mesh import create_mesh
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ def attach_mesh_to_rig(rig_name: str,
                 logger.error(f"Must provide empties for custom body mesh")
                 raise ValueError(f"Must provide empties for custom body mesh")
 
-            create_custom_mesh_altered(rig = rig, empties = empties)
+            create_mesh(rig=rig, empties=empties)
 
             # Deselect all
             bpy.ops.object.select_all(action='DESELECT')

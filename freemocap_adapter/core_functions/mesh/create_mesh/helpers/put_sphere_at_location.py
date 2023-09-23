@@ -6,6 +6,7 @@ from freemocap_adapter.core_functions.mesh.create_mesh.helpers.create_material i
 
 import bpy
 
+
 def put_sphere_mesh_at_location(
     name: str,
     location: List[float],
@@ -37,3 +38,4 @@ def put_sphere_mesh_at_location(
     sphere = bpy.context.editable_objects[-1]
     sphere.name = f"{name}"
     sphere.data.materials.append(material)
+    return sphere
