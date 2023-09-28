@@ -1234,7 +1234,7 @@ def reduce_bone_length_dispersion(interval_variable: str='capture_median', inter
                 # Calculate limits
                 inferior_limit  = median - interval_factor * stdev
                 superior_limit  = median + interval_factor * stdev
-            elif interval_variable == 'standard_lenght':
+            elif interval_variable == 'standard_length':
                 # Use the bone standard anthropomorphic dimension relative to the body height
                 inferior_limit  = anthropomorphic_dimensions[bone]['dimension'] * body_height * (1 - interval_factor)
                 superior_limit  = anthropomorphic_dimensions[bone]['dimension'] * body_height * (1 + interval_factor)
@@ -1400,7 +1400,7 @@ def add_rig(keep_symmetry: bool=False,
     # Get reference to the renamed armature
     rig = bpy.data.objects['root']
 
-    # Add the rig setting the bones lenght as the median lenght across all the frames
+    # Add the rig setting the bones length as the median length across all the frames
     print('Adding rig with median length method...')
 
     # Update the empty positions dictionary
@@ -3509,9 +3509,9 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
     interval_variable: bpy.props.EnumProperty(
         name        = '',
         description = 'Variable used to define the new length dispersion interval',
-        items       = [ ('standard_lenght', 'Standard Lenght', 'Use the standard lenghts based on the total body (rig) height. Defines the new dispersion interval as [lenght*(1-interval_factor),lenght*(1+interval_factor)]'),
-                        ('capture_median', 'Capture Median', 'Use the bones median lenght from the capture. Defines the new dispersion interval as [median*(1-interval_factor),median*(1+interval_factor)]'),
-                        ('capture_stdev', 'Capture Std Dev', 'Use the bones lenght standard deviation from the capture. Defines the new dispersion interval as [median-interval_factor*stdev,median+interval_factor*stdev]')]
+        items       = [ ('standard_length', 'Standard length', 'Use the standard lengths based on the total body (rig) height. Defines the new dispersion interval as [length*(1-interval_factor),length*(1+interval_factor)]'),
+                        ('capture_median', 'Capture Median', 'Use the bones median length from the capture. Defines the new dispersion interval as [median*(1-interval_factor),median*(1+interval_factor)]'),
+                        ('capture_stdev', 'Capture Std Dev', 'Use the bones length standard deviation from the capture. Defines the new dispersion interval as [median-interval_factor*stdev,median+interval_factor*stdev]')]
     )
     interval_factor: bpy.props.FloatProperty(
         name        = '',
@@ -3527,7 +3527,7 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         default     = 1.75,
         min         = 0,
         precision   = 3,
-        description = 'Body height in meters. This value is used when the interval variable is set to standard lenght. If a rig is added after using Reduce Dispersion with standard length, it will have this value as height and the bones lenght will be proporions of this height'
+        description = 'Body height in meters. This value is used when the interval variable is set to standard length. If a rig is added after using Reduce Dispersion with standard length, it will have this value as height and the bones length will be proporions of this height'
     )
 
     # Reduce Shakiness Options
