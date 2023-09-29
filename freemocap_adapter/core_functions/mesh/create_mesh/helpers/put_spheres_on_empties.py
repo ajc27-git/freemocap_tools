@@ -2,7 +2,6 @@ from typing import Dict, Tuple
 
 import bpy
 
-from freemocap_adapter.core_functions.mesh.create_mesh.helpers.create_bone_stick import create_bone_mesh
 from freemocap_adapter.core_functions.mesh.create_mesh.helpers.make_bone_mesh import make_bone_mesh
 from freemocap_adapter.core_functions.mesh.create_mesh.helpers.put_sphere_at_location import put_sphere_mesh_at_location
 from freemocap_adapter.data_models.mediapipe_names.mediapipe_heirarchy import MEDIAPIPE_HIERARCHY

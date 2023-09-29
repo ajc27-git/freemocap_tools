@@ -25,14 +25,14 @@ if __name__ == "__main__" or __name__ == "<run_path>":
         fmc_adapter_tool = bpy.context.scene.fmc_adapter_properties
         recording_path = fmc_adapter_tool.recording_path
 
-        if not Path(recording_path).exists():A
-            raise ValueError(f"Recording path {recording_path} does not exist!")
-    except Exception as e:
-        logging.warning(f"Could not load recording path from Blender. Using default path instead. Error: {e}")
+        if not Path(recording_path).exists(): A
+        raise ValueError(f"Recording path {recording_path} does not exist!")
+except Exception as e:
+logging.warning(f"Could not load recording path from Blender. Using default path instead. Error: {e}")
 
-        from freemocap_adapter.core_functions.setup_scene.get_path_to_sample_data import get_path_to_sample_data
+from freemocap_adapter.core_functions.setup_scene.get_path_to_sample_data import get_path_to_sample_data
 
-        recording_path = get_path_to_sample_data()
+recording_path = get_path_to_sample_data()
 
-    logging.info(f"Running {__file__} with recording_path={recording_path}")
-    main(recording_path=recording_path)
+logging.info(f"Running {__file__} with recording_path={recording_path}")
+main(recording_path=recording_path)

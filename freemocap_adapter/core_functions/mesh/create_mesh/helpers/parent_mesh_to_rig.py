@@ -1,6 +1,10 @@
 import logging
+
 import bpy
+
 logger = logging.getLogger(__name__)
+
+
 def parent_mesh_to_rig(meshes, rig):
     logger.info("Parenting mesh to rig...")
     try:

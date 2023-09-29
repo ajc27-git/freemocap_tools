@@ -4,9 +4,6 @@ from pathlib import Path
 from freemocap_adapter.blender_interface.utilities.get_or_create_freemocap_data_handler import \
     get_or_create_freemocap_data_handler
 from freemocap_adapter.core_functions.bones.enforce_rigid_bones import enforce_rigid_bones
-from freemocap_adapter.core_functions.freemocap_data_handler.operations.freemocap_empties_from_parent_object import \
-    freemocap_empties_from_parent_object
-from freemocap_adapter.core_functions.mesh.attach_mesh_to_rig import attach_mesh_to_rig
 from freemocap_adapter.core_functions.empties.creation.create_freemocap_empties import create_freemocap_empties
 from freemocap_adapter.core_functions.freemocap_data_handler.helpers.saver import \
     FreemocapDataSaver
@@ -16,6 +13,7 @@ from freemocap_adapter.core_functions.freemocap_data_handler.operations.put_skel
     put_skeleton_on_ground
 from freemocap_adapter.core_functions.load_data.load_freemocap_data import load_freemocap_data
 from freemocap_adapter.core_functions.load_data.load_videos import load_videos
+from freemocap_adapter.core_functions.mesh.attach_mesh_to_rig import attach_mesh_to_rig
 from freemocap_adapter.core_functions.rig.add_rig import add_rig
 from freemocap_adapter.core_functions.setup_scene.make_parent_empties import create_freemocap_parent_empty
 from freemocap_adapter.core_functions.setup_scene.set_start_end_frame import set_start_end_frame
@@ -138,7 +136,7 @@ class MainController:
             logger.info("Adding body mesh...")
             attach_mesh_to_rig(body_mesh_mode=self.config.add_body_mesh.body_mesh_mode,
                                rig_name=self.rig_name,
-                               empties = self.empties,)
+                               empties=self.empties, )
         except Exception as e:
             logger.error(f"Failed to attach mesh to rig: {e}")
             logger.exception(e)
@@ -148,7 +146,7 @@ class MainController:
         try:
             logger.info("Loading videos as planes...")
             load_videos(recording_path=self.recording_path,
-                        parent_object=self._video_parent_object,)
+                        parent_object=self._video_parent_object, )
         except Exception as e:
             logger.error(e)
             logger.exception(e)
@@ -177,4 +175,3 @@ class MainController:
                     for space in area.spaces:  # iterate through spaces in current VIEW_3D area
                         if space.type == "VIEW_3D":  # check if space is a 3D view
                             space.shading.type = "MATERIAL"
-

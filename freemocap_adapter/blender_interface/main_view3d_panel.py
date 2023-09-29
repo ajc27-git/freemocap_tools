@@ -26,15 +26,19 @@ class VIEW3D_PT_freemocap_adapter(Panel):
 
         self._save_data_to_disk_panel(fmc_adapter_tool, layout)
 
-        # self._load_data_panel(fmc_adapter_tool, layout)
-        #
-        # self._reduce_bone_dispersion_panel(fmc_adapter_tool, layout)
-        #
-        # self._add_rig_panel(fmc_adapter_tool, layout)
-        #
-        # self._add_body_mesh_panel(fmc_adapter_tool, layout)
-        #
-        # self._fbx_export_panel(layout)
+        self._load_data_panel(fmc_adapter_tool, layout)
+
+        self._reduce_bone_dispersion_panel(fmc_adapter_tool, layout)
+
+        self._add_rig_panel(fmc_adapter_tool, layout)
+
+        self._add_body_mesh_panel(fmc_adapter_tool, layout)
+
+        self._fbx_export_panel(layout)
+
+        # ui_column_3 = self.layout.column(align=True)
+        # ui_column_3.prop(context.scene, 'frame_current', text='Current Frame#' )
+        # ui_column_3.operator('screen.animation_play', icon='PLAY')
 
     def _clear_scene_button(self, layout):
         # Clear scene button
@@ -44,15 +48,19 @@ class VIEW3D_PT_freemocap_adapter(Panel):
     def _run_all_panel(self, fmc_adapter_tool, layout):
         box = layout.box()
         row = box.row()
-        row.label(text="FreeMoCap Recording:")
-        row.prop(fmc_adapter_tool, "recording_path", text="")
+
+        box.prop(fmc_adapter_tool,
+                 "recording_path",
+                 text="FreeMoCap Recording:")
+
+        box.prop(fmc_adapter_tool,
+                 "data_parent_empty",
+                 text="Data Parent Empty")
         box.operator('fmc_adapter._run_all', text='RUN ALL')
 
     def _save_data_to_disk_panel(self, fmc_adapter_tool, layout):
         box = layout.box()
-        box.prop(fmc_adapter_tool,
-                 "data_parent_empty",
-                 text="Data Parent Empty")
+
         box.operator('fmc_adapter._save_data_to_disk', text='Save Data to Disk')
 
     def _fbx_export_panel(self, layout):

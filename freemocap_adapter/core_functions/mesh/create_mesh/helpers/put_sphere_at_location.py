@@ -1,21 +1,18 @@
 from typing import Union, List
 
-import numpy as np
+import bpy
 
 from freemocap_adapter.core_functions.mesh.create_mesh.helpers.create_material import create_material
 
-import bpy
-
 
 def put_sphere_mesh_at_location(
-    name: str,
-    location: List[float],
-    sphere_scale: float = 0.02,
-    material: Union[bpy.types.Material, str] = None,
-    color: str = "#00FFFF",
-    marker_type: str = "generic",
-    emission_strength: float = 1.0):
-
+        name: str,
+        location: List[float],
+        sphere_scale: float = 0.02,
+        material: Union[bpy.types.Material, str] = None,
+        color: str = "#00FFFF",
+        marker_type: str = "generic",
+        emission_strength: float = 1.0):
     if not len(location) == 3:
         raise ValueError(f"location must be a list of length 3, not {len(location)}")
     # If material is None, create a default material
@@ -34,7 +31,7 @@ def put_sphere_mesh_at_location(
                                          scale=(sphere_scale, sphere_scale, sphere_scale),
                                          location=location,
                                          align='WORLD',
-                                         enter_editmode=False,)
+                                         enter_editmode=False, )
     sphere = bpy.context.editable_objects[-1]
     sphere.name = f"{name}_joint_mesh"
     sphere.data.materials.append(material)

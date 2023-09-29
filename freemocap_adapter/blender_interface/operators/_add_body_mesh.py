@@ -4,8 +4,8 @@ import time
 import bpy
 from bpy.types import Operator
 
-from freemocap_adapter.core_functions.mesh.attach_mesh_to_rig import attach_mesh_to_rig
 from freemocap_adapter.core_functions.empties.reorient_empties import reorient_empties
+from freemocap_adapter.core_functions.mesh.attach_mesh_to_rig import attach_mesh_to_rig
 from freemocap_adapter.core_functions.rig.add_rig import add_rig
 
 REORIENT_EMPTIES_EXECUTED = True

@@ -23,6 +23,9 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         subtype='FILE_PATH',
     )
 
+
+class FMC_UI_PROPERTIES(bpy.types.PropertyGroup):
+    logger.info("Initializing FMC_UI_PROPERTIES class...")
     # Show Options Booleans
     show_reorient_empties_options: BoolProperty(
         name="Show options",

@@ -3,7 +3,6 @@ from typing import Dict
 
 import bpy
 
-from freemocap_adapter.core_functions.mesh.create_mesh.helpers.parent_mesh_to_rig import parent_mesh_to_rig
 from freemocap_adapter.core_functions.mesh.create_mesh.helpers.put_spheres_on_empties import put_spheres_on_empties, \
     put_bone_meshes_on_empties
 
