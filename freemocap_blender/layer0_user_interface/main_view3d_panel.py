@@ -27,7 +27,6 @@ class VIEW3D_PT_freemocap_panel(Panel):
                             ui_properties=ui_properties,
                             layout=layout)
 
-        self._save_data_to_disk_panel(layout=layout)
         #
         # self._load_data_panel(data_properties, layout=layout)
         #
@@ -77,6 +76,7 @@ class VIEW3D_PT_freemocap_panel(Panel):
                  emboss=False)
         if ui_properties.show_operations:
             self._load_freemocap_data_row(box)
+            self._save_data_to_disk_panel(box)
 
             # self._calculate_virtual_trajectories()
             # self._put_data_in_inertial_reference_frame()
@@ -91,12 +91,13 @@ class VIEW3D_PT_freemocap_panel(Panel):
 
     def _load_freemocap_data_row(self, box):
         split = box.column().row().split(factor=0.6)
-        split.column().label(text='📂')
-        split.split().column().operator('freemocap_blender._load_freemocap_data', text='1. Load FreeMoCap Data')
+        split.column().label(text='')
+        split.split().column().operator('freemocap_blender._load_freemocap_data', text='📂 Load FreeMoCap Data')
 
-    def _save_data_to_disk_panel(self, layout):
-        box = layout.box()
-        box.operator('freemocap_blender._save_data_to_disk', text='Save Data to Disk')
+    def _save_data_to_disk_panel(self, box):
+        split = box.column().row().split(factor=0.6)
+        split.column().label(text='')
+        split.column().operator('freemocap_blender._save_data_to_disk', text='💾 Save Data to Disk')
 
     def _fbx_export_panel(self, layout):
         # FBX Export
