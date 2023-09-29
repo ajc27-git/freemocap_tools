@@ -1,0 +1,26 @@
+from freemocap_blender.layer0_user_interface.operators._add_body_mesh import FREEMOCAP_ADAPTER_OT_add_body_mesh
+from freemocap_blender.layer0_user_interface.operators._add_rig import FREEMOCAP_ADAPTER_OT_add_rig
+from freemocap_blender.layer0_user_interface.operators._clear_scene import FREEMOCAP_ADAPTER_clear_scene
+from freemocap_blender.layer0_user_interface.operators._export_fbx import FREEMOCAP_ADAPTER_OT_export_fbx
+from freemocap_blender.layer0_user_interface.operators._load_freemocap_data import FREEMOCAP_ADAPTER_load_freemocap_data
+from freemocap_blender.layer0_user_interface.operators._load_videos import FREEMOCAP_ADAPTER_load_videos
+from freemocap_blender.layer0_user_interface.operators._reduce_bone_length_dispersion import \
+    FREEMOCAP_ADAPTER_OT_reduce_bone_length_dispersion
+from freemocap_blender.layer0_user_interface.operators._reduce_shakiness import FREEMOCAP_ADAPTER_OT_reduce_shakiness
+from freemocap_blender.layer0_user_interface.operators._reorient_empties import FREEMOCAP_ADAPTER_OT_reorient_empties
+from freemocap_blender.layer0_user_interface.operators._run_all import FREEMOCAP_ADAPTER_run_all
+from freemocap_blender.layer0_user_interface.operators._save_out_data import FREEMOCAP_ADAPTER_save_data_to_disk
+
+BLENDER_OPERATORS = [  # FREEMOCAP_ADAPTER_download_sample_data,
+    FREEMOCAP_ADAPTER_clear_scene,
+    FREEMOCAP_ADAPTER_run_all,
+    FREEMOCAP_ADAPTER_save_data_to_disk,
+    FREEMOCAP_ADAPTER_load_videos,
+    FREEMOCAP_ADAPTER_load_freemocap_data,
+    FREEMOCAP_ADAPTER_OT_reorient_empties,
+    FREEMOCAP_ADAPTER_OT_reduce_bone_length_dispersion,
+    FREEMOCAP_ADAPTER_OT_reduce_shakiness,
+    FREEMOCAP_ADAPTER_OT_add_rig,
+    FREEMOCAP_ADAPTER_OT_add_body_mesh,
+    FREEMOCAP_ADAPTER_OT_export_fbx,
+]
