@@ -63,8 +63,8 @@ class VIEW3D_PT_freemocap_panel(Panel):
 
         run_all_box = box.box()
         run_all_box.operator('freemocap_blender._run_all', text='RUN ALL 💀 ✨')
-        self._show_operations_dropdown(ui_properties=ui_properties,
-                                       box=run_all_box)
+        # self._show_operations_dropdown(ui_properties=ui_properties,
+        #                                box=run_all_box)
 
     def _show_operations_dropdown(self,
                                   ui_properties,
