@@ -58,9 +58,9 @@ def register():
         bpy.utils.register_class(cls)
 
     logger.info(f"Registering property group FMC_ADAPTER_PROPERTIES")
-    from freemocap_adapter.blender_interface import FMC_ADAPTER_PROPERTIES
+    from freemocap_adapter.blender_interface import FMC_DATA_PROPERTIES
 
-    bpy.types.Scene.fmc_adapter_properties = bpy.props.PointerProperty(type=FMC_ADAPTER_PROPERTIES)
+    bpy.types.Scene.fmc_adapter_properties = bpy.props.PointerProperty(type=FMC_DATA_PROPERTIES)
 
     logger.info(f"Registering property group FMC_UI_PROPERTIES")
 

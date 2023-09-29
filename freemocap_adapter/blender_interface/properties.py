@@ -6,7 +6,7 @@ from bpy.props import StringProperty, BoolProperty
 logger = logging.getLogger(__name__)
 
 
-class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
+class FMC_DATA_PROPERTIES(bpy.types.PropertyGroup):
     logger.info("Initializing FMC_ADAPTER_PROPERTIES class...")
 
     data_parent_empty: bpy.props.PointerProperty(
