@@ -1,7 +1,7 @@
 bl_info = {
     'name'          : 'Freemocap Adapter',
     'author'        : 'ajc27',
-    'version'       : (1, 1, 11),
+    'version'       : (1, 1, 12),
     'blender'       : (3, 0, 0),
     'location'      : '3D Viewport > Sidebar > Freemocap Adapter',
     'description'   : 'Add-on to adapt the Freemocap Blender output',
@@ -2501,9 +2501,6 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
         # Get reference to armature
         rig = bpy.data.objects['root']
 
-        # Get the rig z dimension
-        rig_z_dimension = rig.dimensions.z
-
         # Select the rig
         rig.select_set(True)
         bpy.context.view_layer.objects.active = rig
@@ -2530,16 +2527,19 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
         skelly_mesh.location = head_location
 
         # Calculate the proportion between the rig and the mesh
-        rig_to_body_mesh = rig_z_dimension / body_mesh_z_dimension
+        rig_to_body_mesh = body_height / body_mesh_z_dimension
 
         # Scale the mesh by the rig and body_mesh proportions multiplied by a scale factor
-        # skelly_mesh.scale = (rig_to_body_mesh * 1.0, rig_to_body_mesh * 1.0, rig_to_body_mesh * 1.0)
+        skelly_mesh.scale = (rig_to_body_mesh * 1.0, rig_to_body_mesh * 1.0, rig_to_body_mesh * 1.0)
 
         # Set rig as active
         bpy.context.view_layer.objects.active = skelly_mesh
 
         # Select the skelly_mesh
         skelly_mesh.select_set(True)
+
+        # Apply transformations to the mesh
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
         # Change skelly mesh origin to (0, 0, 0)
         bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
@@ -3579,7 +3579,7 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         default     = 'can_man',
         description = 'Mode (source) for adding the mesh to the rig',
         items       = [('can_man', 'Custom', ''),
-                       #('skelly', 'Skelly', ''),
+                       ('skelly', 'Skelly', ''),
                        #('file', 'File', '')
                        ]
     )
@@ -3674,9 +3674,9 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         split.column().label(text='Add finger constraints')
         split.split().column().prop(fmc_adapter_tool, 'add_fingers_constraints')
 
-        # split = box.column().row().split(factor=0.6)
-        # split.column().label(text='Add IK constraints')
-        # split.split().column().prop(fmc_adapter_tool, 'add_ik_constraints')
+        split = box.column().row().split(factor=0.6)
+        split.column().label(text='Add IK constraints')
+        split.split().column().prop(fmc_adapter_tool, 'add_ik_constraints')
 
         split = box.column().row().split(factor=0.6)
         split.column().label(text='Add rotation limits')
@@ -3833,9 +3833,6 @@ class FMC_ADAPTER_OT_add_body_mesh(Operator):
 
         # Get start time
         start = time.time()
-
-        # Reset the scene frame to the start
-        scene.frame_set(scene.frame_start)
 
         if not adjust_empties_executed:
             print('Executing First Adjust Empties...')
