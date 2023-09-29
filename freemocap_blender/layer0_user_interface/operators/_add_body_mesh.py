@@ -16,15 +16,15 @@ logger = logging.getLogger(__name__)
 
 
 class FREEMOCAP_ADAPTER_OT_add_body_mesh(Operator):
-    bl_idname = 'freemocap_adapter._add_body_mesh'
-    bl_label = 'Freemocap Adapter - Add Body Mesh'
+    bl_idname = 'freemocap_blender._add_body_mesh'
+    bl_label = 'Freemocap Blender - Add Body Mesh'
     bl_description = 'Add a body mesh to the rig. The mesh can be a file or a custom mesh made with basic shapes. This method first executes Add Empties and Add Rig(if no rig available)'
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
         logger.info(f"Executing {__name__}...")
         scene = context.scene
-        freemocap_adapter_tool = scene.freemocap_data_properties
+        freemocap_blender_tool = scene.freemocap_data_properties
 
         # Get start time
         start = time.time()
@@ -37,10 +37,10 @@ class FREEMOCAP_ADAPTER_OT_add_body_mesh(Operator):
             logger.debug('Executing First Adjust Empties...')
 
             # Execute Adjust Empties first
-            reorient_empties(z_align_ref_empty=freemocap_adapter_tool.vertical_align_reference,
-                             z_align_angle_offset=freemocap_adapter_tool.vertical_align_angle_offset,
-                             ground_ref_empty=freemocap_adapter_tool.ground_align_reference,
-                             z_translation_offset=freemocap_adapter_tool.vertical_align_position_offset
+            reorient_empties(z_align_ref_empty=freemocap_blender_tool.vertical_align_reference,
+                             z_align_angle_offset=freemocap_blender_tool.vertical_align_angle_offset,
+                             ground_ref_empty=freemocap_blender_tool.ground_align_reference,
+                             z_translation_offset=freemocap_blender_tool.vertical_align_position_offset
                              )
 
         # Execute Add Rig if there is no rig in the scene
@@ -48,11 +48,11 @@ class FREEMOCAP_ADAPTER_OT_add_body_mesh(Operator):
             root = bpy.data.objects['root']
         except:
             logger.debug('Executing Add Rig to have a rig for the mesh...')
-            add_rig(use_limit_rotation=freemocap_adapter_tool.use_limit_rotation)
+            add_rig(use_limit_rotation=freemocap_blender_tool.use_limit_rotation)
 
         try:
             logger.debug('Executing Add Body Mesh...')
-            attach_mesh_to_rig(body_mesh_mode=freemocap_adapter_tool.body_mesh_mode)
+            attach_mesh_to_rig(body_mesh_mode=freemocap_blender_tool.body_mesh_mode)
         except Exception as e:
             logger.exception(f"Error while adding body mesh: {e}")
             return {'CANCELLED'}

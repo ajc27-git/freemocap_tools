@@ -10,20 +10,20 @@ logger = logging.getLogger(__name__)
 
 
 class FREEMOCAP_ADAPTER_OT_reduce_shakiness(Operator):
-    bl_idname = 'freemocap_adapter._reduce_shakiness'
-    bl_label = 'Freemocap Adapter - Reduce Shakiness'
+    bl_idname = 'freemocap_blender._reduce_shakiness'
+    bl_label = 'Freemocap Blender - Reduce Shakiness'
     bl_description = 'Reduce the shakiness of the capture empties by restricting their acceleration to a defined threshold'
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
         scene = context.scene
-        freemocap_adapter_tool = scene.freemocap_data_properties
+        freemocap_blender_tool = scene.freemocap_data_properties
 
         # Get start time
         start = time.time()
         logger.info('Executing Reduce Shakiness...')
 
-        reduce_shakiness(recording_fps=freemocap_adapter_tool.recording_fps)
+        reduce_shakiness(recording_fps=freemocap_blender_tool.recording_fps)
 
         # Get end time and print execution time
         end = time.time()

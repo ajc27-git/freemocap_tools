@@ -10,17 +10,17 @@ logger = logging.getLogger(__name__)
 
 
 class FREEMOCAP_ADAPTER_OT_export_fbx(Operator):
-    bl_idname = 'freemocap_adapter._export_fbx'
-    bl_label = 'Freemocap Adapter - Export FBX'
+    bl_idname = 'freemocap_blender._export_fbx'
+    bl_label = 'Freemocap Blender - Export FBX'
     bl_description = 'Exports a FBX file containing the rig, the mesh and the baked animation'
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
         logger.info('Executing Export FBX...')
         scene = context.scene
-        freemocap_adapter_tool = scene.freemocap_data_properties
+        freemocap_blender_tool = scene.freemocap_data_properties
 
-        recording_path = freemocap_adapter_tool.recording_path
+        recording_path = freemocap_blender_tool.recording_path
         if recording_path == "":
             logger.error("No recording path specified")
             return {'CANCELLED'}

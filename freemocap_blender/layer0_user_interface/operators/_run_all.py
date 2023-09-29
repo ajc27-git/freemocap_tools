@@ -9,13 +9,13 @@ logger = logging.getLogger(__name__)
 
 
 class FREEMOCAP_ADAPTER_run_all(bpy.types.Operator):
-    bl_idname = 'freemocap_adapter._run_all'
+    bl_idname = 'freemocap_blender._run_all'
     bl_label = "Run All"
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
-        freemocap_adapter_tool = context.scene.freemocap_data_properties
-        recording_path = freemocap_adapter_tool.recording_path
+        freemocap_blender_tool = context.scene.freemocap_data_properties
+        recording_path = freemocap_blender_tool.recording_path
         if recording_path == "":
             logger.error("No recording path specified")
             return {'CANCELLED'}

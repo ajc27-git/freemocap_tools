@@ -4,7 +4,7 @@ from freemocap_blender.layer1_core_functions.setup_scene.clear_scene import clea
 
 
 class FREEMOCAP_ADAPTER_clear_scene(bpy.types.Operator):
-    bl_idname = 'freemocap_adapter._clear_scene'
+    bl_idname = 'freemocap_blender._clear_scene'
     bl_label = "Clear Scene"
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
 

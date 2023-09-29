@@ -20,8 +20,8 @@ if __name__ == "__main__" or __name__ == "<run_path>":
         import bpy
         from pathlib import Path
 
-        freemocap_adapter_tool = bpy.context.scene.freemocap_data_properties
-        recording_path = freemocap_adapter_tool.recording_path
+        freemocap_blender_tool = bpy.context.scene.freemocap_data_properties
+        recording_path = freemocap_blender_tool.recording_path
 
         if not Path(recording_path).exists():
             raise ValueError(f"Recording path {recording_path} does not exist!")

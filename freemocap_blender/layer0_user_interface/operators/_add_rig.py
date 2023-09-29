@@ -14,16 +14,16 @@ logger = logging.getLogger(__name__)
 
 
 class FREEMOCAP_ADAPTER_OT_add_rig(Operator):
-    bl_idname = 'freemocap_adapter._add_rig'
-    bl_label = 'Freemocap Adapter - Add Rig'
+    bl_idname = 'freemocap_blender._add_rig'
+    bl_label = 'Freemocap Blender - Add Rig'
     bl_description = 'Add a Rig to the capture empties. The method sets the rig rest pose as a TPose'
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
         logger.info(f"Executing {__name__}...")
         scene = context.scene
-        freemocap_adapter_tool = scene.freemocap_data_properties
-        parent_empty = freemocap_adapter_tool.data_parent_empty
+        freemocap_blender_tool = scene.freemocap_data_properties
+        parent_empty = freemocap_blender_tool.data_parent_empty
         empties = freemocap_empties_from_parent_object(parent_empty)
         # Get start time
         start = time.time()
@@ -36,22 +36,22 @@ class FREEMOCAP_ADAPTER_OT_add_rig(Operator):
             logger.debug('Executing First Adjust Empties...')
 
             # Execute Adjust Empties first
-            reorient_empties(z_align_ref_empty=freemocap_adapter_tool.vertical_align_reference,
-                             z_align_angle_offset=freemocap_adapter_tool.vertical_align_angle_offset,
-                             ground_ref_empty=freemocap_adapter_tool.ground_align_reference,
-                             z_translation_offset=freemocap_adapter_tool.vertical_align_position_offset,
+            reorient_empties(z_align_ref_empty=freemocap_blender_tool.vertical_align_reference,
+                             z_align_angle_offset=freemocap_blender_tool.vertical_align_angle_offset,
+                             ground_ref_empty=freemocap_blender_tool.ground_align_reference,
+                             z_translation_offset=freemocap_blender_tool.vertical_align_position_offset,
                              empties=empties,
                              parent_object=parent_empty,
-                             correct_fingers_empties=freemocap_adapter_tool.correct_fingers_empties,
+                             correct_fingers_empties=freemocap_blender_tool.correct_fingers_empties,
                              )
 
         logger.debug('Executing Add Rig...')
 
         rig = add_rig(empties=empties,
-                      bone_length_method=freemocap_adapter_tool.bone_length_method,
-                      keep_symmetry=freemocap_adapter_tool.keep_symmetry,
-                      add_fingers_constraints=freemocap_adapter_tool.add_fingers_constraints,
-                      use_limit_rotation=freemocap_adapter_tool.use_limit_rotation)
+                      bone_length_method=freemocap_blender_tool.bone_length_method,
+                      keep_symmetry=freemocap_blender_tool.keep_symmetry,
+                      add_fingers_constraints=freemocap_blender_tool.add_fingers_constraints,
+                      use_limit_rotation=freemocap_blender_tool.use_limit_rotation)
 
         # Get end time and print execution time
         end = time.time()

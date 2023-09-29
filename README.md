@@ -1,4 +1,4 @@
-# Freemocap Adapter
+# Freemocap Blender
 
 Add-on to adapt the Freemocap Blender output. It can adjust the empties position, add a rig and a body mesh. The
 resulting rig and animation can be imported in platforms like Unreal Engine.

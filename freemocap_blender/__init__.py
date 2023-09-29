@@ -24,11 +24,11 @@ logger = logging.getLogger(__name__)
 #######################################################################
 
 bl_info = {
-    'name': 'Freemocap Adapter',
+    'name': 'Freemocap Blender',
     'author': 'ajc27',
     'version': (1, 1, 7),
     'blender': (3, 0, 0),
-    'location': '3D Viewport > Sidebar > Freemocap Adapter',
+    'location': '3D Viewport > Sidebar > Freemocap Blender',
     'description': 'Add-on to adapt the Freemocap Blender output',
     'category': 'Development',
 }

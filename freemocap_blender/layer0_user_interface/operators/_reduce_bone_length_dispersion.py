@@ -11,16 +11,16 @@ logger = logging.getLogger(__name__)
 
 
 class FREEMOCAP_ADAPTER_OT_reduce_bone_length_dispersion(Operator):
-    bl_idname = 'freemocap_adapter._reduce_bone_length_dispersion'
-    bl_label = 'Freemocap Adapter - Reduce Bone Length Dispersion'
+    bl_idname = 'freemocap_blender._reduce_bone_length_dispersion'
+    bl_label = 'Freemocap Blender - Reduce Bone Length Dispersion'
     bl_description = 'Reduce the bone length dispersion by moving the tail empty and its children along the bone projection so the bone new length is within the interval'
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
         scene = context.scene
-        freemocap_adapter_tool = scene.freemocap_data_properties
+        freemocap_blender_tool = scene.freemocap_data_properties
 
-        recording_path = freemocap_adapter_tool.recording_path
+        recording_path = freemocap_blender_tool.recording_path
         if recording_path == "":
             logger.error("No recording path specified")
             return {'CANCELLED'}

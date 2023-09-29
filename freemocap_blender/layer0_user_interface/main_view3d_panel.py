@@ -7,11 +7,11 @@ from freemocap_blender import DEBUG_UI
 logger = logging.getLogger(__name__)
 
 
-class VIEW3D_PT_freemocap_adapter(Panel):
+class VIEW3D_PT_freemocap_panel(Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Freemocap Adapter"
-    bl_label = "Freemocap Adapter"
+    bl_category = "Freemocap"
+    bl_label = "Freemocap"
 
     def draw(self, context):
         if DEBUG_UI:
@@ -27,7 +27,7 @@ class VIEW3D_PT_freemocap_adapter(Panel):
                             ui_properties=ui_properties,
                             layout=layout)
 
-        # self._save_data_to_disk_panel(data_properties, layout=layout)
+        self._save_data_to_disk_panel(layout=layout)
         #
         # self._load_data_panel(data_properties, layout=layout)
         #
@@ -46,52 +46,82 @@ class VIEW3D_PT_freemocap_adapter(Panel):
     def _clear_scene_button(self, layout):
         # Clear scene button
         clear_scene_box = layout.box()
-        clear_scene_box.operator('freemocap_adapter._clear_scene', text='Clear Scene')
+        clear_scene_box.operator('freemocap_blender._clear_scene', text='Clear Scene')
 
     def _run_all_panel(self, layout,
                        data_properties,
-                       ui_properties):
+                       ui_properties
+                       ):
         box = layout.box()
+
+        box.row().prop(data_properties,
+                       "recording_path",
+                       text="FreeMoCap Recording:")
+
+        box.row().prop(data_properties,
+                       "data_parent_empty",
+                       text="Data Parent Empty")
+
+        run_all_box = box.box()
+        run_all_box.operator('freemocap_blender._run_all', text='RUN ALL 💀 ✨')
+        self._show_operations_dropdown(ui_properties=ui_properties,
+                                       box=run_all_box)
+
+    def _show_operations_dropdown(self,
+                                  ui_properties,
+                                  box):
         row = box.row()
+        row.prop(ui_properties,
+                 'show_operations',
+                 icon='TRIA_DOWN' if ui_properties.show_operations else 'TRIA_RIGHT',
+                 emboss=False)
+        if ui_properties.show_operations:
+            self._load_freemocap_data_row(box)
 
-        box.prop(data_properties,
-                 "recording_path",
-                 text="FreeMoCap Recording:")
+            # self._calculate_virtual_trajectories()
+            # self._put_data_in_inertial_reference_frame()
+            # self._enforce_rigid_bones()
+            # self._fix_hand_data()
+            # self._save_data_to_disk()
+            # self._create_empties()
+            # self._add_rig()
+            # self._attach_mesh_to_rig()
+            # self._add_videos()
+            # self._setup_scene()
 
-        box.prop(data_properties,
-                 "data_parent_empty",
-                 text="Data Parent Empty")
-        box.operator('freemocap_adapter._run_all', text='RUN ALL 💀 ✨')
+    def _load_freemocap_data_row(self, box):
+        split = box.column().row().split(factor=0.6)
+        split.column().label(text='📂')
+        split.split().column().operator('freemocap_blender._load_freemocap_data', text='1. Load FreeMoCap Data')
 
-    def _save_data_to_disk_panel(self, freemocap_adapter_tool, layout):
+    def _save_data_to_disk_panel(self, layout):
         box = layout.box()
-
-        box.operator('freemocap_adapter._save_data_to_disk', text='Save Data to Disk')
+        box.operator('freemocap_blender._save_data_to_disk', text='Save Data to Disk')
 
     def _fbx_export_panel(self, layout):
         # FBX Export
         fbx_export_box = layout.box()
-        fbx_export_box.operator('freemocap_adapter._export_fbx', text='5. Export FBX')
+        fbx_export_box.operator('freemocap_blender._export_fbx', text='5. Export FBX')
 
-    def _add_body_mesh_panel(self, freemocap_adapter_tool, layout):
+    def _add_body_mesh_panel(self, freemocap_blender_tool, layout):
         # Add Body Mesh Options
         body_mesh_box = layout.box()
-        body_mesh_box.operator('freemocap_adapter._add_body_mesh', text='4. Add Body Mesh')
+        body_mesh_box.operator('freemocap_blender._add_body_mesh', text='4. Add Body Mesh')
         # box.label(text='Add Body Mesh Options')
         split = body_mesh_box.column().row().split(factor=0.6)
         split.column().label(text='Body Mesh Mode')
-        split.split().column().prop(freemocap_adapter_tool, 'body_mesh_mode')
+        split.split().column().prop(freemocap_blender_tool, 'body_mesh_mode')
 
-    def _add_rig_panel(self, freemocap_adapter_tool, layout):
+    def _add_rig_panel(self, freemocap_blender_tool, layout):
         # Add Rig Options
         add_rig_box = layout.box()
-        add_rig_box.operator('freemocap_adapter._add_rig', text='3. Add Rig')
+        add_rig_box.operator('freemocap_blender._add_rig', text='3. Add Rig')
         row = add_rig_box.row()
-        row.prop(freemocap_adapter_tool,
+        row.prop(freemocap_blender_tool,
                  'show_add_rig_options',
-                 icon='TRIA_DOWN' if freemocap_adapter_tool.show_add_rig_options else 'TRIA_RIGHT',
+                 icon='TRIA_DOWN' if freemocap_blender_tool.show_add_rig_options else 'TRIA_RIGHT',
                  emboss=False)
-        if freemocap_adapter_tool.show_add_rig_options:
+        if freemocap_blender_tool.show_add_rig_options:
             split = add_rig_box.column().row().split(factor=0.6)
             split.column().label(text='Bone Length Method')
             split.split().column().prop(fmc_adapter_tool, 'bone_length_method')

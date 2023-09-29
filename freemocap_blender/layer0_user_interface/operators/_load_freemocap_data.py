@@ -12,16 +12,16 @@ import bpy
 
 
 class FREEMOCAP_ADAPTER_load_freemocap_data(bpy.types.Operator):  # , bpy_extras.io_utils.ImportHelper):
-    bl_idname = 'freemocap_adapter._freemocap_data_operations'
+    bl_idname = 'freemocap_blender._load_freemocap_data'
     bl_label = "Load FreeMoCap Data"
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
         try:
             scene = context.scene
-            freemocap_adapter_tool = scene.freemocap_data_properties
+            data_properties = scene.freemocap_data_properties
 
-            recording_path = freemocap_adapter_tool.recording_path
+            recording_path = data_properties.recording_path
             if recording_path == "":
                 logger.error("No recording path specified")
                 return {'CANCELLED'}
@@ -29,7 +29,7 @@ class FREEMOCAP_ADAPTER_load_freemocap_data(bpy.types.Operator):  # , bpy_extras
             recording_name = Path(recording_path).stem
             origin_name = f"{recording_name}_origin"
             freemocap_origin_axes = create_freemocap_parent_empty(name=origin_name)
-            freemocap_adapter_tool.data_parent_empty = freemocap_origin_axes
+            data_properties.data_parent_empty = freemocap_origin_axes
 
             logger.info("Loading freemocap data....")
             handler = load_freemocap_data(recording_path=recording_path)
