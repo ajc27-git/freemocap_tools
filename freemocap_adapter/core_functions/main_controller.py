@@ -1,7 +1,11 @@
 import logging
 from pathlib import Path
 
+from freemocap_adapter.blender_interface.utilities.get_or_create_freemocap_data_handler import \
+    get_or_create_freemocap_data_handler
 from freemocap_adapter.core_functions.bones.enforce_rigid_bones import enforce_rigid_bones
+from freemocap_adapter.core_functions.freemocap_data_handler.operations.freemocap_empties_from_parent_object import \
+    freemocap_empties_from_parent_object
 from freemocap_adapter.core_functions.mesh.attach_mesh_to_rig import attach_mesh_to_rig
 from freemocap_adapter.core_functions.empties.creation.create_freemocap_empties import create_freemocap_empties
 from freemocap_adapter.core_functions.freemocap_data_handler.helpers.saver import \
@@ -35,7 +39,7 @@ class MainController:
         self.origin_name = f"{self.recording_name}_origin"
         self.rig_name = "rig"
         self._create_parent_empties()
-        self.freemocap_data_handler = None
+        self.freemocap_data_handler = get_or_create_freemocap_data_handler(recording_path=self.recording_path)
         self.empties = None
 
     def _create_parent_empties(self):

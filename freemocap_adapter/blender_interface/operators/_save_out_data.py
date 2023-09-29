@@ -2,15 +2,17 @@ import logging
 
 import bpy
 
+from freemocap_adapter.core_functions.freemocap_data_handler.operations.freemocap_empties_from_parent_object import \
+    freemocap_empties_from_parent_object
 from freemocap_adapter.core_functions.main_controller import MainController
 from freemocap_adapter.data_models.parameter_models.load_parameters_config import load_default_parameters_config
 
 logger = logging.getLogger(__name__)
 
 
-class FMC_ADAPTER_run_all(bpy.types.Operator):
-    bl_idname = 'fmc_adapter._run_all'
-    bl_label = "Run All"
+class FMC_ADAPTER_save_data_to_disk(bpy.types.Operator):
+    bl_idname = 'fmc_adapter._save_data_to_disk'
+    bl_label = "Save Data to Disk"
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
@@ -21,10 +23,12 @@ class FMC_ADAPTER_run_all(bpy.types.Operator):
             return {'CANCELLED'}
         config = load_default_parameters_config()
         try:
-            logger.info(f"Executing `main_contoller.run_all() with config:{config}")
+            logger.info(f"Executing `main_controller.run_all() with config:{config}")
             controller = MainController(recording_path=recording_path,
                                         config=config)
-            controller.run_all()
+            empties = freemocap_empties_from_parent_object(fmc_adapter_tool.data_parent_empty)
+            controller.freemocap_data_handler.extract_data_from_empties(empties=empties)
+            controller.save_data_to_disk()
         except Exception as e:
             logger.error(f"Failed to run main_controller.run_all() with config:{config}: `{e}`")
             logger.exception(e)

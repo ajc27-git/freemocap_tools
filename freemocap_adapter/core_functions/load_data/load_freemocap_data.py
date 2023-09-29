@@ -1,5 +1,7 @@
 import logging
 
+from freemocap_adapter.blender_interface.utilities.get_or_create_freemocap_data_handler import \
+    create_freemocap_data_handler
 from freemocap_adapter.core_functions.freemocap_data_handler.handler import \
     FreemocapDataHandler
 
@@ -12,7 +14,7 @@ def load_freemocap_data(
     logger.info(f"Loading freemocap_data from {recording_path}....")
 
     try:
-        handler = FreemocapDataHandler.from_recording_path(recording_path=recording_path)
+        handler = create_freemocap_data_handler(recording_path=recording_path)
         logger.info(f"Loaded freemocap_data from {recording_path} successfully: \n{handler}")
         handler.mark_processing_stage("original_from_file")
     except Exception as e:

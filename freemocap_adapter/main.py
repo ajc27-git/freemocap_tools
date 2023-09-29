@@ -25,7 +25,7 @@ if __name__ == "__main__" or __name__ == "<run_path>":
         fmc_adapter_tool = bpy.context.scene.fmc_adapter_properties
         recording_path = fmc_adapter_tool.recording_path
 
-        if not Path(recording_path).exists():
+        if not Path(recording_path).exists():A
             raise ValueError(f"Recording path {recording_path} does not exist!")
     except Exception as e:
         logging.warning(f"Could not load recording path from Blender. Using default path instead. Error: {e}")

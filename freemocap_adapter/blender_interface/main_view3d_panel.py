@@ -24,6 +24,8 @@ class VIEW3D_PT_freemocap_adapter(Panel):
 
         self._run_all_panel(fmc_adapter_tool, layout)
 
+        self._save_data_to_disk_panel(fmc_adapter_tool, layout)
+
         # self._load_data_panel(fmc_adapter_tool, layout)
         #
         # self._reduce_bone_dispersion_panel(fmc_adapter_tool, layout)
@@ -34,6 +36,11 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         #
         # self._fbx_export_panel(layout)
 
+    def _clear_scene_button(self, layout):
+        # Clear scene button
+        clear_scene_box = layout.box()
+        clear_scene_box.operator('fmc_adapter._clear_scene', text='Clear Scene')
+
     def _run_all_panel(self, fmc_adapter_tool, layout):
         box = layout.box()
         row = box.row()
@@ -41,10 +48,12 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         row.prop(fmc_adapter_tool, "recording_path", text="")
         box.operator('fmc_adapter._run_all', text='RUN ALL')
 
-    def _clear_scene_button(self, layout):
-        # Clear scene button
-        clear_scene_box = layout.box()
-        clear_scene_box.operator('fmc_adapter._clear_scene', text='Clear Scene')
+    def _save_data_to_disk_panel(self, fmc_adapter_tool, layout):
+        box = layout.box()
+        box.prop(fmc_adapter_tool,
+                 "data_parent_empty",
+                 text="Data Parent Empty")
+        box.operator('fmc_adapter._save_data_to_disk', text='Save Data to Disk')
 
     def _fbx_export_panel(self, layout):
         # FBX Export
@@ -117,9 +126,7 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         # row = load_freemocap_box.row()
         # row.label(text="Download sample data?")
         # row.operator('fmc_adapter._download_sample_data', text='Download')
-        load_freemocap_box.prop(fmc_adapter_tool,
-                                "data_parent_empty",
-                                text="Data Parent Empty")
+
         # adjust_empties_box.operator('fmc_adapter._adjust_empties', text='1. Adjust Empties')
 
     def reorient_empties_panel(self, fmc_adapter_tool, layout):
