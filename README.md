@@ -10,4 +10,4 @@ Install as a regular *.py add-on in Edit->Preferences-Add-ons.
 # Considerations:
 The rig has a TPose as rest pose for easier retargeting.
 For best results, when the adjust empties function is executed the empties should be forming a standing still pose with arms open similar to A or T Pose.
-The body_mesh.ply file should be in the same folder as the Blender file before manually opening it.
+If using a body mesh file in the add_mesh_to_rig function, it should be in the same folder as the Blender file before manually opening it.
