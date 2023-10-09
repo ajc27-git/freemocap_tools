@@ -20,12 +20,6 @@ def fmc_export_video(scene: bpy.types.Scene=None,
     # Get start time
     start = time.time()
 
-    # bpy.context.scene.frame_start   = 900
-    # bpy.context.scene.frame_end     = 1000
-
-    # scene.frame_start   = 970
-    # scene.frame_end     = 1000
-
     # Place the required cameras
     cameras_positions = place_cameras(scene, export_profile)
 
@@ -81,6 +75,12 @@ def fmc_export_video(scene: bpy.types.Scene=None,
                           file_directory=file_directory,
                           export_profile=export_profile,
                           scene=scene)
+
+    # Try to remove the auxiliary video file
+    try:
+        os.remove(render_path)
+    except:
+        print('Error while removing the auxiliary video file.')    
 
     # Get end time and print execution time
     end = time.time()
