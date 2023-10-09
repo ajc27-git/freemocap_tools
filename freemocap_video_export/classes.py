@@ -52,8 +52,11 @@ class vc_frame_number:
 class vc_image:
     def __init__(self, frame_info=None, image_type=None):
         # Get the raw image
-        self.image_raw          = cv2.imread(str(frame_info.file_directory) + visual_components[image_type]['relative_path'], cv2.IMREAD_UNCHANGED)
-        
+        try:
+            self.image_raw          = cv2.imread(str(frame_info.file_directory) + visual_components[image_type]['relative_path'], cv2.IMREAD_UNCHANGED)
+        except:
+            print('Image not found: ' + str(frame_info.file_directory) + visual_components[image_type]['relative_path'])
+
         # Get the larger side of the image to use it as reference
         larger_side = frame_info.width if frame_info.width > frame_info.height else frame_info.height
 
