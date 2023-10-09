@@ -30,7 +30,7 @@ class VIEW3D_PT_freemocap_video_export(Panel):
         box = layout.box()
         
         split = box.column().row().split(factor=0.6)
-        split.column().label(text='Video Type')
+        split.column().label(text='Video Profile')
         split.split().column().prop(fmc_video_export_tool, 'export_profile')
 
         box.operator('fmc_export_video.export_video', text='Export Video')
