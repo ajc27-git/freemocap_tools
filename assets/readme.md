@@ -1,1 +1,1 @@
-Group of assets to be used with the Freemocap Adapter Addon
+Group of assets to be used with the Freemocap Tools
