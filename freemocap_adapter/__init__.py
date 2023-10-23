@@ -2484,11 +2484,16 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
     elif body_mesh_mode == "skelly":
         
         # Change to object mode
-        bpy.ops.object.mode_set(mode='OBJECT')
+        if bpy.context.selected_objects != []:
+            bpy.ops.object.mode_set(mode='OBJECT')
 
         try:
+            # Get the script filepath
+            script_file = os.path.realpath(__file__)
+            # Get the script folder
+            directory = os.path.dirname(script_file)
             # Import the skelly mesh
-            bpy.ops.import_scene.fbx(filepath='skelly_lowpoly_mesh.fbx')
+            bpy.ops.import_scene.fbx(filepath=directory+'/assets/skelly_lowpoly_mesh.fbx')
             
         except:
             print("\nCould not find skelly mesh file.")
@@ -2551,6 +2556,9 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
         bpy.context.view_layer.objects.active = rig
         # Parent the body_mesh and the rig with automatic weights
         bpy.ops.object.parent_set(type='ARMATURE_AUTO')
+
+        # Rename the skelly mesh to fmc_mesh
+        skelly_mesh.name = 'fmc_mesh'
 
     elif body_mesh_mode == "can_man":
     
@@ -2690,62 +2698,46 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
         bpy.ops.mesh.subdivide(number_cuts=cylinder_cuts)
         bpy.ops.object.mode_set(mode="OBJECT")
 
-        if body_mesh_mode == "can_man":
+        # Head
+        bpy.ops.mesh.primitive_uv_sphere_add(
+            radius          = head_mesh_radius,
+            enter_editmode  = False,
+            align           = 'WORLD',
+            location        = head_mesh_location,
+            scale           = (1, 1.2, 1.2)
+        )
+        body_meshes.append(bpy.context.active_object)
 
-            # Head
-            bpy.ops.mesh.primitive_uv_sphere_add(
-                radius          = head_mesh_radius,
-                enter_editmode  = False,
-                align           = 'WORLD',
-                location        = head_mesh_location,
-                scale           = (1, 1.2, 1.2)
-            )
-            body_meshes.append(bpy.context.active_object)
+        # Right Eye
+        bpy.ops.mesh.primitive_uv_sphere_add(
+            radius          = right_eye_mesh_radius,
+            enter_editmode  = False,
+            align           = 'WORLD',
+            location        = right_eye_mesh_location,
+            scale           = (1, 1, 1)
+        )
+        body_meshes.append(bpy.context.active_object)
 
-            # Right Eye
-            bpy.ops.mesh.primitive_uv_sphere_add(
-                radius          = right_eye_mesh_radius,
-                enter_editmode  = False,
-                align           = 'WORLD',
-                location        = right_eye_mesh_location,
-                scale           = (1, 1, 1)
-            )
-            body_meshes.append(bpy.context.active_object)
+        # Left Eye
+        bpy.ops.mesh.primitive_uv_sphere_add(
+            radius          = left_eye_mesh_radius,
+            enter_editmode  = False,
+            align           = 'WORLD',
+            location        = left_eye_mesh_location,
+            scale           = (1, 1, 1)
+        )
+        body_meshes.append(bpy.context.active_object)
 
-            # Left Eye
-            bpy.ops.mesh.primitive_uv_sphere_add(
-                radius          = left_eye_mesh_radius,
-                enter_editmode  = False,
-                align           = 'WORLD',
-                location        = left_eye_mesh_location,
-                scale           = (1, 1, 1)
-            )
-            body_meshes.append(bpy.context.active_object)
-
-            # Nose
-            bpy.ops.mesh.primitive_uv_sphere_add(
-                radius          = nose_mesh_radius,
-                enter_editmode  = False,
-                align           = 'WORLD',
-                location        = nose_mesh_location,
-                scale           = (1, 1, 1)
-            )
-            body_meshes.append(bpy.context.active_object)
+        # Nose
+        bpy.ops.mesh.primitive_uv_sphere_add(
+            radius          = nose_mesh_radius,
+            enter_editmode  = False,
+            align           = 'WORLD',
+            location        = nose_mesh_location,
+            scale           = (1, 1, 1)
+        )
+        body_meshes.append(bpy.context.active_object)
         
-        elif body_mesh_mode == "skelly":
-
-            # Import the skelly mesh
-            bpy.ops.import_scene.fbx(filepath='skelly_med_def.fbx')
-
-            # Get the skelly mesh
-            skelly_mesh = bpy.data.objects['Skelly_Med_Def']
-
-            # Set the location of the skelly mesh
-            skelly_mesh.location = head_mesh_location
-
-            # Append the skelly mesh to the list
-            body_meshes.append(skelly_mesh)
-
         # Right Arm
         bpy.ops.mesh.primitive_cylinder_add(
             vertices        = vertices,
