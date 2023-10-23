@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "ajc27-blender-addon"
+name = "ajc27-freemocap-blender-addon"
 version = "0.1.0"
 description = "A blender add-on to load FreeMoCap data, based on @ajc27's `freemocap_adapter`"
 authors = ["Skelly FreeMoCap <info@freemocap.org>"]
