@@ -3,7 +3,7 @@ import logging
 import bpy
 import bpy_extras
 
-logger = logging.getLogger(__name__)
+import sys
 
 
 class FMC_ADAPTER_download_sample_data(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):
@@ -12,6 +12,6 @@ class FMC_ADAPTER_download_sample_data(bpy.types.Operator, bpy_extras.io_utils.I
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
-        logger.info("Downloading sample data....")
+        print("Downloading sample data....")
         download_sample_data()
         return {'FINISHED'}

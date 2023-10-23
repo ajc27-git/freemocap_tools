@@ -4,7 +4,7 @@ import bmesh
 import bpy
 import numpy as np
 
-from freemocap_adapter.core_functions.mesh.create_mesh.helpers.create_material import create_material
+from .create_material import create_material
 
 
 def make_cone_mesh(name: str = "cone_mesh",
@@ -105,7 +105,6 @@ def make_bone_mesh(name: str = "bone_mesh",
                    squish_scale: tuple = (.8, 1, 1),
                    length: float = 1,
                    ) -> bpy.types.Object:
-
     cone = make_cone_mesh(name=f"{name}_cone_mesh",
                           color=cone_color, )
 
@@ -127,8 +126,6 @@ def make_bone_mesh(name: str = "bone_mesh",
     # apply scale
     bpy.ops.object.transform_apply(scale=True)
 
-
-
     return bone_mesh_object
 
 
@@ -139,5 +136,5 @@ if __name__ == "__main__" or __name__ == "<run_path>":
                                      length=.5)
     bone_mesh_small.location = (-2, 0, 0)
     bone_mesh_large = make_bone_mesh(name="bone_mesh_large",
-                                        length=1.5)
+                                     length=1.5)
     bone_mesh_large.location = (2, 0, 0)

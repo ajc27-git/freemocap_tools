@@ -4,9 +4,9 @@ from typing import Dict
 
 import bpy
 
-from freemocap_adapter.core_functions.mesh.create_mesh.create_mesh import create_mesh
+from .create_mesh.create_mesh import create_mesh
 
-logger = logging.getLogger(__name__)
+import sys
 
 
 def attach_mesh_to_rig(rig_name: str,
@@ -23,22 +23,22 @@ def attach_mesh_to_rig(rig_name: str,
 
         elif body_mesh_mode == "custom":
             if empties is None:
-                logger.error(f"Must provide empties for custom body mesh")
+                print(f"Must provide empties for custom body mesh")
                 raise ValueError(f"Must provide empties for custom body mesh")
 
             create_mesh(rig=rig, empties=empties)
 
             # Deselect all
             bpy.ops.object.select_all(action='DESELECT')
-            logger.success("Body mesh added successfully.")
+            print("Body mesh added successfully.")
             return rig
 
         else:
-            logger.error(f"Invalid body_mesh_mode: {body_mesh_mode}")
+            print(f"Invalid body_mesh_mode: {body_mesh_mode}")
             raise ValueError(f"Invalid body_mesh_mode: {body_mesh_mode}")
     except Exception as e:
-        logger.error(f"Failed to attach mesh to rig: {type(e).__name__}: {e}")
-        logger.exception(e)
+        print(f"Failed to attach mesh to rig: {type(e).__name__}: {e}")
+        print(e)
         raise e
 
 
@@ -321,7 +321,7 @@ def mesh_from_file(mesh_path, rig):
     try:
         bpy.ops.import_mesh.ply(filepath=mesh_path)
     except Exception as e:
-        logger.error(f"Could not find body_mesh file at {mesh_path}, Error: `{e}`")
+        print(f"Could not find body_mesh file at {mesh_path}, Error: `{e}`")
         raise FileNotFoundError("Could not find body_mesh file ")
     # Get reference to the rig
     # Get the rig z dimension

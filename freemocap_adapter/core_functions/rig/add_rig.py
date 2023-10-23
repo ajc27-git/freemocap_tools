@@ -5,9 +5,9 @@ from typing import Dict
 import bpy
 import mathutils
 
-from freemocap_adapter.data_models.bones.bone_constraints import BONES_CONSTRAINTS
+from ...data_models.bones.bone_constraints import BONES_CONSTRAINTS
 
-logger = logging.getLogger(__name__)
+import sys
 
 
 def add_rig(empties: Dict[str, bpy.types.Object],
@@ -765,6 +765,6 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         bpy.ops.object.select_all(action='DESELECT')
     except Exception as e:
         logging.error(f'{e.__class__} Error while creating the rig: {e}')
-        logger.exception(e)
+        print(e)
         raise e
     return rig

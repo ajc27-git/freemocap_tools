@@ -4,11 +4,11 @@ import time
 
 from bpy.types import Operator
 
-from freemocap_adapter.blender_interface.operators._add_body_mesh import REORIENT_EMPTIES_EXECUTED
-from freemocap_adapter.core_functions.empties.reorient_empties import reorient_empties
-from freemocap_adapter.core_functions.freemocap_data_handler.operations.freemocap_empties_from_parent_object import \
+from ...blender_interface.operators._add_body_mesh import REORIENT_EMPTIES_EXECUTED
+from ...core_functions.empties.reorient_empties import reorient_empties
+from ...core_functions.freemocap_data_handler.operations.freemocap_empties_from_parent_object import \
     freemocap_empties_from_parent_object
-from freemocap_adapter.core_functions.rig.add_rig import add_rig
+from ...core_functions.rig.add_rig import add_rig
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class FMC_ADAPTER_OT_add_rig(Operator):
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
-        logger.info(f"Executing {__name__}...")
+        print(f"Executing {__name__}...")
         scene = context.scene
         fmc_adapter_tool = scene.fmc_adapter_properties
         parent_empty = fmc_adapter_tool.data_parent_empty
@@ -33,7 +33,7 @@ class FMC_ADAPTER_OT_add_rig(Operator):
         scene.frame_set(scene.frame_start)
 
         if not REORIENT_EMPTIES_EXECUTED:
-            logger.debug('Executing First Adjust Empties...')
+            print('Executing First Adjust Empties...')
 
             # Execute Adjust Empties first
             reorient_empties(z_align_ref_empty=fmc_adapter_tool.vertical_align_reference,
@@ -45,7 +45,7 @@ class FMC_ADAPTER_OT_add_rig(Operator):
                              correct_fingers_empties=fmc_adapter_tool.correct_fingers_empties,
                              )
 
-        logger.debug('Executing Add Rig...')
+        print('Executing Add Rig...')
 
         rig = add_rig(empties=empties,
                       bone_length_method=fmc_adapter_tool.bone_length_method,
@@ -55,6 +55,6 @@ class FMC_ADAPTER_OT_add_rig(Operator):
 
         # Get end time and print execution time
         end = time.time()
-        logger.debug('Finished. Execution time (s): ' + str(m.trunc((end - start) * 1000) / 1000))
+        print('Finished. Execution time (s): ' + str(m.trunc((end - start) * 1000) / 1000))
         scene.frame_set(current_frame)  # set the frame back to what it was before we started
         return {'FINISHED'}

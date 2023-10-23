@@ -1,14 +1,14 @@
 import logging
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
+import sys
 
 
 def get_path_to_sample_data():
     sample_data_path = Path().home() / "freemocap_data" / "recording_sessions" / "freemocap_sample_data"
     sample_data_path = sample_data_path.resolve()
     if not sample_data_path.exists():
-        logger.error(
+        print(
             "Sample data not found. To download sample data, in the main FreeMoCap Gui:"
             " `File Menu`>>'Download Sample Data',"
             " then press the `Process Recording Folder` button in the `Process Data` tab")
@@ -16,7 +16,7 @@ def get_path_to_sample_data():
 
     output_data_path = sample_data_path / "output_data"
     if not output_data_path.exists():
-        logger.error(
+        print(
             f"Sample data found at `{sample_data_path}, but has not been processed yet. "
             f"To process sample data, go to the main FreeMoCap Gui, "
             f"select the sample data folder and click the 'Process Videos' button or whatever its called lol")

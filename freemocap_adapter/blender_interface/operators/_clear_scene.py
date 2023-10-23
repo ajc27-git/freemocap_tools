@@ -1,6 +1,6 @@
 import bpy
 
-from freemocap_adapter.core_functions.setup_scene.clear_scene import clear_scene
+from ...core_functions.setup_scene.clear_scene import clear_scene
 
 
 class FMC_ADAPTER_clear_scene(bpy.types.Operator):

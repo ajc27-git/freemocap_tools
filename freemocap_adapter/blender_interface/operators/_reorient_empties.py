@@ -4,11 +4,12 @@ import time
 
 from bpy.types import Operator
 
-from freemocap_adapter.core_functions.empties.reorient_empties import reorient_empties
-from freemocap_adapter.core_functions.freemocap_data_handler.operations import \
+from ...core_functions.empties.reorient_empties import reorient_empties
+from ...core_functions.freemocap_data_handler.operations import \
     freemocap_empties_from_parent_object
 
-logger = logging.getLogger(__name__)
+stream_handler = logging.StreamHandler(sys.stdout)
+logger.addHandler(stream_handler)
 
 
 class FMC_ADAPTER_OT_reorient_empties(Operator):
@@ -27,7 +28,7 @@ class FMC_ADAPTER_OT_reorient_empties(Operator):
 
         # Get start time
         start = time.time()
-        logger.info('Executing Re-orient Empties...')
+        print('Executing Re-orient Empties...')
         try:
             reorient_empties(z_align_ref_empty=fmc_adapter_tool.vertical_align_reference,
                              z_align_angle_offset=fmc_adapter_tool.vertical_align_angle_offset,
@@ -40,12 +41,12 @@ class FMC_ADAPTER_OT_reorient_empties(Operator):
 
             # Get end time and print execution time
             end = time.time()
-            logger.success(
+            print(
                 'Finished reorienting empties! Execution time (s): ' + str(m.trunc((end - start) * 1000) / 1000))
             scene.frame_set(frame_number)  # set the frame back to what it was before we started
             return {'FINISHED'}
         except Exception as e:
-            logger.exception('Error while reorienting empties! {e}')
+            print('Error while reorienting empties! {e}')
 
     def freemocap_empties_from_parent_object(self, parent_empty):
         empties = {empty.name: empty for empty in parent_empty.children}

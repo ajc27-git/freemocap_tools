@@ -1,7 +1,7 @@
 import json
 
-from freemocap_adapter.data_models.parameter_models.parameter_models import AdjustEmpties, ReduceBoneLengthDispersion, \
-    ReduceShakiness, AddRig, AddBodyMesh, Config
+from .parameter_models import \
+    Config, AdjustEmpties, ReduceShakiness, ReduceBoneLengthDispersion, AddRig, AddBodyMesh
 
 
 # Define the data classes to represent the JSON structure

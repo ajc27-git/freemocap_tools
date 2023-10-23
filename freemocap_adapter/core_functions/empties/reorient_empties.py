@@ -4,7 +4,7 @@ from typing import Dict
 import bpy
 import mathutils
 
-from freemocap_adapter.core_functions.empties.translate_empty_and_its_children import translate_empty_and_its_children
+from .translate_empty_and_its_children import translate_empty_and_its_children
 
 
 def reorient_empties(empties: Dict[str, bpy.types.Object],

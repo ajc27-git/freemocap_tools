@@ -1,4 +1,4 @@
-from freemocap_adapter.core_functions.freemocap_data_handler.handler import FreemocapDataHandler
+from ..handler import FreemocapDataHandler
 
 FREEMOCAP_DATA_HANDLER = None
 

@@ -4,15 +4,13 @@ from typing import List, Union, Dict, Any
 
 import numpy as np
 
-from freemocap_adapter.core_functions.empties.creation.create_virtual_trajectories import calculate_virtual_trajectories
-from freemocap_adapter.core_functions.freemocap_data_handler.helpers.saver import FreemocapDataSaver
-from freemocap_adapter.core_functions.freemocap_data_handler.helpers.transformer import \
-    FreemocapDataTransformer
-from freemocap_adapter.data_models.freemocap_data.freemocap_data_model import FreemocapData, \
-    FREEMOCAP_DATA_COMPONENT_TYPES
-from freemocap_adapter.data_models.freemocap_data.helpers.freemocap_component_data import FreemocapComponentData
+from ..empties.creation.create_virtual_trajectories import calculate_virtual_trajectories
+from ..freemocap_data_handler.helpers.saver import FreemocapDataSaver
+from ..freemocap_data_handler.helpers.transformer import FreemocapDataTransformer
+from ...data_models.freemocap_data.freemocap_data_model import FreemocapData, FREEMOCAP_DATA_COMPONENT_TYPES
+from ...data_models.freemocap_data.helpers.freemocap_component_data import FreemocapComponentData
 
-logger = logging.getLogger(__name__)
+import sys
 
 
 class FreemocapDataHandler:
@@ -378,8 +376,8 @@ class FreemocapDataHandler:
                             raise ValueError(
                                 f"Data shape {other_component.data.shape} is not supported. Should be 2 or 3 dimensional.")
         except Exception as e:
-            logger.error(f"Error while setting trajectory `{name}`:\n error:\n {e}")
-            logger.exception(e)
+            print(f"Error while setting trajectory `{name}`:\n error:\n {e}")
+            print(e)
             raise Exception(f"Error while setting trajectory: {e}")
 
     def _collect_frame_counts(self) -> dict:
@@ -413,7 +411,7 @@ class FreemocapDataHandler:
         """
         Mark the current state of the data as a processing stage (e.g. "raw", "reoriented", etc.)
         """
-        logger.info(f"Marking processing stage {name}")
+        print(f"Marking processing stage {name}")
         if self._intermediate_stages is None:
             self._intermediate_stages = {}
         if metadata is None:
@@ -433,11 +431,11 @@ class FreemocapDataHandler:
         return FreemocapData.from_data(**self._intermediate_stages[name])
 
     def add_metadata(self, metadata: dict):
-        logger.info(f"Adding metadata {metadata.keys()}")
+        print(f"Adding metadata {metadata.keys()}")
         self.freemocap_data.metadata.update(metadata)
 
     def add_other_component(self, component: FreemocapComponentData):
-        logger.info(f"Adding other component {component.name}")
+        print(f"Adding other component {component.name}")
         self.freemocap_data.other[component.name] = component
         self.mark_processing_stage(f"added_{component.name}")
 
@@ -445,7 +443,7 @@ class FreemocapDataHandler:
 
         try:
             import bpy
-            logger.info(f"Extracting data from empties {empties.keys()}")
+            print(f"Extracting data from empties {empties.keys()}")
 
             body_frames = []
             right_hand_frames = []
@@ -454,7 +452,7 @@ class FreemocapDataHandler:
             other_components_frames = {}
 
             for frame_number in range(bpy.context.scene.frame_start, bpy.context.scene.frame_end):
-                logger.debug(f"Extracting data from frame {frame_number}...")
+                print(f"Extracting data from frame {frame_number}...")
                 bpy.context.scene.frame_set(frame_number)
 
                 if "body" in empties.keys():
@@ -491,14 +489,14 @@ class FreemocapDataHandler:
                     self.freemocap_data.other[other_name].data = np.array(other_component_frames)
 
         except Exception as e:
-            logger.error(f"Failed to extract data from empties {empties.keys()}")
-            logger.exception(e)
+            print(f"Failed to extract data from empties {empties.keys()}")
+            print(e)
             raise e
 
         self.mark_processing_stage(stage_name)
 
     def calculate_virtual_trajectories(self):
-        logger.info(f"Calculating virtual trajectories")
+        print(f"Calculating virtual trajectories")
         try:
             virtual_trajectories = calculate_virtual_trajectories(body_frame_name_xyz=self.body_frame_name_xyz,
                                                                   body_names=self.body_names)
@@ -508,8 +506,8 @@ class FreemocapDataHandler:
             self.mark_processing_stage("added_virtual_trajectories")
 
         except Exception as e:
-            logger.error(f"Failed to calculate virtual trajectories: {e}")
-            logger.exception(e)
+            print(f"Failed to calculate virtual trajectories: {e}")
+            print(e)
             raise e
 
     def get_trajectory_names(self, component_name: str) -> List[str]:

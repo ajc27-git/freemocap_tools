@@ -4,14 +4,14 @@ from typing import Dict, Any
 
 import bpy
 
-logger = logging.getLogger(__name__)
+import sys
 
 EMPTY_VELOCITIES = {}
 EMPTY_POSITIONS = {}
 
 
 def get_empty_positions(empties: Dict[str, bpy.types.Object], ) -> dict[str, dict[str, list[Any]]]:
-    logger.info('Updating Empty Positions Dictionary...')
+    print('Updating Empty Positions Dictionary...')
 
     # Get the scene context
     scene = bpy.context.scene
@@ -42,13 +42,13 @@ def get_empty_positions(empties: Dict[str, bpy.types.Object], ) -> dict[str, dic
     # Reset the scene frame to where it was before
     scene.frame_set(current_frame)
 
-    logger.info('Empty Positions Dictionary update completed.')
+    print('Empty Positions Dictionary update completed.')
     return empty_positions
 
 
 def update_empty_velocities(recording_fps,
                             ):
-    logger.info('Updating Empty Speeds Dictionary...')
+    print('Updating Empty Speeds Dictionary...')
 
     # Get the scene context
     scene = bpy.context.scene
@@ -69,8 +69,8 @@ def update_empty_velocities(recording_fps,
         for object in bpy.data.objects:
             if object.type == 'EMPTY' and object.name != 'freemocap_origin_axes' and object.name != 'world_origin' and object.name != '_full_body_center_of_mass':
                 # Save the speed of the empty based on the recording fps and the distance to the position of the empty in the previous frame
-                # logger.info('length:' + str(len(empty_positions[object.name]['x'])))
-                # logger.info('frame:'+str(frame))
+                # print('length:' + str(len(empty_positions[object.name]['x'])))
+                # print('frame:'+str(frame))
                 current_frame_position = \
                     (EMPTY_POSITIONS[object.name]['x'][frame - 1], EMPTY_POSITIONS[object.name]['y'][frame - 1],
                      EMPTY_POSITIONS[object.name]['z'][frame - 1])
@@ -84,4 +84,4 @@ def update_empty_velocities(recording_fps,
     # Reset the scene frame to the start
     # scene.frame_set(scene.frame_start)
 
-    logger.info('Empty Speeds Dictionary update completed.')
+    print('Empty Speeds Dictionary update completed.')

@@ -4,13 +4,13 @@ from typing import Any, Dict, Optional, Union, Literal
 
 import numpy as np
 
-from freemocap_adapter.data_models.freemocap_data.helpers.freemocap_component_data import FreemocapComponentData
-from freemocap_adapter.data_models.freemocap_data.helpers.freemocap_data_paths import FreemocapDataPaths
-from freemocap_adapter.data_models.freemocap_data.helpers.freemocap_data_stats import FreemocapDataStats
-from freemocap_adapter.data_models.mediapipe_names.mediapipe_trajectory_names import MediapipeTrajectoryNames, \
+from .helpers.freemocap_component_data import FreemocapComponentData
+from .helpers.freemocap_data_paths import FreemocapDataPaths
+from .helpers.freemocap_data_stats import FreemocapDataStats
+from ..mediapipe_names.mediapipe_trajectory_names import MediapipeTrajectoryNames, \
     HumanTrajectoryNames
 
-logger = logging.getLogger(__name__)
+import sys
 
 FREEMOCAP_DATA_COMPONENT_TYPES = Literal["body", "right_hand", "left_hand", "face", "other"]
 
@@ -95,7 +95,7 @@ class FreemocapData:
                     try:
                         other[name] = FreemocapComponentData(**component)
                     except TypeError as e:
-                        logger.error(f"Error creating FreemocapComponentData from dict {component}")
+                        print(f"Error creating FreemocapComponentData from dict {component}")
                         raise e
             else:
                 raise ValueError(f"Component: {name} type not recognized (type: {type(component)}")
@@ -191,7 +191,7 @@ class FreemocapData:
         data_paths = FreemocapDataPaths.from_recording_folder(recording_path)
         metadata = {"recording_path": recording_path,
                     "data_paths": data_paths.__dict__}
-        logger.info(f"Loading data from paths {data_paths}")
+        print(f"Loading data from paths {data_paths}")
         return cls.from_data_paths(data_paths=data_paths, metadata=metadata, **kwargs)
 
     def __str__(self):
@@ -199,7 +199,7 @@ class FreemocapData:
 
 
 if __name__ == "__main__":
-    from freemocap_adapter.core_functions.setup_scene.get_path_to_sample_data import get_path_to_sample_data
+    from .core_functions.setup_scene.get_path_to_sample_data import get_path_to_sample_data
 
     recording_path_in = get_path_to_sample_data()
     freemocap_data = FreemocapData.from_recording_path(recording_path=recording_path_in,
