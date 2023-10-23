@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "ajc27-blender-addon"
+version = "0.1.0"
+description = "A blender add-on to load FreeMoCap data, based on @ajc27's `freemocap_adapter`"
+authors = ["Skelly FreeMoCap <info@freemocap.org>"]
+license = "AGPLv3"
+readme = "README.md"
+packages = [{include = "ajc27_blender_addon"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
