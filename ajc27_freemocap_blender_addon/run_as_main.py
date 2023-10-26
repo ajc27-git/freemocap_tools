@@ -1,12 +1,10 @@
 import sys
 from pathlib import Path
 
-from freemocap.data_layer.export_data.blender_stuff.ajc27_freemocap_blender_addon.freemocap_adapter.core_functions.main_controller import \
-    MainController
-from freemocap.data_layer.export_data.blender_stuff.ajc27_freemocap_blender_addon.freemocap_adapter.data_models.parameter_models.load_parameters_config import \
+from .core_functions.main_controller import MainController
+from .data_models.parameter_models.load_parameters_config import \
     load_default_parameters_config
-from freemocap.data_layer.export_data.blender_stuff.ajc27_freemocap_blender_addon.freemocap_adapter.data_models.parameter_models.parameter_models import \
-    Config
+from .data_models.parameter_models.parameter_models import Config
 
 
 def ajc27_run_as_main_function(recording_path: str,
