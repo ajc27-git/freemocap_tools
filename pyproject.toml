@@ -8,7 +8,7 @@ readme = "README.md"
 packages = [{include = "ajc27_freemocap_blender_addon"}]
 
 [tool.poetry.dependencies]
-python = ">3.8"
+python = ">=3.8"
 
 
 [build-system]
