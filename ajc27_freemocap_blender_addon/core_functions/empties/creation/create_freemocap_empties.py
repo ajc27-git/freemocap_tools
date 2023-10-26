@@ -2,10 +2,9 @@ import logging
 
 import bpy
 
+
 from .create_empty_from_trajectory import create_empties
 from ...freemocap_data_handler.handler import FreemocapDataHandler
-
-import sys
 
 BODY_EMPTY_SCALE = 0.03
 

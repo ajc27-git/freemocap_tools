@@ -2,16 +2,9 @@ from typing import Dict, Tuple
 
 import bpy
 
-<<<<<<<< HEAD:ajc_freemocap_blender_addon/core_functions/mesh/create_mesh/helpers/put_spheres_on_empties.py
-from ajc27_freemocap_blender_addon.core_functions.mesh.create_mesh.helpers.create_bone_stick import create_bone_mesh
-from ajc27_freemocap_blender_addon.core_functions.mesh.create_mesh.helpers.make_bone_mesh import make_bone_mesh
-from ajc27_freemocap_blender_addon.core_functions.mesh.create_mesh.helpers.put_sphere_at_location import put_sphere_mesh_at_location
-from ajc27_freemocap_blender_addon.data_models.mediapipe_names.mediapipe_heirarchy import MEDIAPIPE_HIERARCHY
-========
 from .make_bone_mesh import     make_bone_mesh
 from .put_sphere_at_location import put_sphere_mesh_at_location
 from .....data_models.mediapipe_names.mediapipe_heirarchy import     MEDIAPIPE_HIERARCHY
->>>>>>>> origin/main:ajc_freemocap_blender_addon/core_functions/mesh/create_mesh/helpers/put_meshes_on_empties.py
 
 
 def create_skeleton_segment_object(child_name: str,

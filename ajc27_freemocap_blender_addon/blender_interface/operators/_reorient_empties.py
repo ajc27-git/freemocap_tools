@@ -8,9 +8,6 @@ from ...core_functions.empties.reorient_empties import reorient_empties
 from ...core_functions.freemocap_data_handler.operations import \
     freemocap_empties_from_parent_object
 
-stream_handler = logging.StreamHandler(sys.stdout)
-logger.addHandler(stream_handler)
-
 
 class FMC_ADAPTER_OT_reorient_empties(Operator):
     bl_idname = 'fmc_adapter._reorient_empties'
