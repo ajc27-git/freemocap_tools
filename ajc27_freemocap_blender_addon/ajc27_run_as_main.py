@@ -9,7 +9,7 @@ from freemocap.data_layer.export_data.blender_stuff.ajc27_freemocap_blender_addo
     Config
 
 
-def main(recording_path: str,
+def ajc27_run_as_main_function(recording_path: str,
          save_path: str,
          config: Config = load_default_parameters_config()):
     controller = MainController(recording_path=recording_path,
@@ -38,7 +38,7 @@ if __name__ == "__main__" or __name__ == "<run_path>":
             raise ValueError(f"Recording path {recording_path_input} does not exist!")
 
         print(f"Running {__file__} with recording_path={recording_path_input}")
-        main(recording_path=recording_path_input,
+        ajc27_run_as_main_function(recording_path=recording_path_input,
              save_path=blender_file_save_path_input)
     except Exception as e:
         print(f"ERROR RUNNING {__file__}: \n\n GOT ERROR \n\n {str(e)}")
