@@ -4,7 +4,7 @@ from typing import Dict
 import bpy
 import mathutils
 
-from ajc_freemocap_blender_addon.core_functions.empties.translate_empty_and_its_children import translate_empty_and_its_children
+from .translate_empty_and_its_children import translate_empty_and_its_children
 
 
 def reorient_empties(empties: Dict[str, bpy.types.Object],

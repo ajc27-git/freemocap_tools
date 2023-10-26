@@ -2,12 +2,10 @@ import logging
 
 import bpy
 
-from ajc_freemocap_blender_addon.core_functions.empties.creation.create_empty_from_trajectory import \
-    create_empties
-from ajc_freemocap_blender_addon.core_functions.freemocap_data_handler.handler import \
-    FreemocapDataHandler
+from .create_empty_from_trajectory import create_empties
+from ...freemocap_data_handler.handler import FreemocapDataHandler
 
-logger = logging.getLogger(__name__)
+import sys
 
 BODY_EMPTY_SCALE = 0.03
 
@@ -17,7 +15,7 @@ def create_freemocap_empties(handler: FreemocapDataHandler,
                              body_empty_scale: float = BODY_EMPTY_SCALE,
                              ):
     hand_empty_scale = body_empty_scale * 0.5
-    logger.info("Loading freemocap trajectory data as keyframed empties....")
+    print("Loading freemocap trajectory data as keyframed empties....")
 
     empties = {}
     try:
@@ -57,7 +55,7 @@ def create_freemocap_empties(handler: FreemocapDataHandler,
         return empties
 
     except Exception as e:
-        logger.error(f"Failed to load freemocap trajectory data as keyframed empties: {e}")
-        logger.exception(f"{e}")
+        print(f"Failed to load freemocap trajectory data as keyframed empties: {e}")
+        print(f"{e}")
 
         raise e

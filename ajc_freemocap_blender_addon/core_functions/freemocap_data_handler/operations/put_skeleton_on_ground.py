@@ -1,18 +1,18 @@
 import logging
-from typing import Dict
+from typing import Dict, TYPE_CHECKING
 
 import numpy as np
 
-from ajc_freemocap_blender_addon.core_functions.freemocap_data_handler.handler import \
-    FreemocapDataHandler
-from ajc_freemocap_blender_addon.core_functions.freemocap_data_handler.operations.estimate_good_frame import \
-    estimate_good_frame
+from .estimate_good_frame import estimate_good_frame
 
-logger = logging.getLogger(__name__)
+import sys
+
+if TYPE_CHECKING:
+    from ..handler import FreemocapDataHandler
 
 
-def put_skeleton_on_ground(handler: FreemocapDataHandler):
-    logger.info(
+def put_skeleton_on_ground(handler: 'FreemocapDataHandler'):
+    print(
         f"Putting freemocap data in inertial reference frame...")
 
     ground_reference_trajectories_with_error = handler.get_trajectories(
@@ -40,7 +40,7 @@ def put_skeleton_on_ground(handler: FreemocapDataHandler):
     y_leftward_reference_point = np.nanmean(y_leftward_reference_points, axis=0)
 
     z_upward_reference_point = handler.get_trajectory("head_center")[good_frame, :]
-    
+
     x_forward = center_reference_point - y_leftward_reference_point
     y_left = x_forward_reference_point - center_reference_point
     z_up = z_upward_reference_point - center_reference_point
@@ -77,11 +77,11 @@ def put_skeleton_on_ground(handler: FreemocapDataHandler):
     handler.mark_processing_stage(name="rotated_to_inertial_reference_frame",
                                   metadata={"rotation_matrix": rotation_matrix.tolist()})
 
-    logger.success(
+    print(
         "Finished putting freemocap data in inertial reference frame.\n freemocap_data(after):\n{handler}")
 
 
-def get_body_trajectories_closest_to_the_ground(handler: FreemocapDataHandler) -> Dict[str, np.ndarray]:
+def get_body_trajectories_closest_to_the_ground(handler: 'FreemocapDataHandler') -> Dict[str, np.ndarray]:
     body_names = handler.body_names
 
     # checking for markers from the ground up!
@@ -100,7 +100,7 @@ def get_body_trajectories_closest_to_the_ground(handler: FreemocapDataHandler) -
 
     for part_name, part_list in body_parts_from_low_to_high:
         if all([part in body_names for part in part_list]):
-            logger.debug(f"Trying to use {part_name} trajectories to define ground plane.")
+            print(f"Trying to use {part_name} trajectories to define ground plane.")
             part_trajectories = handler.get_trajectories(part_list)
 
             for trajectory_name, trajectory in part_trajectories.items():
@@ -110,10 +110,10 @@ def get_body_trajectories_closest_to_the_ground(handler: FreemocapDataHandler) -
                     del part_trajectories[trajectory_name]
 
             if len(part_trajectories) < 2:
-                logger.debug(f"Found less than 2 {part_name} trajectories. Trying next part..")
+                print(f"Found less than 2 {part_name} trajectories. Trying next part..")
             else:
-                logger.info(f"Found {part_name} trajectories. Using {part_name} as lowest body trajectories.")
+                print(f"Found {part_name} trajectories. Using {part_name} as lowest body trajectories.")
                 return part_trajectories
 
-    logger.error(f"Found less than 2 head trajectories. Cannot find lowest body trajectories!")
+    print(f"Found less than 2 head trajectories. Cannot find lowest body trajectories!")
     raise Exception("Cannot find lowest body trajectories!")

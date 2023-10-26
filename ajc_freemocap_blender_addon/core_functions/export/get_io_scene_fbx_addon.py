@@ -7,11 +7,11 @@ from pathlib import Path
 import addon_utils
 import bpy
 
-logger = logging.getLogger(__name__)
+import sys
 
 
 def get_io_scene_fbx_addon():
-    logger.info("Checking for io_scene_fbx addon...")
+    print("Checking for io_scene_fbx addon...")
 
     # Your addon name and github repo lik
     addon_name = 'io_scene_fbx'
@@ -29,19 +29,19 @@ def get_io_scene_fbx_addon():
 
     # Import it
     try:
-        logger.debug(f"Loading {addon_name} addon from {addon_folder_path} to test import")
+        print(f"Loading {addon_name} addon from {addon_folder_path} to test import")
         SourceFileLoader(addon_name, os.path.join(addon_folder_path, '__init__.py')).load_module()
 
         import io_scene_fbx.export_fbx_bin as export_fbx_bin
 
     except Exception as e:
-        logger.error(f'Error loading {addon_name} addon: {str(e)}')
+        print(f'Error loading {addon_name} addon: {str(e)}')
         raise
-    logger.success(f'{addon_name} addon loaded')
+    print(f'{addon_name} addon loaded')
 
 
 def download_io_scene_fbx(addon_directory, addon_name, github_url):
-    logger.info(f'{addon_name} addon not installed, installing from {github_url}')
+    print(f'{addon_name} addon not installed, installing from {github_url}')
     # Download the repo as a zip file
     response = requests.get(github_url)
     zip_path = os.path.join(addon_directory, f'{addon_name}.zip')

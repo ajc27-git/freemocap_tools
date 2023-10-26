@@ -4,7 +4,7 @@ from typing import List, Union, Dict
 import bpy
 import numpy as np
 
-logger = logging.getLogger(__name__)
+import sys
 
 
 def create_empties(trajectory_frame_marker_xyz: np.ndarray,
@@ -27,7 +27,7 @@ def create_empties(trajectory_frame_marker_xyz: np.ndarray,
             empty_scale=empty_scale,
             empty_type=empty_type,
         )
-        logger.trace(f"Created empty {trajectory_name}")
+        print(f"Created empty {trajectory_name}")
 
     return empties
 
@@ -42,7 +42,7 @@ def create_keyframed_empty_from_3d_trajectory_data(
     """
     Create a key framed empty from 3d trajectory data
     """
-    logger.info(f"Creating keyframed empty from: {trajectory_name}...")
+    print(f"Creating keyframed empty from: {trajectory_name}...")
     bpy.ops.object.empty_add(type=empty_type)
     empty_object = bpy.context.editable_objects[-1]
     empty_object.name = trajectory_name

@@ -4,9 +4,9 @@ import time
 
 from bpy.types import Operator
 
-from ajc_freemocap_blender_addon.core_functions.export.fbx import export_fbx
+from ...core_functions.export.fbx import export_fbx
 
-logger = logging.getLogger(__name__)
+import sys
 
 
 class FMC_ADAPTER_OT_export_fbx(Operator):
@@ -16,13 +16,13 @@ class FMC_ADAPTER_OT_export_fbx(Operator):
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
-        logger.info('Executing Export FBX...')
+        print('Executing Export FBX...')
         scene = context.scene
         fmc_adapter_tool = scene.fmc_adapter_properties
 
         recording_path = fmc_adapter_tool.recording_path
         if recording_path == "":
-            logger.error("No recording path specified")
+            print("No recording path specified")
             return {'CANCELLED'}
 
         # Get start time
@@ -33,6 +33,6 @@ class FMC_ADAPTER_OT_export_fbx(Operator):
 
         # Get end time and print execution time
         end = time.time()
-        logger.debug('Finished. Execution time (s): ' + str(m.trunc((end - start) * 1000) / 1000))
+        print('Finished. Execution time (s): ' + str(m.trunc((end - start) * 1000) / 1000))
 
         return {'FINISHED'}

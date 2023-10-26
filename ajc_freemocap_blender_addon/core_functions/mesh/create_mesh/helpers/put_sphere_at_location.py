@@ -2,7 +2,7 @@ from typing import Union, List
 
 import numpy as np
 
-from ajc_freemocap_blender_addon.core_functions.mesh.create_mesh.helpers.create_material import create_material
+from .create_material import create_material
 
 import bpy
 

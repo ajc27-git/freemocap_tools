@@ -6,14 +6,14 @@ import addon_utils
 import bpy
 import numpy as np
 
-from ajc_freemocap_blender_addon.core_functions.setup_scene.make_parent_empties import create_video_parent_empty
+from ..setup_scene.make_parent_empties import create_video_parent_empty
 
-logger = logging.getLogger(__name__)
+import sys
 
 
 def get_video_paths(path_to_video_folder: Path) -> list:
     """Search the folder for 'mp4' files (case insensitive) and return them as a list"""
-    logger.info(f"Searching for videos in {path_to_video_folder}")
+    print(f"Searching for videos in {path_to_video_folder}")
     list_of_video_paths = list(Path(path_to_video_folder).glob("*.mp4")) + list(
         Path(path_to_video_folder).glob("*.MP4")
     )
@@ -27,26 +27,26 @@ def add_videos_to_scene(videos_path: Union[Path, str],
                         video_location_scale: float = 4,
                         video_size_scale: float = 5,
                         ):
-    logger.info(f"Adding videos to scene...")
+    print(f"Adding videos to scene...")
 
     number_of_videos = len(list(get_video_paths(videos_path)))
-    logger.debug(f"Found {number_of_videos} videos in {videos_path}")
+    print(f"Found {number_of_videos} videos in {videos_path}")
     for (
             video_number,
             video_path,
     ) in enumerate(get_video_paths(videos_path)):
-        logger.info(f"Adding video: {video_path.name} to scene")
+        print(f"Adding video: {video_path.name} to scene")
 
         bpy.ops.import_image.to_plane(
             files=[{"name": video_path.name}],
             directory=str(video_path.parent),
             shader="EMISSION",
         )
-        logger.trace(f"Added video: {video_path.name} to scene")
+        print(f"Added video: {video_path.name} to scene")
         video_as_plane = bpy.context.editable_objects[-1]
-        logger.debug(f"video_as_plane: {video_as_plane}")
+        print(f"video_as_plane: {video_as_plane}")
         video_as_plane.name = "video_" + str(video_number)
-        logger.debug(f"video_as_plane.name: {video_as_plane.name}")
+        print(f"video_as_plane.name: {video_as_plane.name}")
         buffer = 1.1
         vid_x = (video_number * buffer - np.mean(np.arange(0, number_of_videos))) * video_location_scale
 
@@ -81,10 +81,10 @@ def load_videos(recording_path: str,
         try:
             addon_utils.enable("io_import_images_as_planes")
         except Exception as e:
-            logger.error("Error enabling `io_import_images_as_planes` addon: ")
-            logger.exception(e)
+            print("Error enabling `io_import_images_as_planes` addon: ")
+            print(e)
         try:
             add_videos_to_scene(videos_path=videos_path, parent_object=parent_object)
         except Exception as e:
-            logger.error("Error adding videos to scene: ")
-            logger.exception(e)
+            print("Error adding videos to scene: ")
+            print(e)

@@ -6,12 +6,11 @@ from typing import Union, TYPE_CHECKING
 
 import numpy as np
 
-logger = logging.getLogger(__name__)
+import sys
 
 # this allows us to import the `FreemocapDataHandler` class for type hinting without causing a circular import
 if TYPE_CHECKING:
-    from ajc_freemocap_blender_addon.core_functions.freemocap_data_handler.handler import \
-        FreemocapDataHandler
+    from ..handler import FreemocapDataHandler
 
 
 class FreemocapDataSaver:
@@ -23,7 +22,7 @@ class FreemocapDataSaver:
         try:
             save_path = Path(recording_path) / "saved_data"
             save_path.mkdir(parents=True, exist_ok=True)
-            logger.info(f"Saving freemocap data to {save_path}")
+            print(f"Saving freemocap data to {save_path}")
 
             self._save_data_readme(save_path=save_path)
 
@@ -32,11 +31,11 @@ class FreemocapDataSaver:
             self._save_npy(save_path)
             self._save_csv(save_path)
 
-            logger.success(f"Saved freemocap data to {save_path}")
+            print(f"Saved freemocap data to {save_path}")
 
         except Exception as e:
-            logger.error(f"Failed to save data to disk: {e}")
-            logger.exception(e)
+            print(f"Failed to save data to disk: {e}")
+            print(e)
             raise e
 
     def _save_csv(self, save_path: Union[str, Path]):
@@ -47,7 +46,7 @@ class FreemocapDataSaver:
         """
         csv_path = Path(save_path) / "csv"
         csv_path.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Saving csv files to {csv_path}")
+        print(f"Saving csv files to {csv_path}")
 
         components = {
             'body': self.handler.body_frame_name_xyz,
@@ -70,47 +69,47 @@ class FreemocapDataSaver:
             reshaped_data = component_data.reshape(component_data.shape[0], -1)
             np.savetxt(str(csv_path / f"{component_name}_trajectories.csv"), reshaped_data, delimiter=",",
                        fmt='%s', header=csv_header)
-            logger.debug(
+            print(
                 f"Saved {component_name}_frame_name_xyz to {csv_path / f'{component_name}_frame_name_xyz.csv'}")
 
         np.savetxt(str(save_path / "all_trajectories.csv"),
                    self.handler.all_frame_name_xyz.reshape(self.handler.all_frame_name_xyz.shape[0], -1), delimiter=",",
                    fmt='%s', header=all_csv_header)
-        logger.debug(f"Saved all_frame_name_xyz to {save_path / 'all_trajectories.csv'}")
+        print(f"Saved all_frame_name_xyz to {save_path / 'all_trajectories.csv'}")
 
     def _save_npy(self, save_path: Union[str, Path]):
         npy_path = Path(save_path) / "npy"
         npy_path.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Saving npy files to {npy_path}")
+        print(f"Saving npy files to {npy_path}")
 
         np.save(str(npy_path / "body_frame_name_xyz.npy"), self.handler.body_frame_name_xyz)
-        logger.debug(f"Saved body_frame_name_xyz to {npy_path / 'body_frame_name_xyz.npy'}")
+        print(f"Saved body_frame_name_xyz to {npy_path / 'body_frame_name_xyz.npy'}")
 
         np.save(str(npy_path / "right_hand_frame_name_xyz.npy"), self.handler.right_hand_frame_name_xyz)
-        logger.debug(f"Saved right_hand_frame_name_xyz to {npy_path / 'right_hand_frame_name_xyz.npy'}")
+        print(f"Saved right_hand_frame_name_xyz to {npy_path / 'right_hand_frame_name_xyz.npy'}")
 
         np.save(str(npy_path / "left_hand_frame_name_xyz.npy"), self.handler.left_hand_frame_name_xyz)
-        logger.debug(f"Saved left_hand_frame_name_xyz to {npy_path / 'left_hand_frame_name_xyz.npy'}")
+        print(f"Saved left_hand_frame_name_xyz to {npy_path / 'left_hand_frame_name_xyz.npy'}")
 
         np.save(str(npy_path / "face_frame_name_xyz.npy"), self.handler.face_frame_name_xyz)
-        logger.debug(f"Saved face_frame_name_xyz to {npy_path / 'face_frame_name_xyz.npy'}")
+        print(f"Saved face_frame_name_xyz to {npy_path / 'face_frame_name_xyz.npy'}")
 
         for name, component in self.handler.freemocap_data.other.items():
             np.save(str(npy_path / f"{name}_frame_name_xyz.npy"), component.data)
-            logger.debug(f"Saved {name}_frame_name_xyz to {npy_path / f'{name}_frame_name_xyz.npy'}")
+            print(f"Saved {name}_frame_name_xyz to {npy_path / f'{name}_frame_name_xyz.npy'}")
 
         np.save(str(npy_path / "all_frame_name_xyz.npy"), self.handler.all_frame_name_xyz)
-        logger.debug(f"Saved all_frame_name_xyz to {npy_path / 'all_frame_name_xyz.npy'}")
+        print(f"Saved all_frame_name_xyz to {npy_path / 'all_frame_name_xyz.npy'}")
 
     def _save_data_readme(self, save_path: Union[str, Path]):
-        logger.info(f"Saving data readme to {save_path}")
+        print(f"Saving data readme to {save_path}")
         readme_path = Path(save_path) / "_FREEMOCAP_DATA_README.md"
         readme_path.write_text(DATA_README_TEXT, encoding="utf-8")
 
     def _save_pickle(self, path: Union[str, Path]):
 
         pickle_path = Path(path) / "freemocap_data_handler.pkl"
-        logger.info(f"Saving `FreemocapDataHandler` pickle to {pickle_path}")
+        print(f"Saving `FreemocapDataHandler` pickle to {pickle_path}")
         with open(str(pickle_path), "wb") as f:
             pickle.dump(self.handler, f)
 
@@ -124,22 +123,45 @@ class FreemocapDataSaver:
     def save_metadata(self, path: Union[str, Path]):
         metadata_path = Path(path) / "metadata.json"
         metadata = self.handler.metadata
+
+        # convert numpy arrays to lists, Paths to strings, etc
+        for key, value in metadata.items():
+            if isinstance(value, np.ndarray):
+                metadata[key] = value.tolist()
+            elif isinstance(value, Path):
+                metadata[key] = str(value)
+            elif isinstance(value, dict):
+                for sub_key, sub_value in value.items():
+                    if isinstance(sub_value, np.ndarray):
+                        metadata[key][sub_key] = sub_value.tolist()
+                    elif isinstance(sub_value, Path):
+                        metadata[key][sub_key] = str(sub_value)
+                    else:
+                        pass
+            else:
+                pass
+
         metadata_path.write_text(json.dumps(metadata, indent=4))
-        logger.debug(f"Saved metadata to {metadata_path}")
+        print(f"Saved metadata to {metadata_path}")
 
     def _save_trajectory_names(self, path: Union[str, Path]):
-        # save trajectory names
-        trajectory_names_path = Path(path) / "trajectory_names.json"
-        trajectory_names = {
-            "body": self.handler.body_names,
-            "right_hand": self.handler.right_hand_names,
-            "left_hand": self.handler.left_hand_names,
-            "face": self.handler.face_names,
-            "other": {key: value.trajectory_names for key, value in
-                      self.handler.freemocap_data.other.items()}
-        }
-        trajectory_names_path.write_text(json.dumps(trajectory_names, indent=4))
-        logger.debug(f"Saved trajectory names to {trajectory_names_path}")
+        try:
+            # save trajectory names
+            trajectory_names_path = Path(path) / "trajectory_names.json"
+            trajectory_names = {
+                "body": self.handler.body_names,
+                "right_hand": self.handler.right_hand_names,
+                "left_hand": self.handler.left_hand_names,
+                "face": self.handler.face_names,
+                "other": {key: value.trajectory_names for key, value in
+                          self.handler.freemocap_data.other.items()}
+            }
+            trajectory_names_path.write_text(json.dumps(trajectory_names, indent=4))
+            print(f"Saved trajectory names to {trajectory_names_path}")
+        except Exception as e:
+            print(f"Failed to save trajectory names: {e}")
+            print(e)
+            raise e
 
 
 DATA_README_TEXT = """

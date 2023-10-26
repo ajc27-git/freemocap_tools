@@ -1,8 +1,6 @@
 import math as m
 
-from ajc_freemocap_blender_addon.core_functions.empties.update_empty_positions import get_empty_positions, \
-    update_empty_velocities, \
-    EMPTY_POSITIONS, EMPTY_VELOCITIES
+from .update_empty_positions import get_empty_positions, update_empty_velocities, EMPTY_POSITIONS, EMPTY_VELOCITIES
 
 
 def reduce_shakiness(recording_fps: float = 30):

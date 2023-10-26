@@ -1,4 +1,8 @@
+<<<<<<<< HEAD:ajc_freemocap_blender_addon/blender_interface/utilities/get_or_create_freemocap_data_handler.py
 from ajc_freemocap_blender_addon.core_functions.freemocap_data_handler.handler import FreemocapDataHandler
+========
+from ..handler import FreemocapDataHandler
+>>>>>>>> origin/main:ajc_freemocap_blender_addon/core_functions/freemocap_data_handler/helpers/get_or_create_freemocap_data_handler.py
 
 FREEMOCAP_DATA_HANDLER = None
 

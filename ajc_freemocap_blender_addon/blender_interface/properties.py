@@ -3,11 +3,11 @@ import logging
 import bpy
 from bpy.props import StringProperty, BoolProperty
 
-logger = logging.getLogger(__name__)
+import sys
 
 
 class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
-    logger.info("Initializing FMC_ADAPTER_PROPERTIES class...")
+    print("Initializing FMC_ADAPTER_PROPERTIES class...")
 
     data_parent_empty: bpy.props.PointerProperty(
         name="FreeMoCap data parent empty",

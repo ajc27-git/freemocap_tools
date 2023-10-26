@@ -4,11 +4,11 @@ from pathlib import Path
 import bpy
 import mathutils
 
-logger = logging.getLogger(__name__)
+import sys
 
 
 def export_fbx(recording_path: str, ):
-    logger.info("Exporting recording to FBX...")
+    print("Exporting recording to FBX...")
     try:
         # Deselect all
         bpy.ops.object.select_all(action='DESELECT')
@@ -117,7 +117,7 @@ def export_fbx(recording_path: str, ):
 
         SCALE_FACTOR = 100
     except Exception as e:
-        logger.error(e)
+        print(e)
         return {'CANCELLED'}
 
     def fbx_animations_do(scene_data, ref_id, f_start, f_end, start_zero, objects=None, force_keep=False):

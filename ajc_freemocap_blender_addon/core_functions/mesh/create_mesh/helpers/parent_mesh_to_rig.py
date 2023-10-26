@@ -1,8 +1,8 @@
 import logging
 import bpy
-logger = logging.getLogger(__name__)
+import sys
 def parent_mesh_to_rig(meshes, rig):
-    logger.info("Parenting mesh to rig...")
+    print("Parenting mesh to rig...")
     try:
         meshes[0].name = "mesh"
         # Deselect all
@@ -22,5 +22,5 @@ def parent_mesh_to_rig(meshes, rig):
         # Parent the mesh and the rig with automatic weights
         bpy.ops.object.parent_set(type='ARMATURE_AUTO')
     except Exception as e:
-        logger.error(f"Failed to parent mesh to rig: {e}")
+        print(f"Failed to parent mesh to rig: {e}")
         raise e

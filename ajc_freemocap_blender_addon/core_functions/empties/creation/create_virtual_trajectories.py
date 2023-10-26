@@ -3,9 +3,9 @@ from typing import List, Dict
 
 import numpy as np
 
-from ajc_freemocap_blender_addon.data_models.mediapipe_names.virtual_trajectories import MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS
+from ....data_models.mediapipe_names.virtual_trajectories import MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS
 
-logger = logging.getLogger(__name__)
+import sys
 
 
 def validate_marker_definitions(virtual_marker_definitions: dict):
@@ -42,8 +42,8 @@ def calculate_virtual_trajectory(all_trajectories: np.ndarray,
             component_xyz = all_trajectories[:, all_names.index(name), :] * weight
             virtual_trajectory_frame_xyz += component_xyz
     except Exception as e:
-        logger.error(f"Error calculating virtual marker trajectory: {e}")
-        logger.exception(e)
+        print(f"Error calculating virtual marker trajectory: {e}")
+        print(e)
         raise
     return virtual_trajectory_frame_xyz
 
@@ -53,12 +53,12 @@ def calculate_virtual_trajectories(body_frame_name_xyz: np.ndarray,
     """
     Create virtual markers from the body data using the marker definitions.
     """
-    logger.info("Creating virtual markers...")
+    print("Creating virtual markers...")
     validate_marker_definitions(MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS)
 
     virtual_trajectories = {}
     for virtual_trajectory_name, virtual_trajectory_definition in MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS.items():
-        logger.info(f"Calculating virtual marker trajectory: {virtual_trajectory_name} \n"
+        print(f"Calculating virtual marker trajectory: {virtual_trajectory_name} \n"
                     f"Component trajectories: {virtual_trajectory_definition['marker_names']} \n"
                     f" weights: {virtual_trajectory_definition['marker_weights']}\n")
 
@@ -80,5 +80,5 @@ def calculate_virtual_trajectories(body_frame_name_xyz: np.ndarray,
             )
         virtual_trajectories[virtual_trajectory_name] = virtual_trajectory_frame_xyz
 
-        logger.success(f"Finished calculating virtual marker trajectory: {virtual_trajectories.keys()}")
+        print(f"Finished calculating virtual marker trajectory: {virtual_trajectories.keys()}")
     return virtual_trajectories

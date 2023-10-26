@@ -4,18 +4,17 @@ from typing import Dict, Any
 
 import numpy as np
 
-from ajc_freemocap_blender_addon.core_functions.bones.calculate_bone_length_statistics import calculate_bone_length_statistics
-from ajc_freemocap_blender_addon.core_functions.freemocap_data_handler.handler import \
-    FreemocapDataHandler
-from ajc_freemocap_blender_addon.data_models.bones.bone_definitions import BONE_DEFINITIONS
-from ajc_freemocap_blender_addon.data_models.mediapipe_names.mediapipe_heirarchy import MEDIAPIPE_HIERARCHY
+from ..bones.calculate_bone_length_statistics import calculate_bone_length_statistics
+from ..freemocap_data_handler.handler import     FreemocapDataHandler
+from ...data_models.bones.bone_definitions import BONE_DEFINITIONS
+from ...data_models.mediapipe_names.mediapipe_heirarchy import MEDIAPIPE_HIERARCHY
 
-logger = logging.getLogger(__name__)
+import sys
 
 
 def enforce_rigid_bones(handler: FreemocapDataHandler,
                         bones: Dict[str, Dict[str, Any]] = BONE_DEFINITIONS):
-    logger.info('Enforcing rigid bones - altering bone lengths to ensure they are the same length on each frame...')
+    print('Enforcing rigid bones - altering bone lengths to ensure they are the same length on each frame...')
     original_trajectories = handler.trajectories
     updated_trajectories = deepcopy(original_trajectories)
 
@@ -29,7 +28,7 @@ def enforce_rigid_bones(handler: FreemocapDataHandler,
     # If the bone length is outside the interval, adjust the coordinates of the tail empty and its children so the new bone length is at the border of the interval
 
     for name, bone in bones.items():
-        logger.debug(f"Enforcing rigid length for bone: {name}...")
+        print(f"Enforcing rigid length for bone: {name}...")
 
         desired_length = bone['median']
 
@@ -56,7 +55,7 @@ def enforce_rigid_bones(handler: FreemocapDataHandler,
                                                                          frame_number=frame_number,
                                                                          updated_trajectories=updated_trajectories)
 
-    logger.success('Bone lengths enforced successfully!')
+    print('Bone lengths enforced successfully!')
 
     # Update the information of the virtual bones
     updated_bones = calculate_bone_length_statistics(trajectories=updated_trajectories, bones=bones)
@@ -64,7 +63,7 @@ def enforce_rigid_bones(handler: FreemocapDataHandler,
     # Print the current bones length median, standard deviation and coefficient of variation
     log_bone_statistics(bones=updated_bones, type='updated')
 
-    logger.info('Updating freemocap data handler with the new trajectories...')
+    print('Updating freemocap data handler with the new trajectories...')
     for name, trajectory in updated_trajectories.items():
         handler.set_trajectory(name=name, data=trajectory)
 
@@ -90,8 +89,8 @@ def translate_trajectory_and_its_children(name: str,
                                                       frame_number=frame_number,
                                                       updated_trajectories=updated_trajectories)
     except Exception as e:
-        logger.error(f"Error while adjusting trajectory `{name}` and its children:\n error:\n {e}")
-        logger.exception(e)
+        print(f"Error while adjusting trajectory `{name}` and its children:\n error:\n {e}")
+        print(e)
         raise Exception(f"Error while adjusting trajectory and its children: {e}")
 
     return updated_trajectories
@@ -108,4 +107,4 @@ def log_bone_statistics(bones: Dict[str, Dict[str, Any]], type: str):
         cv_string = str(round(bone['stdev'] / bone['median'] * 100, 4))
         log_string += f"{name:<15} {median_string:>12} {stdev_string:>12} {cv_string:>12}\n"
 
-    logger.info(log_string)
+    print(log_string)

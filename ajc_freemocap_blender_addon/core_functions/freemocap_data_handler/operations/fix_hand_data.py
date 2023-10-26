@@ -1,16 +1,16 @@
 import logging
-from typing import List
+from typing import List, TYPE_CHECKING
 
 import numpy as np
 from numpy import dot
 
-from ajc_freemocap_blender_addon.core_functions.freemocap_data_handler.handler import \
-    FreemocapDataHandler
+if TYPE_CHECKING:
+    from ..handler import FreemocapDataHandler
 
-logger = logging.getLogger(__name__)
+import sys
 
 
-def fix_hand_data(handler: FreemocapDataHandler):
+def fix_hand_data(handler: 'FreemocapDataHandler'):
     """
     fix hand data by...
 
@@ -19,7 +19,7 @@ def fix_hand_data(handler: FreemocapDataHandler):
     2. rotate hand data so "right/left_index_finger_mcp" trajectory (hand data) is on top of the "right/left_index" trajectory (hand data)
     3. rotate hand data so "right/left_pinky_mcp" trajectory (hand data) is on top of the "right/left_pinky" trajectory (hand data)
     """
-    logger.info(
+    print(
         "Fixing hand data (i.e. aligning the `left/right_hand...` data with the body's more impoverished hand data)")
 
     hand_data_frame_name_xyz = {"right": handler.right_hand_frame_name_xyz,
@@ -61,11 +61,11 @@ def fix_hand_data(handler: FreemocapDataHandler):
             #                component_name=f"{side}_hand")
 
         handler.mark_processing_stage("fixed_hand_data")
-        logger.success("Finished fixing hand data!")
+        print("Finished fixing hand data!")
         return handler
     except Exception as e:
-        logger.error(f"Error while fixing hand data:\n error:\n {e}")
-        logger.exception(e)
+        print(f"Error while fixing hand data:\n error:\n {e}")
+        print(e)
         raise e
 
 
@@ -86,8 +86,8 @@ def calculate_rotation_matricies(data1_frame_xyz: np.ndarray,
             rotation_matrix = calculate_rotation_matrix(data1_xyz, data2_xyz)
             rotation_matricies.append(rotation_matrix)
     except Exception as e:
-        logger.error(f"Error while calculating rotation matrix on frame_number `{frame_number}`:\n error:\n {e}")
-        logger.exception(e)
+        print(f"Error while calculating rotation matrix on frame_number `{frame_number}`:\n error:\n {e}")
+        print(e)
         raise e
     return rotation_matricies
 

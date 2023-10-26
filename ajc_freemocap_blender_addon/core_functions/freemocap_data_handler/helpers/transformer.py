@@ -4,14 +4,13 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from ajc_freemocap_blender_addon.data_models.freemocap_data.freemocap_data_model import FREEMOCAP_DATA_COMPONENT_TYPES
+from ....data_models.freemocap_data.freemocap_data_model import FREEMOCAP_DATA_COMPONENT_TYPES
 
-logger = logging.getLogger(__name__)
+import sys
 
 # this allows us to import the `FreemocapDataHandler` class for type hinting without causing a circular import
 if TYPE_CHECKING:
-    from ajc_freemocap_blender_addon.core_functions.freemocap_data_handler.handler import \
-        FreemocapDataHandler
+    from ..handler import FreemocapDataHandler
 
 
 class FreemocapDataTransformer:
@@ -40,7 +39,7 @@ class FreemocapDataTransformer:
         if rotation_matrix.shape != (3, 3):
             raise ValueError(f"Rotation matrix must be a 3x3 matrix. Got {rotation_matrix.shape} instead.")
 
-        logger.info(f"Applying rotation matrix {rotation_matrix}")
+        print(f"Applying rotation matrix {rotation_matrix}")
         if component_name == "body" or component_name is None:
             self.handler.body_frame_name_xyz = self._rotate_component(self.handler.body_frame_name_xyz, rotation_matrix)
 
@@ -71,7 +70,7 @@ class FreemocapDataTransformer:
             raise ValueError(f"Rotation matrix must be a 3x3 matrix. Got {rotation_matrix.shape} instead.")
 
         if data_frame_name_xyz.shape[-1] == 2:
-            logger.info(f"2D data detected. Adding a third dimension with zeros.")
+            print(f"2D data detected. Adding a third dimension with zeros.")
             data_frame_name_xyz = np.concatenate(
                 [data_frame_name_xyz, np.zeros((data_frame_name_xyz.shape[0], data_frame_name_xyz.shape[1], 1))],
                 axis=2)
@@ -105,7 +104,7 @@ class FreemocapDataTransformer:
                           component_name: FREEMOCAP_DATA_COMPONENT_TYPES = None,
                           frame_number: int = None):
 
-        logger.info(f"Translating by vector {vector}")
+        print(f"Translating by vector {vector}")
         if isinstance(vector, list):
             vector = np.array(vector)
         if vector.shape != (3,):
@@ -174,7 +173,7 @@ class FreemocapDataTransformer:
     def apply_scale(self,
                     scale: float,
                     component_name: FREEMOCAP_DATA_COMPONENT_TYPES = None):
-        logger.info(f"Applying scale {scale}")
+        print(f"Applying scale {scale}")
         if component_name == "body" or component_name is None:
             self.handler.body_frame_name_xyz *= scale
         if component_name == "right_hand" or component_name is None:

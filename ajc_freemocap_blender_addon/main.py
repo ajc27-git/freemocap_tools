@@ -1,38 +1,44 @@
-import logging
+import sys
+from pathlib import Path
 
-from ajc_freemocap_blender_addon.core_functions.main_controller import MainController
-from ajc_freemocap_blender_addon.data_models.parameter_models.load_parameters_config import load_default_parameters_config
-from ajc_freemocap_blender_addon.data_models.parameter_models.parameter_models import Config
-
-logger = logging.getLogger(__name__)
+from freemocap.data_layer.export_data.blender_stuff.ajc27_freemocap_blender_addon.freemocap_adapter.core_functions.main_controller import \
+    MainController
+from freemocap.data_layer.export_data.blender_stuff.ajc27_freemocap_blender_addon.freemocap_adapter.data_models.parameter_models.load_parameters_config import \
+    load_default_parameters_config
+from freemocap.data_layer.export_data.blender_stuff.ajc27_freemocap_blender_addon.freemocap_adapter.data_models.parameter_models.parameter_models import \
+    Config
 
 
 def main(recording_path: str,
+         save_path: str,
          config: Config = load_default_parameters_config()):
     controller = MainController(recording_path=recording_path,
+                                save_path=save_path,
                                 config=config)
 
     controller.run_all()
 
-    logger.success("Done!!!")
+    print("Done!!!")
 
 
 if __name__ == "__main__" or __name__ == "<run_path>":
+    print("RUNNING AJC27 FREEMOCAP ADDON...")
     try:
-        import bpy
-        from pathlib import Path
+        argv = sys.argv
+        print(f"Received command line arguments: {argv}")
+        argv = argv[argv.index("--") + 1:]
+        recording_path_input = Path(argv[0])
+        blender_file_save_path_input = Path(argv[1])
 
-        fmc_adapter_tool = bpy.context.scene.fmc_adapter_properties
-        recording_path = fmc_adapter_tool.recording_path
+        if not recording_path_input:
+            print("No recording path specified!")
+            raise ValueError("No recording path specified")
+        if not Path(recording_path_input).exists():
+            print(f"Recording path {recording_path_input} does not exist!")
+            raise ValueError(f"Recording path {recording_path_input} does not exist!")
 
-        if not Path(recording_path).exists():
-            raise ValueError(f"Recording path {recording_path} does not exist!")
+        print(f"Running {__file__} with recording_path={recording_path_input}")
+        main(recording_path=recording_path_input,
+             save_path=blender_file_save_path_input)
     except Exception as e:
-        logging.warning(f"Could not load recording path from Blender. Using default path instead. Error: {e}")
-
-        from ajc_freemocap_blender_addon.core_functions.setup_scene.get_path_to_sample_data import get_path_to_sample_data
-
-        recording_path = get_path_to_sample_data()
-
-    logging.info(f"Running {__file__} with recording_path={recording_path}")
-    main(recording_path=recording_path)
+        print(f"ERROR RUNNING {__file__}: \n\n GOT ERROR \n\n {str(e)}")

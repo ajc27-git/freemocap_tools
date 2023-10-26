@@ -2,8 +2,9 @@ import logging
 
 from bpy.types import Panel
 
-from ajc_freemocap_blender_addon import DEBUG_UI
 
+
+import sys
 logger = logging.getLogger(__name__)
 
 
@@ -14,8 +15,6 @@ class VIEW3D_PT_freemocap_adapter(Panel):
     bl_label = "Freemocap Adapter"
 
     def draw(self, context):
-        if DEBUG_UI:
-            logger.trace('Drawing panel...')
         layout = self.layout
         scene = context.scene
         fmc_adapter_tool = scene.fmc_adapter_properties
