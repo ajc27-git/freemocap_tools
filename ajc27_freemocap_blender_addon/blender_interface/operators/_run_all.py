@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 import bpy
 
@@ -24,6 +25,7 @@ class FMC_ADAPTER_run_all(bpy.types.Operator):
         try:
             print(f"Executing `main_contoller.run_all() with config:{config}")
             controller = MainController(recording_path=recording_path,
+                                        save_path=str(Path(recording_path)/(Path(recording_path).stem+".blend")),
                                         config=config)
             controller.run_all()
         except Exception as e:
@@ -31,3 +33,5 @@ class FMC_ADAPTER_run_all(bpy.types.Operator):
             print(e)
             return {'CANCELLED'}
         return {'FINISHED'}
+
+

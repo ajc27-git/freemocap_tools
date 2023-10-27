@@ -22,7 +22,7 @@ root.addHandler(handler)
 logger = logging.getLogger(__name__)
 
 bl_info = {
-    'name': 'Freemocap Adapter',
+    'name': 'ajc27_freemocap_blender_addon',
     'author': 'ajc27',
     'version': (1, 1, 7),
     'blender': (3, 0, 0),

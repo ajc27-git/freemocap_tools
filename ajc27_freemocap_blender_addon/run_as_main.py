@@ -29,14 +29,24 @@ if __name__ == "__main__" or __name__ == "<run_path>":
         blender_file_save_path_input = Path(argv[1])
 
         if not recording_path_input:
-            print("No recording path specified!")
-            raise ValueError("No recording path specified")
+            if __name__ == "<run_path>":
+                print("No recording path specified!")
+                raise ValueError("No recording path specified")
+            elif (Path().home() / "freemocap_data/recording_sessions/freemocap_sample_data").exists():
+                recording_path_input = Path().home() / "freemocap_data/recording_sessions/freemocap_sample_data"
+            else:
+                raise ValueError("No recording path specified")
+
         if not Path(recording_path_input).exists():
             print(f"Recording path {recording_path_input} does not exist!")
             raise ValueError(f"Recording path {recording_path_input} does not exist!")
 
+        if not blender_file_save_path_input:
+            blender_file_save_path_input = recording_path_input / (recording_path_input.stem + ".blend")
+            
+
         print(f"Running {__file__} with recording_path={recording_path_input}")
-        ajc27_run_as_main_function(recording_path=recording_path_input,
-             save_path=blender_file_save_path_input)
+        ajc27_run_as_main_function(recording_path=str(recording_path_input),
+                                    save_path=blender_file_save_path_input)
     except Exception as e:
         print(f"ERROR RUNNING {__file__}: \n\n GOT ERROR \n\n {str(e)}")
