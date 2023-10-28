@@ -16,7 +16,6 @@ def ajc27_run_as_main_function(recording_path: str,
 
 if __name__ == "__main__" or __name__ == "<run_path>":
     from ajc27_freemocap_blender_addon.core_functions.main_controller import MainController
-    from install_and_run_addon.install.bpy_install_addon import install_addon
 
     print("RUNNING AJC27 FREEMOCAP ADDON...")
     try:
@@ -26,7 +25,6 @@ if __name__ == "__main__" or __name__ == "<run_path>":
         recording_path_input = Path(argv[0])
         blender_file_save_path_input = Path(argv[1])
 
-        install_addon()
 
         if not recording_path_input:
             if __name__ == "<run_path>":
