@@ -13,9 +13,9 @@ from bpy_install_addon import INSTALL_ADDON_SCRIPT_PATH
 
 
 
-def install_self(blender_path: str, 
-                 addon_root_directory: str,
-                 addon_name ='ajc27_freemocap_blender_addon'):
+def install_to_blender(blender_path: str,
+                       addon_root_directory: str,
+                       addon_name ='ajc27_freemocap_blender_addon'):
     
     # Define your addon's name and root directory
     subprocess_command =         [
@@ -36,5 +36,5 @@ if __name__ == "__main__":
     blender_path_in = r"C:\Users\jonma\Blender Foundation\stable\blender-3.6.5+stable.cf1e1ed46b7e\blender.exe"
     addon_root_directory_in = str(Path(__file__).parent.parent.parent)  # Path to the root directory of the addon's code
 
-    install_self(blender_path=blender_path_in,
-                    addon_root_directory=addon_root_directory_in)
+    install_to_blender(blender_path=blender_path_in,
+                       addon_root_directory=addon_root_directory_in)
