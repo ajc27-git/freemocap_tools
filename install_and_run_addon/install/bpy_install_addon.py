@@ -30,9 +30,10 @@ def create_zip_from_folder(addon_folder_path:Union[Path,str])->str:
     return str(zip_path)
     
 
-def install_addon(addon_root_directory: str,
-                    addon_name: str):
-    import bpy    
+def install_addon():
+    addon_root_directory = str(Path(__file__).parent.parent.parent)  # Path to the root directory of the addon's code
+    addon_name = Path(addon_root_directory).name
+    import bpy
 
     print(f"\n\nInstalling blender addon named `{addon_name}` from root directory: `{addon_root_directory}`\n\n")
     zip_file_path = create_zip_from_folder(addon_folder_path=addon_root_directory)

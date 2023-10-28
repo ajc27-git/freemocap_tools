@@ -1,15 +1,10 @@
 import sys
 from pathlib import Path
 
-from ajc27_freemocap_blender_addon.core_functions.main_controller import MainController
-from ajc27_freemocap_blender_addon.data_models.parameter_models.load_parameters_config import \
-    load_default_parameters_config
-from ajc27_freemocap_blender_addon.data_models.parameter_models.parameter_models import Config
-
 
 def ajc27_run_as_main_function(recording_path: str,
-         save_path: str,
-         config: Config = load_default_parameters_config()):
+                               save_path: str,
+                               config: 'Config'):
     controller = MainController(recording_path=recording_path,
                                 save_path=save_path,
                                 config=config)
@@ -20,6 +15,9 @@ def ajc27_run_as_main_function(recording_path: str,
 
 
 if __name__ == "__main__" or __name__ == "<run_path>":
+    from ajc27_freemocap_blender_addon.core_functions.main_controller import MainController
+    from install_and_run_addon.install.bpy_install_addon import install_addon
+
     print("RUNNING AJC27 FREEMOCAP ADDON...")
     try:
         argv = sys.argv
@@ -27,6 +25,8 @@ if __name__ == "__main__" or __name__ == "<run_path>":
         argv = argv[argv.index("--") + 1:]
         recording_path_input = Path(argv[0])
         blender_file_save_path_input = Path(argv[1])
+
+        install_addon()
 
         if not recording_path_input:
             if __name__ == "<run_path>":
@@ -43,10 +43,9 @@ if __name__ == "__main__" or __name__ == "<run_path>":
 
         if not blender_file_save_path_input:
             blender_file_save_path_input = recording_path_input / (recording_path_input.stem + ".blend")
-            
 
         print(f"Running {__file__} with recording_path={recording_path_input}")
         ajc27_run_as_main_function(recording_path=str(recording_path_input),
-                                    save_path=blender_file_save_path_input)
+                                   save_path=str(blender_file_save_path_input))
     except Exception as e:
         print(f"ERROR RUNNING {__file__}: \n\n GOT ERROR \n\n {str(e)}")
