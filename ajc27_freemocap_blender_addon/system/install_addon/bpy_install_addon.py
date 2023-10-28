@@ -34,15 +34,15 @@ def install_addon(addon_root_directory: str,
                     addon_name: str):
     import bpy    
 
-    print(f"Installing blender addon named `{addon_name}` from root directory: `{addon_root_directory}`\n\n")
+    print(f"\n\nInstalling blender addon named `{addon_name}` from root directory: `{addon_root_directory}`\n\n")
     zip_file_path = create_zip_from_folder(addon_folder_path=addon_root_directory)
     print(f"Created zip file at `{zip_file_path}`\n\n")
 
-    print(f"Installing addon from zip file...\n\n")
+    print(f"\n\nInstalling addon from zip file...\n\n")
     bpy.ops.preferences.addon_install(overwrite=True, target='DEFAULT', filepath=zip_file_path)
     print(f"Eanbling addon `{addon_name}`...\n\n")
     bpy.ops.preferences.addon_enable(module=f'{addon_name}')
-    print(f"Saving user preferences...\n\n")
+    print(f"\n\nSaving user preferences...\n\n")
     bpy.ops.wm.save_userpref()
 
     installed_addons = bpy.context.preferences.addons.keys()
@@ -68,5 +68,7 @@ if __name__ == "__main__":
         raise FileNotFoundError(f"Addon root directory `{addon_root_directory}` does not exist!")
     install_addon(addon_root_directory=addon_root_directory,
                     addon_name=addon_name)
+    
+
 
 
