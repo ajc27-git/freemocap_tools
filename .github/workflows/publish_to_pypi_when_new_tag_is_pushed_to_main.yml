@@ -38,13 +38,6 @@ jobs:
     - name: Install dependencies
       run: poetry install
 
-    - name: Bump version
-      run: |
-        poetry version patch
-        git config --global user.name 'github-actions'
-        git config --global user.email 'github-actions@github.com'
-        git commit -am "Bump version"
-        git push
 
     - name: Build package
       run: poetry build
