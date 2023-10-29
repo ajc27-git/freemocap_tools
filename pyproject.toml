@@ -9,11 +9,8 @@ packages = [{ include = "ajc27_freemocap_blender_addon" }]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.13"
-numpy = "^1.26.1"
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.9.1"
-pytest = "*"
 bumpver = "^2023.1129"
 
 [tool.bumpver.file_patterns]
