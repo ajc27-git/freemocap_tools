@@ -83,8 +83,8 @@ class MediapipeTrajectoryNames(HumanTrajectoryNames):
         self.left_hand = [f"left_hand_{name}" for name in hand_names]
 
         # NOTE - these are the names of the first couple face markers, there are like 400 more points in that mesh that will be given names like `face_012` etc
-        face_named_points = ["right_eye",
-                             "left_eye",
+        face_named_points = ["face_right_eye",
+                             "face_left_eye",
                              "nose_tip",
                              "mouth_center",
                              "right_ear_tragion",
