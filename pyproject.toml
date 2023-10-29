@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ajc27_freemocap_blender_addon"
-version = "v2023.10.1008"
+version = "0.2.0"
 description = "A Blender Add-on for working with Freemocap Data (based on @ajc27's addon)"
 authors = ["Skelly FreeMoCap <info@freemocap.org>"]
 license = "AGPLv3"
@@ -10,21 +10,9 @@ packages = [{ include = "ajc27_freemocap_blender_addon" }]
 [tool.pofetry.dependencies]
 python = ">=3.8,<3.13"
 
-[tool.poetry.group.dev.dependencies]
-bumpver = "^2023.1129"
-
-[tool.bumpver.file_patterns]
-"ajc27_freemocap_blender_addon/__init__.py" = ["{version}"]
 
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.bumpver]
-current_version = "v2023.10.1009"
-version_pattern = "vYYYY.0M.BUILD[-TAG]"
-commit_message  = "Bump version {old_version} -> {new_version}"
-commit          = true
-tag             = true
-push            = true
