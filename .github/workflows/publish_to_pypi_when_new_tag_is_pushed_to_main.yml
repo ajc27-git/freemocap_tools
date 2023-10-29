@@ -4,11 +4,9 @@ on:
   push:
     tags: [ v* ]
 
-permissions:
-  contents: read
-
 jobs:
-  deploy:
+  pypi-publish:
+    name: upload release to PyPI
     runs-on: ubuntu-latest
     environment: release
     permissions:
