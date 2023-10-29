@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "ajc27_freemocap_blender_addon"
-version = "2023.10.1006"
+version = "2023.10.1008"
 description = "A Blender Add-on for working with Freemocap Data (based on @ajc27's addon)"
 authors = ["Skelly FreeMoCap <info@freemocap.org>"]
 license = "AGPLv3"
 readme = "README.md"
 packages = [{ include = "ajc27_freemocap_blender_addon" }]
 
-[tool.poetry.dependencies]
+[tool.pofetry.dependencies]
 python = ">=3.8,<3.13"
 
 [tool.poetry.group.dev.dependencies]
