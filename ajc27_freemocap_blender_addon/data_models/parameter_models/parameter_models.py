@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -37,8 +37,8 @@ class AddBodyMesh:
 
 @dataclass
 class Config:
-    adjust_empties: AdjustEmpties = AdjustEmpties()
-    reduce_bone_length_dispersion: ReduceBoneLengthDispersion = ReduceBoneLengthDispersion()
-    reduce_shakiness: ReduceShakiness = ReduceShakiness()
-    add_rig: AddRig = AddRig()
-    add_body_mesh: AddBodyMesh = AddBodyMesh()
+    adjust_empties: AdjustEmpties = field(default_factory=AdjustEmpties)
+    reduce_bone_length_dispersion: ReduceBoneLengthDispersion = field(default_factory=ReduceBoneLengthDispersion)
+    reduce_shakiness: ReduceShakiness = field(default_factory=ReduceShakiness)
+    add_rig: AddRig = field(default_factory=AddRig)
+    add_body_mesh: AddBodyMesh = field(default_factory=AddBodyMesh)

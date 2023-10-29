@@ -1,15 +1,24 @@
 [tool.poetry]
 name = "ajc27_freemocap_blender_addon"
 version = "0.1.0"
-description = "A add-on to import FreeMoCap data into Blender (based on @ajc27's addon)"
+description = "A Blender Add-on for working with Freemocap Data (based on @ajc27's addon)"
 authors = ["Skelly FreeMoCap <info@freemocap.org>"]
 license = "AGPLv3"
 readme = "README.md"
-packages = [{include = "ajc27_freemocap_blender_addon"}]
+packages = [{ include = "ajc27_freemocap_blender_addon" }]
 
 [tool.poetry.dependencies]
-python =  ">=3.8,<3.13"
+python = ">=3.8,<3.13"
 numpy = "*"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.9.1"
+pytest = "*"
+bumpver = "^2023.1129"
+
+[tool.bumpver.file_patterns]
+"ajc27_freemocap_blender_addon/__init__.py" = ["{version}"]
+
 
 [build-system]
 requires = ["poetry-core"]
