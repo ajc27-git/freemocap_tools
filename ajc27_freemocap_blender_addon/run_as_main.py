@@ -9,6 +9,8 @@ from ajc27_freemocap_blender_addon.data_models.parameter_models.parameter_models
 def ajc27_run_as_main_function(recording_path: str,
                                save_path: str,
                                config: Config = load_default_parameters_config()):
+    from ajc27_freemocap_blender_addon.core_functions.main_controller import MainController
+
     controller = MainController(recording_path=recording_path,
                                 save_path=save_path,
                                 config=config)
@@ -20,7 +22,6 @@ def ajc27_run_as_main_function(recording_path: str,
 
 if __name__ == "__main__" or __name__ == "<run_path>":
     print("RUNNING AJC27 FREEMOCAP ADDON...")
-    from ajc27_freemocap_blender_addon.core_functions.main_controller import MainController
     try:
         argv = sys.argv
         print(f"Received command line arguments: {argv}")
