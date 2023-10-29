@@ -19,9 +19,8 @@ def ajc27_run_as_main_function(recording_path: str,
 
 
 if __name__ == "__main__" or __name__ == "<run_path>":
-    from ajc27_freemocap_blender_addon.core_functions.main_controller import MainController
-
     print("RUNNING AJC27 FREEMOCAP ADDON...")
+    from ajc27_freemocap_blender_addon.core_functions.main_controller import MainController
     try:
         argv = sys.argv
         print(f"Received command line arguments: {argv}")

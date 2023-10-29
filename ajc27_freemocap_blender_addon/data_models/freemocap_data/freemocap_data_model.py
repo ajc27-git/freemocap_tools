@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional, Union, Literal
 
 import numpy as np
 
+from ajc27_freemocap_blender_addon.core_functions.setup_scene.get_path_to_sample_data import get_path_to_sample_data
 from .helpers.freemocap_component_data import FreemocapComponentData
 from .helpers.freemocap_data_paths import FreemocapDataPaths
 from .helpers.freemocap_data_stats import FreemocapDataStats
@@ -199,7 +200,6 @@ class FreemocapData:
 
 
 if __name__ == "__main__":
-    from .core_functions.setup_scene.get_path_to_sample_data import get_path_to_sample_data
 
     recording_path_in = get_path_to_sample_data()
     freemocap_data = FreemocapData.from_recording_path(recording_path=recording_path_in,
