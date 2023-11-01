@@ -270,6 +270,12 @@ def add_visual_components(
 
         index_frame += 1
 
+    # Delete the "plot_aux.png" file if it exists
+    try:
+        os.remove(str(frame_info.file_directory) + '/video/' + 'plot_aux.png')
+    except FileNotFoundError:
+        pass
+
     video.release()
     output_writer.release()
     cv2.destroyAllWindows()

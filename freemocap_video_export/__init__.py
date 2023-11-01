@@ -12,7 +12,7 @@ import bpy
 
 def register():
     # Import addon classes
-    from .addon_interface import FMC_VIDEO_EXPORT_PROPERTIES, VIEW3D_PT_freemocap_video_export, FMC_ADAPTER_OT_export_video
+    from freemocap_video_export.addon_interface import FMC_VIDEO_EXPORT_PROPERTIES, VIEW3D_PT_freemocap_video_export, FMC_ADAPTER_OT_export_video
 
     # Register addon classes
     bpy.utils.register_class(FMC_VIDEO_EXPORT_PROPERTIES)

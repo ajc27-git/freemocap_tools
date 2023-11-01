@@ -1,3 +1,4 @@
+import os
 import cv2
 import numpy as np
 import json
@@ -53,9 +54,9 @@ class vc_image:
     def __init__(self, frame_info=None, image_type=None):
         # Get the raw image
         try:
-            self.image_raw          = cv2.imread(str(frame_info.file_directory) + visual_components[image_type]['relative_path'], cv2.IMREAD_UNCHANGED)
+            self.image_raw          = cv2.imread(os.path.dirname(os.path.realpath(__file__)) + visual_components[image_type]['relative_path'], cv2.IMREAD_UNCHANGED)
         except:
-            print('Image not found: ' + str(frame_info.file_directory) + visual_components[image_type]['relative_path'])
+            print('Image not found: ' + os.path.dirname(os.path.realpath(__file__)) + visual_components[image_type]['relative_path'])
 
         # Get the larger side of the image to use it as reference
         larger_side = frame_info.width if frame_info.width > frame_info.height else frame_info.height
@@ -280,7 +281,7 @@ class vc_plot_com_bos():
 
         # Convert the Matplotlib plot to an OpenCV image.
         fig.canvas.draw()
-        fig.savefig('plot_aux.png', transparent=False)
+        fig.savefig(str(frame_info.file_directory) + '/video/' + 'plot_aux.png', transparent=False)
         
         # Close the figure
         plt.close(fig)
@@ -288,7 +289,7 @@ class vc_plot_com_bos():
         ### Image appending ###
 
         # Read the image component
-        img = cv2.imread('plot_aux.png', cv2.IMREAD_UNCHANGED)
+        img = cv2.imread(str(frame_info.file_directory) + '/video/' + 'plot_aux.png', cv2.IMREAD_UNCHANGED)
 
         # Resize the component
         component = visual_components['vc_plot_com_bos']
@@ -448,7 +449,7 @@ class vc_plot_foot_deviation():
 
         # Convert the Matplotlib plot to an OpenCV image.
         fig.canvas.draw()
-        fig.savefig('plot_aux.png', transparent=False, bbox_inches='tight')
+        fig.savefig(str(frame_info.file_directory) + '/video/' + 'plot_aux.png', transparent=False, bbox_inches='tight')
 
         # Close the figure
         plt.close(fig)
@@ -456,7 +457,7 @@ class vc_plot_foot_deviation():
         ### Image appending ###
 
         # Read the image component
-        img = cv2.imread('plot_aux.png', cv2.IMREAD_UNCHANGED)
+        img = cv2.imread(str(frame_info.file_directory) + '/video/' + 'plot_aux.png', cv2.IMREAD_UNCHANGED)
 
         # Resize the component
         component = visual_components['vc_plot_foot_deviation']

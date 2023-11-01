@@ -105,7 +105,7 @@ visual_components = {
         'lineType'      : cv2.LINE_AA,
     },
     'logo': {
-        'relative_path'             : '/freemocap_logo.png',
+        'relative_path'             : '/assets/freemocap_logo.png',
         'resize_largest_side_pct'   : 0.1,
         'position_x_pct'            : 0.9,
         'position_y_pct'            : 0.02,
