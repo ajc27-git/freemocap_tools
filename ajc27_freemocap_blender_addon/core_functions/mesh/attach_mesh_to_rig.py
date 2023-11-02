@@ -4,7 +4,7 @@ from typing import Dict
 
 import bpy
 
-from .create_mesh.create_mesh import create_mesh
+from .rigid_body_mesh.create_mesh import create_mesh
 
 import sys
 

@@ -1,6 +1,6 @@
-import logging
 from pathlib import Path
 
+from .mesh.skelly_mesh.attach_skelly_mesh import attach_skelly_mesh_to_rig
 from ..core_functions.bones.enforce_rigid_bones import enforce_rigid_bones
 from ..core_functions.empties.creation.create_freemocap_empties import create_freemocap_empties
 from ..core_functions.freemocap_data_handler.helpers.get_or_create_freemocap_data_handler import \
@@ -18,8 +18,6 @@ from ..core_functions.rig.add_rig import add_rig
 from ..core_functions.setup_scene.make_parent_empties import create_freemocap_parent_empty
 from ..core_functions.setup_scene.set_start_end_frame import set_start_end_frame
 from ..data_models.parameter_models.parameter_models import Config
-
-import sys
 
 
 class MainController:
@@ -133,12 +131,22 @@ class MainController:
             print(e)
             raise e
 
-    def attach_mesh_to_rig(self):
+    def attach_rigid_body_mesh_to_rig(self):
         try:
             print("Adding body mesh...")
             attach_mesh_to_rig(body_mesh_mode=self.config.add_body_mesh.body_mesh_mode,
                                rig_name=self.rig_name,
                                empties=self.empties, )
+        except Exception as e:
+            print(f"Failed to attach mesh to rig: {e}")
+            print(e)
+            raise e
+
+    def attach_skelly_mesh_to_rig(self):
+        try:
+            print("Adding Skelly mesh!!! :D")
+            attach_skelly_mesh_to_rig(rig_name=self.rig_name,
+                                      empties=self.empties)
         except Exception as e:
             print(f"Failed to attach mesh to rig: {e}")
             print(e)
@@ -164,7 +172,8 @@ class MainController:
         self.save_data_to_disk()
         self.create_empties()
         self.add_rig()
-        self.attach_mesh_to_rig()
+        self.attach_rigid_body_mesh_to_rig()
+        self.add_skelly_mesh_to_rig()
         self.add_videos()
         self.setup_scene()
         self.save_blender_file()
@@ -185,4 +194,3 @@ class MainController:
 
         bpy.ops.wm.save_as_mainfile(filepath=str(self.save_path))
         print(f"Saved .blend file to: {self.save_path}")
-
