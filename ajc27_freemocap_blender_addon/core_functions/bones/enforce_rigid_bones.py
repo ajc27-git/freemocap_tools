@@ -1,6 +1,6 @@
 import logging
 from copy import deepcopy
-from typing import Dict, Any
+from typing import Dict, Any, Tuple
 
 import numpy as np
 
@@ -13,7 +13,7 @@ import sys
 
 
 def enforce_rigid_bones(handler: FreemocapDataHandler,
-                        bones: Dict[str, Dict[str, Any]] = BONE_DEFINITIONS):
+                        bones: Dict[str, Dict[str, Any]] = BONE_DEFINITIONS) -> FreemocapDataHandler:
     print('Enforcing rigid bones - altering bone lengths to ensure they are the same length on each frame...')
     original_trajectories = handler.trajectories
     updated_trajectories = deepcopy(original_trajectories)

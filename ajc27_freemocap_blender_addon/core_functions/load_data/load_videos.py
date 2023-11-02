@@ -74,7 +74,7 @@ def load_videos(recording_path: str,
     elif Path(recording_path / "synchronized_videos").is_dir():
         videos_path = Path(recording_path / "synchronized_videos")
     else:
-        logger.warning("Did not find an `annotated_videos` or `synchronized_videos` folder in the recording path")
+        print("Did not find an `annotated_videos` or `synchronized_videos` folder in the recording path")
         videos_path = None
 
     if videos_path is not None:

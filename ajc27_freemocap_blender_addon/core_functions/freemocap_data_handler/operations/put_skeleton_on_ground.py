@@ -12,8 +12,7 @@ if TYPE_CHECKING:
 
 
 def put_skeleton_on_ground(handler: 'FreemocapDataHandler'):
-    print(
-        f"Putting freemocap data in inertial reference frame...")
+    print(f"Putting freemocap data in inertial reference frame...")
 
     ground_reference_trajectories_with_error = handler.get_trajectories(
         trajectory_names=["right_heel", "left_heel", "right_foot_index", "left_foot_index"],
@@ -105,7 +104,7 @@ def get_body_trajectories_closest_to_the_ground(handler: 'FreemocapDataHandler')
 
             for trajectory_name, trajectory in part_trajectories.items():
                 if np.isnan(trajectory).all():
-                    logger.warning(
+                    print(
                         f"Trajectory {trajectory_name} is all nan. Removing from lowest body trajectories.")
                     del part_trajectories[trajectory_name]
 

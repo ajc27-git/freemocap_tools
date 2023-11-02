@@ -4,6 +4,7 @@ from typing import List, Union, Dict, Any
 
 import numpy as np
 
+from .operations.estimate_good_frame import estimate_good_frame
 from ..empties.creation.create_virtual_trajectories import calculate_virtual_trajectories
 from ..freemocap_data_handler.helpers.saver import FreemocapDataSaver
 from ..freemocap_data_handler.helpers.transformer import FreemocapDataTransformer
@@ -183,8 +184,8 @@ class FreemocapDataHandler:
     @property
     def number_of_hand_trajectories(self):
         if not self.number_of_right_hand_trajectories == self.number_of_left_hand_trajectories:
-            logger.warning(f"Number of right hand trajectories ({self.number_of_right_hand_trajectories}) "
-                           f"does not match number of left hand trajectories ({self.number_of_left_hand_trajectories}).")
+            print(f"Number of right hand trajectories ({self.number_of_right_hand_trajectories}) "
+                  f"does not match number of left hand trajectories ({self.number_of_left_hand_trajectories}).")
         return self.number_of_right_hand_trajectories + self.number_of_left_hand_trajectories
 
     @property
@@ -198,6 +199,15 @@ class FreemocapDataHandler:
                 self.number_of_left_hand_trajectories +
                 self.number_of_face_trajectories +
                 self.number_of_other_trajectories)
+
+    def estimate_good_clean_frame(self):
+        return estimate_good_frame(trajectories_with_error=self.get_trajectories(with_error=True))
+
+    def estimate_height(self):
+        if "bones" in self.metadata:
+            raise AssertionError(
+                "Cannot estimate height before the 'bones' metadata has been set ( in the `enforce_rigid_bones` step).")
+        left_leg_length = 9
 
     def add_trajectory(self,
                        trajectory: np.ndarray,
@@ -262,9 +272,14 @@ class FreemocapDataHandler:
                                 source=source,
                                 group_name=group_name)
 
-    def get_trajectories(self, trajectory_names: List[str], components=None, with_error: bool = False) -> Union[
+    def get_trajectories(self,
+                         trajectory_names: List[str] = None,
+                         components=None,
+                         with_error: bool = False) -> Union[
         Dict[str, np.ndarray], Dict[str, Dict[str, np.ndarray]]]:
 
+        if trajectory_names is None:
+            trajectory_names = [self.body_names, self.right_hand_names, self.left_hand_names]
         if not isinstance(trajectory_names, list):
             trajectory_names = [trajectory_names]
 
