@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import bpy
 from collections import deque
 from .config_variables import *
+from . import addon_interface
 
 class frame_information:
     def __init__(
@@ -200,16 +201,16 @@ class vc_plot_com_bos():
                 bpy.data.objects['right_foot_index'].matrix_world.translation[1] - com_y,
                 bpy.data.objects['right_heel'].matrix_world.translation[1] - com_y,
             ],
+            'z': [
+                bpy.data.objects['left_heel'].matrix_world.translation[2],
+                bpy.data.objects['left_foot_index'].matrix_world.translation[2],
+                bpy.data.objects['right_foot_index'].matrix_world.translation[2],
+                bpy.data.objects['right_heel'].matrix_world.translation[2],
+            ],
         }
-
-        # Get the maximum value to set the axes limits
-        max_x_value = max(abs(x) for x in base_of_support_points['x'])
-        max_y_value = max(abs(y) for y in base_of_support_points['y'])
-        max_value = max(max_x_value, max_y_value)
 
         # Scattter chart labels
         scatter_labels = [
-            'COM',
             'left_heel',
             'left_foot_index',
             'right_foot_index',
@@ -223,9 +224,17 @@ class vc_plot_com_bos():
 
         # Plot the COM
         ax.scatter(0, 0, marker='o', color=color_palette['dark_terra_cotta']['hex'], zorder=2)
+
+        # Filter out points that are above the ground contact threshold
+        filtered_base_of_support_points = {
+            'x': [x for x, z in zip(base_of_support_points['x'], base_of_support_points['z']) if z < visual_components['vc_plot_com_bos']['ground_contact_threshold']],
+            'y': [y for y, z in zip(base_of_support_points['y'], base_of_support_points['z']) if z < visual_components['vc_plot_com_bos']['ground_contact_threshold']],
+            'z': [z for z in base_of_support_points['z'] if z < visual_components['vc_plot_com_bos']['ground_contact_threshold']],
+        }
+
         # Plot the base of support
-        ax.scatter(base_of_support_points['x'],
-                   base_of_support_points['y'],
+        ax.scatter(filtered_base_of_support_points['x'],
+                   filtered_base_of_support_points['y'],
                    marker='o',
                    color=color_palette['crystal']['hex'],
                    zorder=2,
@@ -234,17 +243,29 @@ class vc_plot_com_bos():
         # Add labels
         plt.text(0, 0, 'COM', color=color_palette['crystal']['hex'], fontsize=12)
 
-        for point in range(0, len(base_of_support_points['x'])):
-            plt.text(base_of_support_points['x'][point],
-                     base_of_support_points['y'][point],
-                     scatter_labels[point + 1],
-                     color=color_palette['crystal']['hex'],
-                     fontsize=12)
+        # Filter the labels based on the filtered base of support points
+        filtered_scatter_labels = [label for label, z in zip(scatter_labels, base_of_support_points['z']) if z < visual_components['vc_plot_com_bos']['ground_contact_threshold']]
 
-        # Connect the points to form a polygon
-        ax.plot(base_of_support_points['x'] + [base_of_support_points['x'][0]], base_of_support_points['y'] + [base_of_support_points['y'][0]], color='red', zorder=1)
+        for point in range(0, len(filtered_base_of_support_points['x'])):
+            plt.text(filtered_base_of_support_points['x'][point],
+                    filtered_base_of_support_points['y'][point],
+                    filtered_scatter_labels[point],
+                    color=color_palette['crystal']['hex'],
+                    fontsize=12)
+
+        # Connect the points to form a polygon if there are more than 1 point
+        if len(filtered_base_of_support_points['x']) > 1:
+            ax.plot(filtered_base_of_support_points['x'] + [filtered_base_of_support_points['x'][0]], filtered_base_of_support_points['y'] + [filtered_base_of_support_points['y'][0]], color='red', zorder=1)
         
         ### Plot format setup ###
+
+        # Get the maximum value to set the axes limits if there are at least 1 point
+        if len(filtered_base_of_support_points['x']) > 0:
+            max_x_value = max(abs(x) for x in filtered_base_of_support_points['x'])
+            max_y_value = max(abs(y) for y in filtered_base_of_support_points['y'])
+            max_value = max(max_x_value, max_y_value)
+        else:
+            max_value = 10
 
         # Set the axes limits
         ax.set_xlim(-max_value * 1.1, max_value * 1.1)

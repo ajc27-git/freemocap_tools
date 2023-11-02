@@ -174,6 +174,7 @@ visual_components = {
         'topleft_y_pct': 0.7,
         'width_pct': 0.23,
         'height_pct': 0.25,
+        'ground_contact_threshold': 0.05,
     },
     'vc_plot_foot_deviation': {
         'topleft_x_pct': 0.75,

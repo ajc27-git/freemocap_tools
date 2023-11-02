@@ -246,10 +246,10 @@ def add_visual_components(
     )
 
     # Creat the visual component objects list
-    visual_components = []
+    visual_components_list = []
     for visual_component in export_profiles[export_profile]['visual_components']:
         visual_component_class = globals()[visual_component]
-        visual_components.append(visual_component_class(frame_info))
+        visual_components_list.append(visual_component_class(frame_info))
 
     index_frame = 0
     # Add the logo to the video
@@ -262,7 +262,7 @@ def add_visual_components(
         frame_info.frame_number = index_frame
 
         # Add each visual component
-        for visual_component in visual_components:
+        for visual_component in visual_components_list:
             frame = visual_component.add_component(frame, frame_info)
 
         # Write the frame

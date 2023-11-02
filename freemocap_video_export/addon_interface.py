@@ -2,6 +2,7 @@ import bpy
 from bpy.types import Operator, Panel
 from bpy.props import EnumProperty
 from .functions import fmc_export_video
+from . import config_variables
 
 # Class with the different properties of the methods
 class FMC_VIDEO_EXPORT_PROPERTIES(bpy.types.PropertyGroup):
@@ -13,6 +14,12 @@ class FMC_VIDEO_EXPORT_PROPERTIES(bpy.types.PropertyGroup):
                        ('showcase', 'Showcase', ''),
                        ('scientific', 'Scientific', ''),
         ],
+    )
+
+    scientific_ground_contact_threshold: bpy.props.FloatProperty(
+        name        = '',
+        default     = 0.05,
+        description = 'Ground contact threshold (m)'
     )
 
 # UI Panel Class
@@ -33,6 +40,11 @@ class VIEW3D_PT_freemocap_video_export(Panel):
         split.column().label(text='Video Profile')
         split.split().column().prop(fmc_video_export_tool, 'export_profile')
 
+        box.label(text='Scientific Profile Options')
+        split = box.column().row().split(factor=0.6)
+        split.column().label(text='Ground Contact Threshold (m)')
+        split.split().column().prop(fmc_video_export_tool, 'scientific_ground_contact_threshold')
+
         box.operator('fmc_export_video.export_video', text='Export Video')
 
 # Operator classes that executes the methods
@@ -47,6 +59,8 @@ class FMC_ADAPTER_OT_export_video(Operator):
         fmc_video_export_tool   = scene.fmc_video_export_tool
 
         print("Exporting video.......")
+
+        config_variables.visual_components['vc_plot_com_bos']['ground_contact_threshold'] = fmc_video_export_tool.scientific_ground_contact_threshold
 
         fmc_export_video(scene=scene, export_profile=fmc_video_export_tool.export_profile)
 
