@@ -200,14 +200,10 @@ class FreemocapDataHandler:
                 self.number_of_face_trajectories +
                 self.number_of_other_trajectories)
 
+
     def estimate_good_clean_frame(self):
         return estimate_good_frame(trajectories_with_error=self.get_trajectories(with_error=True))
 
-    def estimate_height(self):
-        if "bones" in self.metadata:
-            raise AssertionError(
-                "Cannot estimate height before the 'bones' metadata has been set ( in the `enforce_rigid_bones` step).")
-        left_leg_length = 9
 
     def add_trajectory(self,
                        trajectory: np.ndarray,

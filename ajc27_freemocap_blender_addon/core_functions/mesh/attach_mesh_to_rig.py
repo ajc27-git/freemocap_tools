@@ -4,7 +4,7 @@ from typing import Dict
 
 import bpy
 
-from .rigid_body_mesh.create_mesh import create_mesh
+from .rigid_body_mesh.create_rigid_body_mesh import create_rigid_body_mesh
 
 import sys
 
@@ -26,7 +26,7 @@ def attach_mesh_to_rig(rig_name: str,
                 print(f"Must provide empties for custom body mesh")
                 raise ValueError(f"Must provide empties for custom body mesh")
 
-            create_mesh(rig=rig, empties=empties)
+            create_rigid_body_mesh(rig=rig, empties=empties)
 
             # Deselect all
             bpy.ops.object.select_all(action='DESELECT')

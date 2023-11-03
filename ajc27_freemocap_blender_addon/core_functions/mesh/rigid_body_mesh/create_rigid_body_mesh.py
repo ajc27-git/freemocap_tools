@@ -9,7 +9,7 @@ from .helpers.put_meshes_on_empties import put_spheres_on_empties, \
 logger = logging.getLogger(__name__)
 
 
-def create_mesh(rig: bpy.types.Object,
+def create_rigid_body_mesh(rig: bpy.types.Object,
                 empties: Dict[str, bpy.types.Object], ):
     # Change to edit mode
     meshes = put_spheres_on_empties(empties=empties)

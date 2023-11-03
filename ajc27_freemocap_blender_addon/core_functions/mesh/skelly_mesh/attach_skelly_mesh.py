@@ -7,7 +7,7 @@ from ajc27_freemocap_blender_addon.core_functions import PACKAGE_BASE_PATH
 
 
 def attach_skelly_mesh_to_rig(rig_name: str,
-                              body_mesh_name: Dict[str, float],
+                              body_dimensions: BodyDimensions,
                               empties: Dict[str, bpy.types.Object], ):
     # Change to object mode
     if bpy.context.selected_objects != []:
@@ -19,7 +19,7 @@ def attach_skelly_mesh_to_rig(rig_name: str,
         bpy.ops.import_scene.fbx(filepath=str(PACKAGE_BASE_PATH) + '/assets/skelly_lowpoly_mesh.fbx')
 
     except:
-        print("\nCould not find skelly mesh file.")
+        print("Could not find skelly mesh file.")
         return
 
     # Deselect all objects

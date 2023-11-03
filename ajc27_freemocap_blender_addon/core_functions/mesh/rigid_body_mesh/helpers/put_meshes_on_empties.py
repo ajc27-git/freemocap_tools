@@ -26,6 +26,7 @@ def put_bone_meshes_on_empties(empties: Dict[str, bpy.types.Object]):
                 all_empties.update(other_component)
 
     for parent_empty_name in MEDIAPIPE_HIERARCHY.keys():
+        print(f"Creating bone mesh for {parent_empty_name}...")
         color, squish_scale = get_bone_mesh_color_and_squish(parent_empty_name)
 
         for child_name in MEDIAPIPE_HIERARCHY[parent_empty_name]["children"]:

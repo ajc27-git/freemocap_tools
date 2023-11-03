@@ -4,6 +4,7 @@ from typing import Dict, Any, Tuple
 
 import numpy as np
 
+from .calculate_body_dimensions import calculate_body_dimensions
 from ..bones.calculate_bone_length_statistics import calculate_bone_length_statistics
 from ..freemocap_data_handler.handler import     FreemocapDataHandler
 from ...data_models.bones.bone_definitions import BONE_DEFINITIONS
@@ -69,6 +70,7 @@ def enforce_rigid_bones(handler: FreemocapDataHandler,
 
     handler.mark_processing_stage(name='enforced_rigid_bones',
                                   metadata={'bones': updated_bones,
+                                            "body_dimensions": calculate_body_dimensions(updated_bones),
                                             'hierarchy': MEDIAPIPE_HIERARCHY},
                                   )
     return handler

@@ -54,7 +54,6 @@ def make_cone_mesh(name: str = "cone_mesh",
     bm.verts.ensure_lookup_table()  # This is important to access vertices by index
     # Select the vertex you want to move the cursor to (i.e. center of the cone base)
     for vertex in bm.verts:
-        print(vertex.index, vertex.co)
         x = vertex.co.x
         y = vertex.co.y
         z = vertex.co.z

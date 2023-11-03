@@ -98,6 +98,7 @@ class MainController:
             self.freemocap_data_handler = enforce_rigid_bones(
                 handler=self.freemocap_data_handler
             )
+
         except Exception as e:
             print(f"Failed during `enforce rigid bones`, error: `{e}`")
             print(e)
@@ -156,7 +157,7 @@ class MainController:
 
     def attach_rigid_body_mesh_to_rig(self):
         try:
-            print("Adding body mesh...")
+            print("Adding rigid_body_bone_meshes...")
             attach_mesh_to_rig(
                 body_mesh_mode=self.config.add_body_mesh.body_mesh_mode,
                 rig_name=self.rig_name,
@@ -170,10 +171,10 @@ class MainController:
     def attach_skelly_mesh_to_rig(self):
         try:
             print("Adding Skelly mesh!!! :D")
-            body_scale = self.freemocap_data_handler.estimate_height()
+            body_dimensions = self.freemocap_data_handler.get_body_dimensions()
             attach_skelly_mesh_to_rig(
                 rig_name=self.rig_name,
-                body_scale=body_scale,
+                body_dimensions=body_dimensions,
                 empties=self.empties
             )
         except Exception as e:
