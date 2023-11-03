@@ -14,7 +14,8 @@ def create_skeleton_segment_object(child_name: str,
     pass
 
 
-def put_bone_meshes_on_empties(empties: Dict[str, bpy.types.Object]):
+def put_bone_meshes_on_empties(empties: Dict[str, bpy.types.Object],
+                               parent_empty: bpy.types.Object):
     all_empties = {}
     for component in empties.values():
         all_empties.update(component)
@@ -46,9 +47,11 @@ def put_bone_meshes_on_empties(empties: Dict[str, bpy.types.Object]):
             track_to_constraint = bone_mesh.constraints.new(type="DAMPED_TRACK")
             track_to_constraint.target = all_empties[child_name]
             track_to_constraint.track_axis = "TRACK_Z"
+            bone_mesh.parent = parent_empty
 
 
-def put_spheres_on_empties(empties: Dict[str, bpy.types.Object]):
+def put_spheres_on_empties(empties: Dict[str, bpy.types.Object], 
+                           parent_empty: bpy.types.Object):
     meshes = []
 
     components = {}
@@ -77,6 +80,7 @@ def put_spheres_on_empties(empties: Dict[str, bpy.types.Object]):
             sphere_mesh = bpy.context.active_object
             constraint = sphere_mesh.constraints.new(type="COPY_LOCATION")
             constraint.target = empty
+            sphere_mesh.parent = parent_empty
 
     return meshes
 

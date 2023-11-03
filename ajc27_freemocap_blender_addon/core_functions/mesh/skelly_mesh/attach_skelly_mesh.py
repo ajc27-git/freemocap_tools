@@ -7,8 +7,7 @@ import bpy
 
 SKELLY_MESH_PATH = r"C:\Users\jonma\github_repos\freemocap_organization\ajc27_freemocap_blender_addon\ajc27_freemocap_blender_addon\assets\skelly_lowpoly_mesh.fbx"
 
-def attach_skelly_mesh_to_rig(rig_name: str,
-                              
+def attach_skelly_mesh_to_rig(rig_name: str,                              
                               body_dimensions: Dict[str, float],
                               empties: Dict[str, bpy.types.Object],
                               skelly_mesh_path: str = SKELLY_MESH_PATH

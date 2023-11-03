@@ -12,6 +12,9 @@ logger = logging.getLogger(__name__)
 def create_rigid_body_mesh(rig: bpy.types.Object,
                 empties: Dict[str, bpy.types.Object], ):
     # Change to edit mode
-    meshes = put_spheres_on_empties(empties=empties)
-    meshes = put_bone_meshes_on_empties(empties=empties)
-    # parent_mesh_to_rig(meshes, rig)
+    bpy.ops.object.empty_add()
+    rigid_mesh_parent = bpy.context.editable_objects[-1]
+    rigid_mesh_parent.name = "rigid_body_mesh_parent"
+    put_spheres_on_empties(empties=empties, parent_empty=rigid_mesh_parent)
+    put_bone_meshes_on_empties(empties=empties, parent_empty=rigid_mesh_parent)
+    
