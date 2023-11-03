@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+import traceback
 
 import bpy
 
@@ -30,7 +31,7 @@ class FMC_ADAPTER_run_all(bpy.types.Operator):
             controller.run_all()
         except Exception as e:
             print(f"Failed to run main_controller.run_all() with config:{config}: `{e}`")
-            print(e)
+            print(traceback.format_exc())
             return {'CANCELLED'}
         return {'FINISHED'}
 

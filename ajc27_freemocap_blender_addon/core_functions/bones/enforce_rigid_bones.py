@@ -70,7 +70,7 @@ def enforce_rigid_bones(handler: FreemocapDataHandler,
 
     handler.mark_processing_stage(name='enforced_rigid_bones',
                                   metadata={'bones': updated_bones,
-                                            "body_dimensions": calculate_body_dimensions(updated_bones),
+                                            "body_dimensions": calculate_body_dimensions(bones_info=updated_bones),
                                             'hierarchy': MEDIAPIPE_HIERARCHY},
                                   )
     return handler
