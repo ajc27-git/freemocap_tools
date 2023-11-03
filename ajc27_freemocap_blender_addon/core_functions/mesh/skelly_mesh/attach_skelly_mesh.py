@@ -67,9 +67,9 @@ def attach_skelly_mesh_to_rig(rig_name: str,
     raw_body_mesh_height = skelly_mesh.dimensions.z
 
     # Calculate the proportion between the rig and the mesh
-    rig_to_body_mesh_height_ratio =  raw_body_mesh_height / body_dimensions['total_height']
-    rig_to_body_mesh_wingspan_ratio =  raw_body_mesh_wingspan_width / body_dimensions['total_wingspan']
-    rig_to_body_mesh_toe_to_toe_ratio =  raw_body_mesh_toe_to_heel_depth / body_dimensions['mean_foot_length']
+    rig_to_body_mesh_height_ratio =  body_dimensions['total_height'] / raw_body_mesh_height 
+    rig_to_body_mesh_wingspan_ratio =   body_dimensions['total_wingspan'] /raw_body_mesh_wingspan_width 
+    rig_to_body_mesh_toe_to_toe_ratio = body_dimensions['mean_foot_length'] /  raw_body_mesh_toe_to_heel_depth 
 
     # Scale the mesh by the rig and body_mesh proportions multiplied by a scale factor
     skelly_mesh.scale = (rig_to_body_mesh_wingspan_ratio,
