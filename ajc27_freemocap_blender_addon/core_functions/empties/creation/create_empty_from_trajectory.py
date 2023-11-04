@@ -27,7 +27,6 @@ def create_empties(trajectory_frame_marker_xyz: np.ndarray,
             empty_scale=empty_scale,
             empty_type=empty_type,
         )
-        print(f"Created empty {trajectory_name}")
 
     return empties
 

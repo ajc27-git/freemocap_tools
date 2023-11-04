@@ -1,22 +1,18 @@
-import logging
 import math as m
 from typing import Dict
 
 import bpy
 
-from .rigid_body_mesh.create_rigid_body_mesh import create_rigid_body_mesh
-
-import sys
+from .rigid_body_mesh.helpers.put_meshes_on_empties import put_bone_meshes_on_empties
 
 
-def attach_mesh_to_rig(rig_name: str,
+def attach_mesh_to_rig(rig: bpy.types.Object,
+                       parent_object: bpy.types.Object,
                        body_mesh_mode: str = "custom",
                        mesh_path: str = None,
                        empties: Dict[str, bpy.types.Object] = None,
                        ):
     try:
-        rig = bpy.data.objects[rig_name]
-
         if body_mesh_mode == "file":
 
             mesh_from_file(mesh_path, rig)
@@ -26,7 +22,7 @@ def attach_mesh_to_rig(rig_name: str,
                 print(f"Must provide empties for custom body mesh")
                 raise ValueError(f"Must provide empties for custom body mesh")
 
-            create_rigid_body_mesh(rig=rig, empties=empties)
+            put_bone_meshes_on_empties(empties=empties, parent_empty=parent_object)
 
             # Deselect all
             bpy.ops.object.select_all(action='DESELECT')

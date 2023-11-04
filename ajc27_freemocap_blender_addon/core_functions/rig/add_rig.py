@@ -17,8 +17,7 @@ def add_rig(empties: Dict[str, bpy.types.Object],
             keep_symmetry: bool = False,
             add_fingers_constraints: bool = False,
             use_limit_rotation: bool = False,
-
-            ):
+            ) -> bpy.types.Object:
     try:
         # Deselect all objects
         for object in bpy.data.objects:
@@ -32,6 +31,7 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         rig = bpy.data.objects['metarig']
         # Rename the rig object to root
         rig.name = rig_name
+        rig.data.display_type = 'STICK'
         # Get reference to the renamed armature
         rig = bpy.data.objects[rig_name]
         rig.parent = parent_object

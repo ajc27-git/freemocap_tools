@@ -3,7 +3,6 @@ from pathlib import Path
 
 from .mesh.skelly_mesh.attach_skelly_mesh import attach_skelly_mesh_to_rig
 from .rig.save_bone_and_joint_angles_from_rig import save_bone_and_joint_angles_from_rig
-
 from ..core_functions.bones.enforce_rigid_bones import enforce_rigid_bones
 from ..core_functions.empties.creation.create_freemocap_empties import (
     create_freemocap_empties,
@@ -23,7 +22,7 @@ from ..core_functions.load_data.load_videos import load_videos
 from ..core_functions.mesh.attach_mesh_to_rig import attach_mesh_to_rig
 from ..core_functions.rig.add_rig import add_rig
 from ..core_functions.setup_scene.make_parent_empties import (
-    create_freemocap_parent_empty,
+    create_parent_empty,
 )
 from ..core_functions.setup_scene.set_start_end_frame import set_start_end_frame
 from ..data_models.parameter_models.parameter_models import Config
@@ -35,6 +34,7 @@ class MainController:
     """
 
     def __init__(self, recording_path: str, save_path: str, config: Config):
+        self.rig = None
         self.config = config
 
         self.recording_path = recording_path
@@ -49,14 +49,25 @@ class MainController:
         self.empties = None
 
     def _create_parent_empties(self):
-        self.data_parent_object = create_freemocap_parent_empty(name=self.origin_name)
-        self._empty_parent_object = create_freemocap_parent_empty(
-            name=f"empties_parent",
-            parent_object=self.data_parent_object
+        self.data_parent_object = create_parent_empty(name=self.origin_name,
+                                                      type="ARROWS")
+        self._empty_parent_object = create_parent_empty(
+            name=f"empties",
+            parent_object=self.data_parent_object,
+            type="PLAIN_AXES",
+            scale=(0.3, 0.3, 0.3),
         )
-        self._video_parent_object = create_freemocap_parent_empty(
-            name=f"videos_parent",
-            parent_object=self.data_parent_object
+        self._rigid_body_meshes_parent_object = create_parent_empty(
+            name=f"rigid_body_meshes",
+            parent_object=self.data_parent_object,
+            type="CUBE",
+            scale=(0.2, 0.2, 0.2),
+        )
+        self._video_parent_object = create_parent_empty(
+            name=f"videos",
+            parent_object=self.data_parent_object,
+            type="SPHERE",
+            scale=(0.1, 0.1, 0.1),
         )
 
     def load_freemocap_data(self):
@@ -145,7 +156,7 @@ class MainController:
     def add_rig(self):
         try:
             print("Adding rig...")
-            add_rig(
+            self.rig = add_rig(
                 empties=self.empties,
                 bones=self.freemocap_data_handler.metadata["bones"],
                 rig_name=self.rig_name,
@@ -160,11 +171,14 @@ class MainController:
             raise e
 
     def save_bone_and_joint_data_from_rig(self):
+        if self.rig is None:
+            raise ValueError("Rig is None!")
         try:
             print("Saving joint angles...")
-            csv_file_path = str(Path(self.save_path).parent / "saved_data" / f"{self.recording_name}_bone_and_joint_data.csv")
+            csv_file_path = str(
+                Path(self.save_path).parent / "saved_data" / f"{self.recording_name}_bone_and_joint_data.csv")
             save_bone_and_joint_angles_from_rig(
-                rig_name=self.rig_name,
+                rig=self.rig,
                 csv_save_path=csv_file_path,
                 start_frame=0,
                 end_frame=self.freemocap_data_handler.number_of_frames,
@@ -175,12 +189,16 @@ class MainController:
             raise e
 
     def attach_rigid_body_mesh_to_rig(self):
+        if self.rig is None:
+            raise ValueError("Rig is None!")
+
         try:
             print("Adding rigid_body_bone_meshes...")
             attach_mesh_to_rig(
                 body_mesh_mode=self.config.add_body_mesh.body_mesh_mode,
-                rig_name=self.rig_name,
+                rig=self.rig,
                 empties=self.empties,
+                parent_object=self._rigid_body_meshes_parent_object,
             )
         except Exception as e:
             print(f"Failed to attach mesh to rig: {e}")
@@ -188,11 +206,13 @@ class MainController:
             raise e
 
     def attach_skelly_mesh_to_rig(self):
+        if self.rig is None:
+            raise ValueError("Rig is None!")
         try:
             print("Adding Skelly mesh!!! :D")
             body_dimensions = self.freemocap_data_handler.get_body_dimensions()
             attach_skelly_mesh_to_rig(
-                rig_name=self.rig_name,
+                rig=self.rig,
                 body_dimensions=body_dimensions,
                 empties=self.empties
             )
@@ -213,6 +233,31 @@ class MainController:
             print(e)
             raise e
 
+    def setup_scene(self):
+        import bpy
+
+        for window in bpy.context.window_manager.windows:
+            for area in window.screen.areas:  # iterate through areas in current screen
+                if area.type == "VIEW_3D":
+                    for (
+                            space
+                    ) in area.spaces:  # iterate through spaces in current VIEW_3D area
+                        if space.type == "VIEW_3D":  # check if space is a 3D view
+                            space.shading.type = "MATERIAL"
+
+        # self.data_parent_object.hide_set(True)
+        # self._empty_parent_object.hide_set(True)
+        # self._rigid_body_meshes_parent_object.hide_set(True)
+        # self._video_parent_object.hide_set(True)
+
+
+    def save_blender_file(self):
+        print("Saving blender file...")
+        import bpy
+
+        bpy.ops.wm.save_as_mainfile(filepath=str(self.save_path))
+        print(f"Saved .blend file to: {self.save_path}")
+
     def run_all(self):
         print("Running all stages...")
         self.load_freemocap_data()
@@ -230,22 +275,3 @@ class MainController:
         self.setup_scene()
         self.save_blender_file()
         # export_fbx(recording_path=recording_path, )
-
-    def setup_scene(self):
-        import bpy
-
-        for window in bpy.context.window_manager.windows:
-            for area in window.screen.areas:  # iterate through areas in current screen
-                if area.type == "VIEW_3D":
-                    for (
-                            space
-                    ) in area.spaces:  # iterate through spaces in current VIEW_3D area
-                        if space.type == "VIEW_3D":  # check if space is a 3D view
-                            space.shading.type = "MATERIAL"
-
-    def save_blender_file(self):
-        print("Saving blender file...")
-        import bpy
-
-        bpy.ops.wm.save_as_mainfile(filepath=str(self.save_path))
-        print(f"Saved .blend file to: {self.save_path}")

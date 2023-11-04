@@ -1,22 +1,21 @@
 import csv
 from pathlib import Path
 from typing import Dict
-from ajc27_freemocap_blender_addon.data_models.bones.bone_constraints import BONES_CONSTRAINTS
 
 import bpy
 
+from ajc27_freemocap_blender_addon.data_models.bones.bone_constraints import BONES_CONSTRAINTS
 
-def save_bone_and_joint_angles_from_rig(rig_name: str,
-                               csv_save_path: str,
-                               start_frame: int,
-                               end_frame: int):
+
+def save_bone_and_joint_angles_from_rig(rig: bpy.types.Object,
+                                        csv_save_path: str,
+                                        start_frame: int,
+                                        end_frame: int):
     Path(csv_save_path).parent.mkdir(parents=True, exist_ok=True)
-    documenation_save_path = Path(csv_save_path).parent / "_BONE_AND_JOINT_DATA_README.md"
-
-    rig = bpy.data.objects[rig_name]
+    documentation_save_path = Path(csv_save_path).parent / "_BONE_AND_JOINT_DATA_README.md"
 
     if rig.type != 'ARMATURE':
-        raise TypeError(f"Object {rig_name} is not an armature!")
+        raise TypeError(f"`rig` is not an armature!")
     all_bone_data = {}
     for frame_number in range(start_frame, end_frame + 1):
         bpy.context.scene.frame_set(frame_number)
@@ -40,11 +39,11 @@ def save_bone_and_joint_angles_from_rig(rig_name: str,
             row_data = []
             for bone_data in frame_data.values():
                 row_data.extend(bone_data.values())
-            column_data_mappping = dict(zip(column_names, row_data))            
+            column_data_mappping = dict(zip(column_names, row_data))
             writer.writerow(column_data_mappping)
 
     # Save documentation
-    with open(documenation_save_path, 'w') as file:
+    with open(documentation_save_path, 'w') as file:
         file.write(DOCUMENTATION_STRING)
 
 
@@ -56,10 +55,10 @@ def get_bone_data(bone: bpy.types.PoseBone) -> Dict[str, float]:
         "tail_center_world_x": bone.tail.x,
         "tail_center_world_y": bone.tail.y,
         "tail_center_world_z": bone.tail.z,
-        "rotation_quaternion_x":bone.matrix.to_quaternion().x,
-        "rotation_quaternion_y":bone.matrix.to_quaternion().y,
-        "rotation_quaternion_z":bone.matrix.to_quaternion().z,
-        "rotation_quaternion_w":bone.matrix.to_quaternion().w,
+        "rotation_quaternion_x": bone.matrix.to_quaternion().x,
+        "rotation_quaternion_y": bone.matrix.to_quaternion().y,
+        "rotation_quaternion_z": bone.matrix.to_quaternion().z,
+        "rotation_quaternion_w": bone.matrix.to_quaternion().w,
         "rotation_euler_x": bone.matrix.to_euler().x,
         "rotation_euler_y": bone.matrix.to_euler().y,
         "rotation_euler_z": bone.matrix.to_euler().z,

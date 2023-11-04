@@ -6,7 +6,6 @@ import addon_utils
 import bpy
 import numpy as np
 
-from ..setup_scene.make_parent_empties import create_video_parent_empty
 
 import sys
 

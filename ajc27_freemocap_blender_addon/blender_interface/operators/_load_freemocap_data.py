@@ -3,7 +3,7 @@ from pathlib import Path
 
 from ...core_functions.empties.creation.create_freemocap_empties import create_freemocap_empties
 from ...core_functions.load_data.load_freemocap_data import load_freemocap_data
-from ...core_functions.setup_scene.make_parent_empties import create_freemocap_parent_empty
+from ...core_functions.setup_scene.make_parent_empties import create_parent_empty
 from ...core_functions.setup_scene.set_start_end_frame import set_start_end_frame
 
 import sys
@@ -28,7 +28,7 @@ class FMC_ADAPTER_load_freemocap_data(bpy.types.Operator):  # , bpy_extras.io_ut
 
             recording_name = Path(recording_path).stem
             origin_name = f"{recording_name}_origin"
-            freemocap_origin_axes = create_freemocap_parent_empty(name=origin_name)
+            freemocap_origin_axes = create_parent_empty(name=origin_name)
             fmc_adapter_tool.data_parent_empty = freemocap_origin_axes
 
             print("Loading freemocap data....")

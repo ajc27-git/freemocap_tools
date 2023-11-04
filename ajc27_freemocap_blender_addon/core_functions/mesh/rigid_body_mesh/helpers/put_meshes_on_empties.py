@@ -119,13 +119,13 @@ def get_segment_settings(component_name, emission_strength):
             color = "#610088"
         sphere_scale = .025
     elif component_name == "left_hand":
-        color = "#00b630"
-        sphere_scale = .01
+        color = "#00FFFF"
+        sphere_scale = .025
     elif component_name == "right_hand":
-        color = "#9f0000"
-        sphere_scale = .01
-    elif component_name == "other":
         color = "#FF00FF"
+        sphere_scale = .025
+    elif component_name == "other":
+        color = "#00FF77"
         sphere_scale = .04
         emission_strength = 100
     return color, emission_strength, sphere_scale
