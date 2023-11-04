@@ -9,7 +9,8 @@ def create_freemocap_parent_empty(name: str = "freemocap_data_parent_empty",
                                   parent_object: bpy.types.Object = None):
     print("Creating freemocap parent empty...")
     bpy.ops.object.empty_add(type="ARROWS")
-    parent_empty  = bpy.context.active_object
+    parent_empty = bpy.context.active_object
+    parent_empty.name = name
 
     if parent_object is not None:
         print(f"Setting parent of {parent_empty.name} to {parent_object.name}")

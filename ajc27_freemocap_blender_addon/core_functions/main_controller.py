@@ -1,7 +1,9 @@
-from pathlib import Path
 import traceback
+from pathlib import Path
 
 from .mesh.skelly_mesh.attach_skelly_mesh import attach_skelly_mesh_to_rig
+from .rig.save_bone_and_joint_angles_from_rig import save_bone_and_joint_angles_from_rig
+
 from ..core_functions.bones.enforce_rigid_bones import enforce_rigid_bones
 from ..core_functions.empties.creation.create_freemocap_empties import (
     create_freemocap_empties,
@@ -39,7 +41,7 @@ class MainController:
         self.save_path = save_path
         self.recording_name = Path(self.recording_path).stem
         self.origin_name = f"{self.recording_name}_origin"
-        self.rig_name = "rig"
+        self.rig_name = f"{self.recording_name}_rig"
         self._create_parent_empties()
         self.freemocap_data_handler = get_or_create_freemocap_data_handler(
             recording_path=self.recording_path
@@ -49,10 +51,12 @@ class MainController:
     def _create_parent_empties(self):
         self.data_parent_object = create_freemocap_parent_empty(name=self.origin_name)
         self._empty_parent_object = create_freemocap_parent_empty(
-            name=f"empties", parent_object=self.data_parent_object
+            name=f"empties_parent",
+            parent_object=self.data_parent_object
         )
         self._video_parent_object = create_freemocap_parent_empty(
-            name=f"videos", parent_object=self.data_parent_object
+            name=f"videos_parent",
+            parent_object=self.data_parent_object
         )
 
     def load_freemocap_data(self):
@@ -155,6 +159,21 @@ class MainController:
             print(e)
             raise e
 
+    def save_bone_and_joint_data_from_rig(self):
+        try:
+            print("Saving joint angles...")
+            csv_file_path = str(Path(self.save_path).parent / "saved_data" / f"{self.recording_name}_bone_and_joint_data.csv")
+            save_bone_and_joint_angles_from_rig(
+                rig_name=self.rig_name,
+                csv_save_path=csv_file_path,
+                start_frame=0,
+                end_frame=self.freemocap_data_handler.number_of_frames,
+            )
+        except Exception as e:
+            print(f"Failed to save joint angles: {e}")
+            print(e)
+            raise e
+
     def attach_rigid_body_mesh_to_rig(self):
         try:
             print("Adding rigid_body_bone_meshes...")
@@ -204,6 +223,7 @@ class MainController:
         self.save_data_to_disk()
         self.create_empties()
         self.add_rig()
+        self.save_bone_and_joint_data_from_rig()
         self.attach_rigid_body_mesh_to_rig()
         self.attach_skelly_mesh_to_rig()
         self.add_videos()
@@ -218,7 +238,7 @@ class MainController:
             for area in window.screen.areas:  # iterate through areas in current screen
                 if area.type == "VIEW_3D":
                     for (
-                        space
+                            space
                     ) in area.spaces:  # iterate through spaces in current VIEW_3D area
                         if space.type == "VIEW_3D":  # check if space is a 3D view
                             space.shading.type = "MATERIAL"
