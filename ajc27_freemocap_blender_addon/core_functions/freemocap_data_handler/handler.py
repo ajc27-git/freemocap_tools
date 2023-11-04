@@ -205,7 +205,7 @@ class FreemocapDataHandler:
             return self.metadata["body_dimensions"]
         else:
             raise ValueError("Body dimensions not found in metadata - please run `enforce_rigid_bones()`/`estimate_body_dimensions()` first.")
-        
+
     def estimate_good_clean_frame(self):
         return estimate_good_frame(trajectories_with_error=self.get_trajectories(with_error=True))
 
