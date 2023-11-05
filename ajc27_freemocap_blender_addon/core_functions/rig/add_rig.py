@@ -1,5 +1,6 @@
 import logging
 import math as m
+import re
 from typing import Dict, List
 
 import bpy
@@ -724,7 +725,10 @@ def add_rig(empty_names: List[str],
                 #     actual_target_name = get_actual_empty_target_name(empty_names = empty_names,
                 #                                                       base_target_name = base_target_name)
                 #     constraint["target"] = actual_target_name
-                
+                appended_number_string = get_appended_number(parent_object.name)
+                if appended_number_string is not None:
+                    if 'target' in constraint.keys():
+                        constraint['target'] = constraint['target'] + appended_number_string
                 # Add new constraint determined by type
                 if not use_limit_rotation and constraint['type'] == 'LIMIT_ROTATION':
                     continue
@@ -776,6 +780,12 @@ def add_rig(empty_names: List[str],
         print(e)
         raise e
     return rig
+
+def get_appended_number(rig_name):
+    pattern = r"\.0[0-9]{2}$"
+    match = re.search(pattern, rig_name)
+    return match.group() if match else None
+
 
 def get_actual_empty_target_name(empty_names:List[str],
                                 base_target_name:str) -> str:
