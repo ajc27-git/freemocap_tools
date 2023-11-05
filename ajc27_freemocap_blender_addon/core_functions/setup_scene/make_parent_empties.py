@@ -1,6 +1,5 @@
 import bpy
 
-
 def create_parent_empty(name: str,
                         type: str,
                         scale: tuple = (1.0, 1.0, 1.0),
