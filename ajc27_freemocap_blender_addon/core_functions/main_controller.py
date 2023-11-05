@@ -1,5 +1,6 @@
 import traceback
 from pathlib import Path
+from typing import List
 
 from .meshes.center_of_mass.create_center_of_mass_mesh import create_center_of_mass_mesh
 from .meshes.center_of_mass.create_center_of_mass_trails import create_center_of_mass_trails
@@ -37,6 +38,12 @@ class MainController:
 
     def __init__(self, recording_path: str, save_path: str, config: Config):
         self.rig = None
+        self.empties = None
+        self._data_parent_object = None
+        self._empty_parent_object = None
+        self._rigid_body_meshes_parent_object = None
+        self._video_parent_object = None
+
         self.config = config
 
         self.recording_path = recording_path
@@ -53,6 +60,23 @@ class MainController:
     @property
     def data_parent_object(self):
         return self._data_parent_object
+
+    @property
+    def empty_names(self) -> List[str]:
+        if self.empties is None:
+            raise ValueError("Empties have not been created yet!")
+        empty_names = []
+
+        def get_empty_names_from_dict(dictionary):
+            for key, value in dictionary.items():
+                if isinstance(value, dict):
+                    get_empty_names_from_dict(value) #recursion, baby!
+                else:
+                    empty_names.append(key)
+
+        get_empty_names_from_dict(self.empties)
+
+        return empty_names
 
     def _create_parent_empties(self):
         self._data_parent_object = create_parent_empty(name=self.origin_name,
@@ -163,8 +187,8 @@ class MainController:
         try:
             print("Adding rig...")
             self.rig = add_rig(
-                empties=self.empties,
-                bones=self.freemocap_data_handler.metadata["bones"],
+                empty_names=self.empty_names,
+                bone_data=self.freemocap_data_handler.metadata["bone_data"],
                 rig_name=self.rig_name,
                 parent_object=self._data_parent_object,
                 keep_symmetry=self.config.add_rig.keep_symmetry,
@@ -253,7 +277,6 @@ class MainController:
             print(e)
             raise e
 
-
     def add_videos(self):
         try:
             print("Loading videos as planes...")
@@ -278,10 +301,10 @@ class MainController:
                         if space.type == "VIEW_3D":  # check if space is a 3D view
                             space.shading.type = "MATERIAL"
 
-        # self.data_parent_object.hide_set(True)
-        # self._empty_parent_object.hide_set(True)
-        # self._rigid_body_meshes_parent_object.hide_set(True)
-        # self._video_parent_object.hide_set(True)
+        self.data_parent_object.hide_set(True)
+        self._empty_parent_object.hide_set(True)
+        self._rigid_body_meshes_parent_object.hide_set(True)
+        self._video_parent_object.hide_set(True)
 
 
     def save_blender_file(self):
@@ -293,12 +316,16 @@ class MainController:
 
     def run_all(self):
         print("Running all stages...")
+
+        #Pure python stuff
         self.load_freemocap_data()
         self.calculate_virtual_trajectories()
         self.put_data_in_inertial_reference_frame()
         self.enforce_rigid_bones()
         self.fix_hand_data()
         self.save_data_to_disk()
+
+        #Blender stuff
         self.create_empties()
         self.add_rig()
         self.save_bone_and_joint_data_from_rig()

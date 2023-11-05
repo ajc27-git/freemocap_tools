@@ -1,17 +1,17 @@
 import logging
 import math as m
-from typing import Dict
+from typing import Dict, List
 
 import bpy
 import mathutils
 
-from ...data_models.bones.bone_constraints import BONES_CONSTRAINTS
+from ...data_models.bones.bone_constraints import ALL_BONES_CONSTRAINT_DEFINITIONS
 
 import sys
 
 
-def add_rig(empties: Dict[str, bpy.types.Object],
-            bones: Dict[str, Dict[str, float]],
+def add_rig(empty_names: List[str],
+            bone_data: Dict[str, Dict[str, float]],
             rig_name: str,
             parent_object: bpy.types.Object,
             keep_symmetry: bool = False,
@@ -42,14 +42,14 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         rig.select_set(True)
 
         # Get rig height as the sum of the major bones length in a standing position. Assume foot declination angle of 23º
-        avg_ankle_projection_length = (m.sin(m.radians(23)) * bones['foot.R']['median'] + m.sin(
+        avg_ankle_projection_length = (m.sin(m.radians(23)) * bone_data['foot.R']['median'] + m.sin(
             m.radians(23)) *
-                                       bones['foot.L']['median']) / 2
-        avg_shin_length = (bones['shin.R']['median'] + bones['shin.L']['median']) / 2
-        avg_thigh_length = (bones['thigh.R']['median'] + bones['thigh.L']['median']) / 2
+                                       bone_data['foot.L']['median']) / 2
+        avg_shin_length = (bone_data['shin.R']['median'] + bone_data['shin.L']['median']) / 2
+        avg_thigh_length = (bone_data['thigh.R']['median'] + bone_data['thigh.L']['median']) / 2
 
-        rig_height = avg_ankle_projection_length + avg_shin_length + avg_thigh_length + bones['spine'][
-            'median'] + bones['spine.001']['median'] + bones['neck']['median']
+        rig_height = avg_ankle_projection_length + avg_shin_length + avg_thigh_length + bone_data['spine'][
+            'median'] + bone_data['spine.001']['median'] + bone_data['neck']['median']
 
         # Calculate new rig proportion
         rig_new_proportion = rig_height / rig.dimensions.z
@@ -102,11 +102,11 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         pelvis_L.head = (0, 0, hips_center_z_pos)
 
         # Calculate the average length of the pelvis bones
-        avg_pelvis_length = (bones['pelvis.R']['median'] + bones['pelvis.L']['median']) / 2
+        avg_pelvis_length = (bone_data['pelvis.R']['median'] + bone_data['pelvis.L']['median']) / 2
 
         # Set the pelvis bones length based on the keep symmetry parameter
-        pelvis_R_length = avg_pelvis_length if keep_symmetry else bones['pelvis.R']['median']
-        pelvis_L_length = avg_pelvis_length if keep_symmetry else bones['pelvis.L']['median']
+        pelvis_R_length = avg_pelvis_length if keep_symmetry else bone_data['pelvis.R']['median']
+        pelvis_L_length = avg_pelvis_length if keep_symmetry else bone_data['pelvis.L']['median']
 
         # Align the pelvis bone tails to the hips center
         pelvis_R.tail = (-pelvis_R_length, 0, hips_center_z_pos)
@@ -120,16 +120,16 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         thigh_L.head = (pelvis_L_length, 0, hips_center_z_pos)
 
         # Set the thigh bones length based on the keep symmetry parameter
-        thigh_R_length = avg_thigh_length if keep_symmetry else bones['thigh.R']['median']
-        thigh_L_length = avg_thigh_length if keep_symmetry else bones['thigh.L']['median']
+        thigh_R_length = avg_thigh_length if keep_symmetry else bone_data['thigh.R']['median']
+        thigh_L_length = avg_thigh_length if keep_symmetry else bone_data['thigh.L']['median']
 
         # Align the thighs bone tail to the bone head
         thigh_R.tail = (-pelvis_R_length, 0, hips_center_z_pos - thigh_R_length)
         thigh_L.tail = (pelvis_L_length, 0, hips_center_z_pos - thigh_L_length)
 
         # Set the shin bones length based on the keep symmetry parameter
-        shin_R_length = avg_shin_length if keep_symmetry else bones['shin.R']['median']
-        shin_L_length = avg_shin_length if keep_symmetry else bones['shin.L']['median']
+        shin_R_length = avg_shin_length if keep_symmetry else bone_data['shin.R']['median']
+        shin_L_length = avg_shin_length if keep_symmetry else bone_data['shin.L']['median']
 
         # Align the shin bones to the thigh bones
         shin_R.tail = (-pelvis_R_length, 0, hips_center_z_pos - thigh_R_length - shin_R_length)
@@ -140,11 +140,11 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         rig.data.edit_bones.remove(rig.data.edit_bones['toe.L'])
 
         # Move the foot bones tail to adjust their length depending on keep symmetry and also form a 23º degree with the horizontal plane
-        avg_foot_length = (bones['foot.R']['median'] + bones['foot.L']['median']) / 2
+        avg_foot_length = (bone_data['foot.R']['median'] + bone_data['foot.L']['median']) / 2
 
         # Set the foot bones length based on the keep symmetry parameter
-        foot_R_length = avg_foot_length if keep_symmetry else bones['foot.R']['median']
-        foot_L_length = avg_foot_length if keep_symmetry else bones['foot.L']['median']
+        foot_R_length = avg_foot_length if keep_symmetry else bone_data['foot.R']['median']
+        foot_L_length = avg_foot_length if keep_symmetry else bone_data['foot.L']['median']
 
         foot_R.tail = (
             -pelvis_R_length, -foot_R_length * m.cos(m.radians(23)),
@@ -154,11 +154,11 @@ def add_rig(empties: Dict[str, bpy.types.Object],
             foot_L.head[2] - foot_L_length * m.sin(m.radians(23)))
 
         # Move the heel bones so their head is aligned with the ankle on the x axis
-        avg_heel_length = (bones['heel.02.R']['median'] + bones['heel.02.L']['median']) / 2
+        avg_heel_length = (bone_data['heel.02.R']['median'] + bone_data['heel.02.L']['median']) / 2
 
         # Set the heel bones length based on the keep symmetry parameter
-        heel_02_R_length = avg_heel_length if keep_symmetry else bones['heel.02.R']['median']
-        heel_02_L_length = avg_heel_length if keep_symmetry else bones['heel.02.L']['median']
+        heel_02_R_length = avg_heel_length if keep_symmetry else bone_data['heel.02.R']['median']
+        heel_02_L_length = avg_heel_length if keep_symmetry else bone_data['heel.02.L']['median']
 
         heel_02_R.head = (-pelvis_R_length, heel_02_R.head[1], heel_02_R.head[2])
         heel_02_R.length = heel_02_R_length
@@ -200,11 +200,11 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         spine_001 = rig.data.edit_bones['spine.001']
 
         # Adjust the spine bone length and align it vertically
-        spine.tail = (spine.head[0], spine.head[1], spine.head[2] + bones['spine']['median'])
+        spine.tail = (spine.head[0], spine.head[1], spine.head[2] + bone_data['spine']['median'])
 
         # Adjust the spine.001 bone length and align it vertically
         spine_001.tail = (
-            spine_001.head[0], spine_001.head[1], spine_001.head[2] + bones['spine.001']['median'])
+            spine_001.head[0], spine_001.head[1], spine_001.head[2] + bone_data['spine.001']['median'])
 
         # Calculate the shoulders head z offset from the spine.001 tail. This to raise the shoulders and breasts by that offset
         shoulder_z_offset = spine_001.tail[2] - shoulder_R.head[2]
@@ -220,11 +220,11 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         shoulder_L.tail[2] += shoulder_z_offset
 
         # Get average shoulder length
-        avg_shoulder_length = (bones['shoulder.R']['median'] + bones['shoulder.L']['median']) / 2
+        avg_shoulder_length = (bone_data['shoulder.R']['median'] + bone_data['shoulder.L']['median']) / 2
 
         # Set the shoulder bones length based on the keep symmetry parameter
-        shoulder_R_length = avg_shoulder_length if keep_symmetry else bones['shoulder.R']['median']
-        shoulder_L_length = avg_shoulder_length if keep_symmetry else bones['shoulder.L']['median']
+        shoulder_R_length = avg_shoulder_length if keep_symmetry else bone_data['shoulder.R']['median']
+        shoulder_L_length = avg_shoulder_length if keep_symmetry else bone_data['shoulder.L']['median']
 
         # Move the shoulder tail in the x axis
         shoulder_R.tail[0] = spine_001.tail[0] - shoulder_R_length
@@ -240,29 +240,29 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         upper_arm_R.tail[2] += upper_arm_R_z_offset
         upper_arm_R.head[0] += upper_arm_R_x_offset
         upper_arm_R.tail[0] += upper_arm_R_x_offset
-        for bone in upper_arm_R.children_recursive:
-            if not bone.use_connect:
-                bone.head[2] += upper_arm_R_z_offset
-                bone.tail[2] += upper_arm_R_z_offset
-                bone.head[0] += upper_arm_R_x_offset
-                bone.tail[0] += upper_arm_R_x_offset
+        for bone_constraint_definition in upper_arm_R.children_recursive:
+            if not bone_constraint_definition.use_connect:
+                bone_constraint_definition.head[2] += upper_arm_R_z_offset
+                bone_constraint_definition.tail[2] += upper_arm_R_z_offset
+                bone_constraint_definition.head[0] += upper_arm_R_x_offset
+                bone_constraint_definition.tail[0] += upper_arm_R_x_offset
             else:
-                bone.tail[2] += upper_arm_R_z_offset
-                bone.tail[0] += upper_arm_R_x_offset
+                bone_constraint_definition.tail[2] += upper_arm_R_z_offset
+                bone_constraint_definition.tail[0] += upper_arm_R_x_offset
 
         upper_arm_L.head[2] += upper_arm_L_z_offset
         upper_arm_L.tail[2] += upper_arm_L_z_offset
         upper_arm_L.head[0] += upper_arm_L_x_offset
         upper_arm_L.tail[0] += upper_arm_L_x_offset
-        for bone in upper_arm_L.children_recursive:
-            if not bone.use_connect:
-                bone.head[2] += upper_arm_L_z_offset
-                bone.tail[2] += upper_arm_L_z_offset
-                bone.head[0] += upper_arm_L_x_offset
-                bone.tail[0] += upper_arm_L_x_offset
+        for bone_constraint_definition in upper_arm_L.children_recursive:
+            if not bone_constraint_definition.use_connect:
+                bone_constraint_definition.head[2] += upper_arm_L_z_offset
+                bone_constraint_definition.tail[2] += upper_arm_L_z_offset
+                bone_constraint_definition.head[0] += upper_arm_L_x_offset
+                bone_constraint_definition.tail[0] += upper_arm_L_x_offset
             else:
-                bone.tail[2] += upper_arm_L_z_offset
-                bone.tail[0] += upper_arm_L_x_offset
+                bone_constraint_definition.tail[2] += upper_arm_L_z_offset
+                bone_constraint_definition.tail[0] += upper_arm_L_x_offset
 
         # Align the y position of breasts, shoulders, arms and hands to the y position of the spine.001 tail
         # Calculate the breasts head y offset from the spine.001 tail
@@ -300,21 +300,21 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         # Move hands and its children by the y offset (forearm tail is moved by hand head)
         hand_R.head[1] += hand_R_y_offset
         hand_R.tail[1] += hand_R_y_offset
-        for bone in hand_R.children_recursive:
-            if not bone.use_connect:
-                bone.head[1] += hand_R_y_offset
-                bone.tail[1] += hand_R_y_offset
+        for bone_constraint_definition in hand_R.children_recursive:
+            if not bone_constraint_definition.use_connect:
+                bone_constraint_definition.head[1] += hand_R_y_offset
+                bone_constraint_definition.tail[1] += hand_R_y_offset
             else:
-                bone.tail[1] += hand_R_y_offset
+                bone_constraint_definition.tail[1] += hand_R_y_offset
 
         hand_L.head[1] += hand_L_y_offset
         hand_L.tail[1] += hand_L_y_offset
-        for bone in hand_L.children_recursive:
-            if not bone.use_connect:
-                bone.head[1] += hand_L_y_offset
-                bone.tail[1] += hand_L_y_offset
+        for bone_constraint_definition in hand_L.children_recursive:
+            if not bone_constraint_definition.use_connect:
+                bone_constraint_definition.head[1] += hand_L_y_offset
+                bone_constraint_definition.tail[1] += hand_L_y_offset
             else:
-                bone.tail[1] += hand_L_y_offset
+                bone_constraint_definition.tail[1] += hand_L_y_offset
 
         # Change to Pose Mode to rotate the arms and make a T Pose for posterior retargeting
         bpy.ops.object.mode_set(mode='POSE')
@@ -375,23 +375,23 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         hand_L = rig.data.edit_bones['hand.L']
 
         # Get average upperarm length
-        avg_upper_arm_length = (bones['upper_arm.R']['median'] + bones['upper_arm.L'][
+        avg_upper_arm_length = (bone_data['upper_arm.R']['median'] + bone_data['upper_arm.L'][
             'median']) / 2
 
         # Set the upperarm bones length based on the keep symmetry parameter
-        upper_arm_R_length = avg_upper_arm_length if keep_symmetry else bones['upper_arm.R']['median']
-        upper_arm_L_length = avg_upper_arm_length if keep_symmetry else bones['upper_arm.L']['median']
+        upper_arm_R_length = avg_upper_arm_length if keep_symmetry else bone_data['upper_arm.R']['median']
+        upper_arm_L_length = avg_upper_arm_length if keep_symmetry else bone_data['upper_arm.L']['median']
 
         # Move the upper_arm tail in the x axis
         upper_arm_R.tail[0] = upper_arm_R.head[0] - upper_arm_R_length
         upper_arm_L.tail[0] = upper_arm_L.head[0] + upper_arm_L_length
 
         # Get average forearm length
-        avg_forearm_length = (bones['forearm.R']['median'] + bones['forearm.L']['median']) / 2
+        avg_forearm_length = (bone_data['forearm.R']['median'] + bone_data['forearm.L']['median']) / 2
 
         # Set the forearm bones length based on the keep symmetry parameter
-        forearm_R_length = avg_forearm_length if keep_symmetry else bones['forearm.R']['median']
-        forearm_L_length = avg_forearm_length if keep_symmetry else bones['forearm.L']['median']
+        forearm_R_length = avg_forearm_length if keep_symmetry else bone_data['forearm.R']['median']
+        forearm_L_length = avg_forearm_length if keep_symmetry else bone_data['forearm.L']['median']
 
         # Calculate the x axis offset of the current forearm tail x position and the forearm head x position plus the calculated forearm length
         # This is to move the forearm tail and all the hand bones
@@ -400,20 +400,20 @@ def add_rig(empties: Dict[str, bpy.types.Object],
 
         # Move forearms tail and its children by the x offset
         forearm_R.tail[0] += forearm_R_tail_x_offset
-        for bone in forearm_R.children_recursive:
-            if not bone.use_connect:
-                bone.head[0] += forearm_R_tail_x_offset
-                bone.tail[0] += forearm_R_tail_x_offset
+        for bone_constraint_definition in forearm_R.children_recursive:
+            if not bone_constraint_definition.use_connect:
+                bone_constraint_definition.head[0] += forearm_R_tail_x_offset
+                bone_constraint_definition.tail[0] += forearm_R_tail_x_offset
             else:
-                bone.tail[0] += forearm_R_tail_x_offset
+                bone_constraint_definition.tail[0] += forearm_R_tail_x_offset
 
         forearm_L.tail[0] += forearm_L_tail_x_offset
-        for bone in forearm_L.children_recursive:
-            if not bone.use_connect:
-                bone.head[0] += forearm_L_tail_x_offset
-                bone.tail[0] += forearm_L_tail_x_offset
+        for bone_constraint_definition in forearm_L.children_recursive:
+            if not bone_constraint_definition.use_connect:
+                bone_constraint_definition.head[0] += forearm_L_tail_x_offset
+                bone_constraint_definition.tail[0] += forearm_L_tail_x_offset
             else:
-                bone.tail[0] += forearm_L_tail_x_offset
+                bone_constraint_definition.tail[0] += forearm_L_tail_x_offset
 
         #############################################################
         ### DEBUG ###
@@ -444,11 +444,11 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         #############################################################
 
         # Get average hand length
-        avg_hand_length = (bones['hand.R']['median'] + bones['hand.L']['median']) / 2
+        avg_hand_length = (bone_data['hand.R']['median'] + bone_data['hand.L']['median']) / 2
 
         # Set the forearm bones length based on the keep symmetry parameter
-        hand_R_length = avg_hand_length if keep_symmetry else bones['hand.R']['median']
-        hand_L_length = avg_hand_length if keep_symmetry else bones['hand.L']['median']
+        hand_R_length = avg_hand_length if keep_symmetry else bone_data['hand.R']['median']
+        hand_L_length = avg_hand_length if keep_symmetry else bone_data['hand.L']['median']
 
         # Move hands tail to match the average length
         hand_R.tail[0] = hand_R.head[0] - hand_R_length
@@ -464,7 +464,7 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         spine_004.head = (spine_001.tail[0], spine_001.tail[1], spine_001.tail[2])
 
         # Change spine.004 tail position values
-        spine_004.tail = (spine_004.head[0], spine_004.head[1], spine_004.head[2] + bones['neck']['median'])
+        spine_004.tail = (spine_004.head[0], spine_004.head[1], spine_004.head[2] + bone_data['neck']['median'])
 
         # Change the parent of the face bone for the spine.004 bone
         face = rig.data.edit_bones['face']
@@ -476,8 +476,8 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         rig.data.edit_bones.remove(rig.data.edit_bones['spine.006'])
 
         # Calculate the y and z offset of the nose.001 bone tail using the imaginary head_nose bone. Assume a 18º of declination angle
-        nose_y_offset = -bones['head_nose']['median'] * m.cos(m.radians(18)) - nose_001.tail[1]
-        nose_z_offset = (spine_004.tail[2] - bones['head_nose']['median'] * m.sin(m.radians(18))) - \
+        nose_y_offset = -bone_data['head_nose']['median'] * m.cos(m.radians(18)) - nose_001.tail[1]
+        nose_z_offset = (spine_004.tail[2] - bone_data['head_nose']['median'] * m.sin(m.radians(18))) - \
                         nose_001.tail[2]
 
         # Move the face bone on the z axis using the calculated offset
@@ -485,20 +485,20 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         face.tail[2] += nose_z_offset
 
         # Move on the y and z axis the children bones from the face bone using the calculated offsets
-        for bone in face.children_recursive:
-            if not bone.use_connect:
-                bone.head[1] += nose_y_offset
-                bone.tail[1] += nose_y_offset
-                bone.head[2] += nose_z_offset
-                bone.tail[2] += nose_z_offset
+        for bone_constraint_definition in face.children_recursive:
+            if not bone_constraint_definition.use_connect:
+                bone_constraint_definition.head[1] += nose_y_offset
+                bone_constraint_definition.tail[1] += nose_y_offset
+                bone_constraint_definition.head[2] += nose_z_offset
+                bone_constraint_definition.tail[2] += nose_z_offset
             else:
-                bone.tail[1] += nose_y_offset
-                bone.tail[2] += nose_z_offset
+                bone_constraint_definition.tail[1] += nose_y_offset
+                bone_constraint_definition.tail[2] += nose_z_offset
 
         # Move the face bone head to align it horizontally
         face.head[1] = spine_004.tail[1]
         face.head[2] = face.tail[2]
-        face.tail[1] = face.head[1] - (bones['head_nose']['median'] * m.cos(m.radians(18)) / 2)
+        face.tail[1] = face.head[1] - (bone_data['head_nose']['median'] * m.cos(m.radians(18)) / 2)
 
         # Rename spine.004 to neck
         rig.data.edit_bones['spine.004'].name = "neck"
@@ -574,11 +574,11 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         thumb_carpal_R = rig.data.edit_bones.new('thumb.carpal.R')
         thumb_carpal_R.head = hand_R.head
         thumb_carpal_R.tail = thumb_carpal_R.head + mathutils.Vector(
-            [0, -bones['thumb.carpal.R']['median'], 0])
+            [0, -bone_data['thumb.carpal.R']['median'], 0])
         thumb_carpal_L = rig.data.edit_bones.new('thumb.carpal.L')
         thumb_carpal_L.head = hand_L.head
         thumb_carpal_L.tail = thumb_carpal_L.head + mathutils.Vector(
-            [0, -bones['thumb.carpal.L']['median'], 0])
+            [0, -bone_data['thumb.carpal.L']['median'], 0])
 
         # Asign the parent to thumb carpals
         thumb_carpal_R.parent = hand_R
@@ -615,7 +615,7 @@ def add_rig(empties: Dict[str, bpy.types.Object],
             # Move the tail of the metacarpal bones so they are aligned horizontally
             palm_bone.tail[2] = palm_bone.head[2]
             # Change metacarpal bones lengths
-            palm_bone.length = bones[palm_bone.name]['median']
+            palm_bone.length = bone_data[palm_bone.name]['median']
 
         # Align the phalanges to the x axis (set bones head and tail y position equal to yz position of metacarpals bone tail)
         for palm_bone in palm_bones:
@@ -625,7 +625,7 @@ def add_rig(empties: Dict[str, bpy.types.Object],
                 length_sign = -1 if ".R" in phalange.name else 1
                 # Set the length by moving the bone tail along the x axis. Using this instead of just setting bone.length because that causes some bone inversions
                 phalange.tail = (
-                    phalange.head[0] + length_sign * bones[phalange.name]['median'], phalange.head[1],
+                    phalange.head[0] + length_sign * bone_data[phalange.name]['median'], phalange.head[1],
                     phalange.head[2])
                 # Reset the phalange bone roll to 0
                 phalange.roll = 0
@@ -708,49 +708,57 @@ def add_rig(empties: Dict[str, bpy.types.Object],
             hand_locked_track_target = 'thumb'
 
         # Create each constraint
-        for bone in BONES_CONSTRAINTS:
-
+        for bone_name, constraint_definitions in ALL_BONES_CONSTRAINT_DEFINITIONS.items():
+            if not isinstance(constraint_definitions, list):
+                raise Exception(f'Constraint definitions for {bone_name} must be a list')
+            
             # If it is a finger bone amd add_fingers_constraints is False continue with the next bone
             if not add_fingers_constraints and len(
                     [finger_part for finger_part in ['palm', 'thumb', 'index', 'middle', 'ring', 'pinky'] if
-                     finger_part in bone]) > 0:
+                     finger_part in bone_constraint_definition]) > 0:
                 continue
 
-            for cons in BONES_CONSTRAINTS[bone]:
+            for constraint in constraint_definitions:
+                # if "target" in constraint.keys():
+                #     base_target_name = constraint["target"]
+                #     actual_target_name = get_actual_empty_target_name(empty_names = empty_names,
+                #                                                       base_target_name = base_target_name)
+                #     constraint["target"] = actual_target_name
+                
                 # Add new constraint determined by type
-                if not use_limit_rotation and cons['type'] == 'LIMIT_ROTATION':
+                if not use_limit_rotation and constraint['type'] == 'LIMIT_ROTATION':
                     continue
                 else:
-                    bone_cons = rig.pose.bones[bone].constraints.new(cons['type'])
+                    bone_constraint = rig.pose.bones[bone_name].constraints.new(constraint['type'])
 
                     # Define aditional parameters based on the type of constraint
-                if cons['type'] == 'LIMIT_ROTATION':
-                    bone_cons.use_limit_x = cons['use_limit_x']
-                    bone_cons.min_x = m.radians(cons['min_x'])
-                    bone_cons.max_x = m.radians(cons['max_x'])
-                    bone_cons.use_limit_y = cons['use_limit_y']
-                    bone_cons.min_y = m.radians(cons['min_y'])
-                    bone_cons.max_y = m.radians(cons['max_y'])
-                    bone_cons.use_limit_z = cons['use_limit_z']
-                    bone_cons.min_z = m.radians(cons['min_z'])
-                    bone_cons.max_z = m.radians(cons['max_z'])
-                    bone_cons.owner_space = cons['owner_space']
+                if constraint['type'] == 'LIMIT_ROTATION':
+                    bone_constraint.use_limit_x = constraint['use_limit_x']
+                    bone_constraint.min_x = m.radians(constraint['min_x'])
+                    bone_constraint.max_x = m.radians(constraint['max_x'])
+                    bone_constraint.use_limit_y = constraint['use_limit_y']
+                    bone_constraint.min_y = m.radians(constraint['min_y'])
+                    bone_constraint.max_y = m.radians(constraint['max_y'])
+                    bone_constraint.use_limit_z = constraint['use_limit_z']
+                    bone_constraint.min_z = m.radians(constraint['min_z'])
+                    bone_constraint.max_z = m.radians(constraint['max_z'])
+                    bone_constraint.owner_space = constraint['owner_space']
                     pass
-                elif cons['type'] == 'COPY_LOCATION':
-                    bone_cons.target = bpy.data.objects[cons['target']]
-                elif cons['type'] == 'LOCKED_TRACK':
-                    bone_cons.target = bpy.data.objects[cons['target']]
-                    bone_cons.track_axis = cons['track_axis']
-                    bone_cons.lock_axis = cons['lock_axis']
-                    bone_cons.influence = cons['influence']
-                elif cons['type'] == 'DAMPED_TRACK':
-                    bone_cons.target = bpy.data.objects[cons['target']]
-                    bone_cons.track_axis = cons['track_axis']
-                elif cons['type'] == 'IK':
-                    bone_cons.target = bpy.data.objects[cons['target']]
-                    bone_cons.pole_target = bpy.data.objects[cons['pole_target']]
-                    bone_cons.chain_count = cons['chain_count']
-                    bone_cons.pole_angle = cons['pole_angle']
+                elif constraint['type'] == 'COPY_LOCATION':
+                    bone_constraint.target = bpy.data.objects[constraint['target']]
+                elif constraint['type'] == 'LOCKED_TRACK':
+                    bone_constraint.target = bpy.data.objects[constraint['target']]
+                    bone_constraint.track_axis = constraint['track_axis']
+                    bone_constraint.lock_axis = constraint['lock_axis']
+                    bone_constraint.influence = constraint['influence']
+                elif constraint['type'] == 'DAMPED_TRACK':
+                    bone_constraint.target = bpy.data.objects[constraint['target']]
+                    bone_constraint.track_axis = constraint['track_axis']
+                elif constraint['type'] == 'IK':
+                    bone_constraint.target = bpy.data.objects[constraint['target']]
+                    bone_constraint.pole_target = bpy.data.objects[constraint['pole_target']]
+                    bone_constraint.chain_count = constraint['chain_count']
+                    bone_constraint.pole_angle = constraint['pole_angle']
 
         ### Bake animation to the rig ###
         # Get the empties ending frame
@@ -768,3 +776,25 @@ def add_rig(empties: Dict[str, bpy.types.Object],
         print(e)
         raise e
     return rig
+
+def get_actual_empty_target_name(empty_names:List[str],
+                                base_target_name:str) -> str:
+    """
+    Get the actual empty target name based on the constraint target name, 
+    this is mostly to give us the ability to load multiple recorings, because
+    blender will append `.001`, `.002`  the names of emtpies of the 2nd, 3rd, etc to avoid name collisions
+
+    So basically, if the base_target name is `hips_center` this will look for empties named `hips_center`,
+      `hips_center.001`, `hips_center.002`, etc in the provided `empty_names` list and return that
+    """
+
+    actual_target_name = None
+    for empty_name in empty_names:
+        if base_target_name in empty_name:
+            actual_target_name = empty_name
+            break
+
+    if actual_target_name is None:
+        raise ValueError(f'Could not find empty target for {base_target_name}')
+    
+    return actual_target_name
