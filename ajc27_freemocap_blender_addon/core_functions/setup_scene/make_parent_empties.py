@@ -2,13 +2,12 @@ import bpy
 
 def create_parent_empty(name: str,
                         type: str,
-                        scale: tuple = (1.0, 1.0, 1.0),
+                        display_scale: float,
                         parent_object: bpy.types.Object = None):
     print("Creating freemocap parent empty...")
     bpy.ops.object.empty_add(type=type)
     parent_empty = bpy.context.active_object
-    parent_empty.scale = scale
-    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    parent_empty.empty_display_size = display_scale
     parent_empty.name = name
  
 
