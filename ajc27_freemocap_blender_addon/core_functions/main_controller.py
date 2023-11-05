@@ -272,13 +272,29 @@ class MainController:
             raise e
 
     def create_center_of_mass_trails(self):
-        return
         try:
             print("Adding Center of Mass trail meshes")
+            #
+            # def create_center_of_mass_trails(center_of_mass_empty: bpy.types.Object,
+            #                                  parent_empty: bpy.types.Object,
+            #                                  tail_past_frames: int,
+            #                                  trail_future_frames: int,
+            #                                  trail_starting_width: float,
+            #                                  trail_minimum_width: float,
+            #                                  trail_size_falloff: float,
+            #                                  trail_color: Tuple[float, float, float, float],
+            #                                  ):
             create_center_of_mass_trails(
-                center_of_mass_xyz = self.freemocap_data_handler.center_of_mass_trajectory,
-                center_of_mass_empty = self.freemocap_data_handler.center_of_mass_empty,
+                center_of_mass_empty=self.center_of_mass_empty,
+                parent_empty=self._rigid_body_meshes_parent_object,
+                tail_past_frames=30,
+                trail_future_frames=60,
+                trail_starting_width=0.1,
+                trail_minimum_width=0.01,
+                trail_size_falloff=0.8,
+                trail_color=(1.0, 0.0, 1.0, 1.0),
             )
+
         except Exception as e:
             print(f"Failed to attach mesh to rig: {e}")
             print(e)
