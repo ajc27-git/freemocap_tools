@@ -1,4 +1,4 @@
-BONES_CONSTRAINTS = {
+ALL_BONES_CONSTRAINT_DEFINITIONS = {
     "pelvis": [
         {'type': 'COPY_LOCATION',
          'target': 'hips_center'},

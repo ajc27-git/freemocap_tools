@@ -15,6 +15,9 @@ __email__ = "info@freemocap.org"
 #######################################################################
 import logging
 import sys
+from pathlib import Path
+
+PACKAGE_ROOT_PATH = str(Path(__file__).parent)
 
 root = logging.getLogger()
 handler = logging.StreamHandler(sys.stdout)
@@ -58,7 +61,7 @@ def register():
         print(f"Registering class {cls.__name__}")
         bpy.utils.register_class(cls)
 
-    print(f"Registering property group FMC_ADAPTER_PROPERTIES")
+    print("Registering property group FMC_ADAPTER_PROPERTIES")
 
     from .blender_interface import FMC_ADAPTER_PROPERTIES
     bpy.types.Scene.fmc_adapter_properties = bpy.props.PointerProperty(type=FMC_ADAPTER_PROPERTIES)

@@ -1,19 +1,18 @@
-import logging
-
 import bpy
 from bpy.props import StringProperty, BoolProperty
 
-import sys
+
 
 
 class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
     print("Initializing FMC_ADAPTER_PROPERTIES class...")
 
+
     data_parent_empty: bpy.props.PointerProperty(
         name="FreeMoCap data parent empty",
         description="Empty that serves as parent for all the freemocap empties",
         type=bpy.types.Object,
-        poll=lambda self, object: object.type == 'EMPTY',
+        poll=lambda self, object_in: object_in.type == 'EMPTY',
     )
 
     recording_path: StringProperty(
@@ -21,6 +20,27 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         description="Path to a freemocap recording",
         default="",
         subtype='FILE_PATH',
+    )
+    center_of_mass_past_frames: bpy.props.IntProperty(
+        name="Past Frames",
+        description="Number of past data frames of the center of mass trajectory to draw",
+        default=30,
+        min=0,
+    )
+
+    center_of_mass_future_frames: bpy.props.IntProperty(
+        name="Future Frames",
+        description="Number of future data frames to draw",
+        default=30,
+        min=0,
+    )
+
+    center_of_mass_size_fall_off: bpy.props.FloatProperty(
+        name="Future Frames",
+        description="How quickly the size of the center of mass trail falls off down to minimum (1.0 drops immediately to minimum, 0.0 never drops)",
+        default=0.5,
+        max=1.0,
+        min=0.0
     )
 
     # Show Options Booleans

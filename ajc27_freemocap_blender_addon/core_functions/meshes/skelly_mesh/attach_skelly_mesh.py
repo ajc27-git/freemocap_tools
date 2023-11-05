@@ -5,7 +5,10 @@ from typing import Dict
 
 import bpy
 
-SKELLY_MESH_PATH = r"C:\Users\jonma\github_repos\freemocap_organization\ajc27_freemocap_blender_addon\ajc27_freemocap_blender_addon\assets\skelly_lowpoly_mesh.fbx"
+from ajc27_freemocap_blender_addon import PACKAGE_ROOT_PATH
+from pathlib import Path
+
+SKELLY_MESH_PATH = str(Path(PACKAGE_ROOT_PATH) / "assets" / "skelly_lowpoly_mesh.fbx")
 
 def attach_skelly_mesh_to_rig(rig: bpy.types.Object,
                               body_dimensions: Dict[str, float],

@@ -28,6 +28,7 @@ class FMC_ADAPTER_run_all(bpy.types.Operator):
             controller = MainController(recording_path=recording_path,
                                         save_path=str(Path(recording_path)/(Path(recording_path).stem+".blend")),
                                         config=config)
+            fmc_adapter_tool.data_parent_empty = controller.data_parent_object
             controller.run_all()
         except Exception as e:
             print(f"Failed to run main_controller.run_all() with config:{config}: `{e}`")
