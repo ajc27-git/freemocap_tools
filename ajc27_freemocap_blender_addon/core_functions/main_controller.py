@@ -1,7 +1,9 @@
 import traceback
 from pathlib import Path
 
-from .mesh.skelly_mesh.attach_skelly_mesh import attach_skelly_mesh_to_rig
+from .meshes.center_of_mass.create_center_of_mass_mesh import create_center_of_mass_mesh
+from .meshes.center_of_mass.create_center_of_mass_trails import create_center_of_mass_trails
+from .meshes.skelly_mesh.attach_skelly_mesh import attach_skelly_mesh_to_rig
 from .rig.save_bone_and_joint_angles_from_rig import save_bone_and_joint_angles_from_rig
 from ..core_functions.bones.enforce_rigid_bones import enforce_rigid_bones
 from ..core_functions.empties.creation.create_freemocap_empties import (
@@ -19,7 +21,7 @@ from ..core_functions.freemocap_data_handler.operations.put_skeleton_on_ground i
 )
 from ..core_functions.load_data.load_freemocap_data import load_freemocap_data
 from ..core_functions.load_data.load_videos import load_videos
-from ..core_functions.mesh.attach_mesh_to_rig import attach_mesh_to_rig
+from ..core_functions.meshes.attach_mesh_to_rig import attach_mesh_to_rig
 from ..core_functions.rig.add_rig import add_rig
 from ..core_functions.setup_scene.make_parent_empties import (
     create_parent_empty,
@@ -48,24 +50,28 @@ class MainController:
         )
         self.empties = None
 
+    @property
+    def data_parent_object(self):
+        return self._data_parent_object
+
     def _create_parent_empties(self):
-        self.data_parent_object = create_parent_empty(name=self.origin_name,
-                                                      type="ARROWS")
+        self._data_parent_object = create_parent_empty(name=self.origin_name,
+                                                       type="ARROWS")
         self._empty_parent_object = create_parent_empty(
             name=f"empties",
-            parent_object=self.data_parent_object,
+            parent_object=self._data_parent_object,
             type="PLAIN_AXES",
             scale=(0.3, 0.3, 0.3),
         )
         self._rigid_body_meshes_parent_object = create_parent_empty(
             name=f"rigid_body_meshes",
-            parent_object=self.data_parent_object,
+            parent_object=self._data_parent_object,
             type="CUBE",
             scale=(0.2, 0.2, 0.2),
         )
         self._video_parent_object = create_parent_empty(
             name=f"videos",
-            parent_object=self.data_parent_object,
+            parent_object=self._data_parent_object,
             type="SPHERE",
             scale=(0.1, 0.1, 0.1),
         )
@@ -160,7 +166,7 @@ class MainController:
                 empties=self.empties,
                 bones=self.freemocap_data_handler.metadata["bones"],
                 rig_name=self.rig_name,
-                parent_object=self.data_parent_object,
+                parent_object=self._data_parent_object,
                 keep_symmetry=self.config.add_rig.keep_symmetry,
                 add_fingers_constraints=self.config.add_rig.add_fingers_constraints,
                 use_limit_rotation=self.config.add_rig.use_limit_rotation,
@@ -221,6 +227,33 @@ class MainController:
             print(e)
             raise e
 
+    def create_center_of_mass_mesh(self):
+
+        try:
+            print("Adding Center of Mass Mesh!!! :D")
+            create_center_of_mass_mesh(
+                center_of_mass_xyz = self.freemocap_data_handler.center_of_mass_xyz,
+                center_of_mass_empty = self.freemocap_data_handler.center_of_mass_empty,
+            )
+        except Exception as e:
+            print(f"Failed to attach mesh to rig: {e}")
+            print(e)
+            raise e
+
+    def create_center_of_mass_trails(self):
+
+        try:
+            print("Adding Center of Mass Mesh!!! :D")
+            create_center_of_mass_trails(
+                center_of_mass_xyz = self.freemocap_data_handler.center_of_mass_xyz,
+                center_of_mass_empty = self.freemocap_data_handler.center_of_mass_empty,
+            )
+        except Exception as e:
+            print(f"Failed to attach mesh to rig: {e}")
+            print(e)
+            raise e
+
+
     def add_videos(self):
         try:
             print("Loading videos as planes...")
@@ -271,6 +304,7 @@ class MainController:
         self.save_bone_and_joint_data_from_rig()
         self.attach_rigid_body_mesh_to_rig()
         self.attach_skelly_mesh_to_rig()
+        # self.create_center_of_mass_mesh()
         self.add_videos()
         self.setup_scene()
         self.save_blender_file()
