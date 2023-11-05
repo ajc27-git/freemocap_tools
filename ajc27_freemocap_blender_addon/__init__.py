@@ -15,6 +15,9 @@ __email__ = "info@freemocap.org"
 #######################################################################
 import logging
 import sys
+from pathlib import Path
+
+PACKAGE_ROOT_PATH = str(Path(__file__).parent)
 
 root = logging.getLogger()
 handler = logging.StreamHandler(sys.stdout)
