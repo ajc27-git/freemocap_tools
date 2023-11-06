@@ -1,6 +1,6 @@
 import bpy
 
-from ajc27_freemocap_blender_addon.core_functions.meshes.center_of_mass.com_material import create_center_of_mass_material
+from ajc27_freemocap_blender_addon.core_functions.meshes.center_of_mass.center_of_mass_material import create_center_of_mass_material
 
 
 def create_center_of_mass_mesh(parent_object: bpy.types.Object,

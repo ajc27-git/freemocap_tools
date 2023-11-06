@@ -2,8 +2,8 @@ import traceback
 from pathlib import Path
 from typing import List
 
-from .meshes.center_of_mass.com_mesh import create_center_of_mass_mesh
-from .meshes.center_of_mass.com_trails import create_center_of_mass_trails
+from .meshes.center_of_mass.center_of_mass_mesh import create_center_of_mass_mesh
+from .meshes.center_of_mass.center_of_mass_trails import create_center_of_mass_trails
 from .meshes.skelly_mesh.attach_skelly_mesh import attach_skelly_mesh_to_rig
 from .rig.save_bone_and_joint_angles_from_rig import save_bone_and_joint_angles_from_rig
 from ..core_functions.bones.enforce_rigid_bones import enforce_rigid_bones
@@ -285,13 +285,13 @@ class MainController:
             #                                  trail_color: Tuple[float, float, float, float],
             #                                  ):
             create_center_of_mass_trails(
-                center_of_mass_empty=self.center_of_mass_empty,
+                center_of_mass_trajectory=self.freemocap_data_handler.center_of_mass_trajectory,
                 parent_empty=self._rigid_body_meshes_parent_object,
                 tail_past_frames=30,
                 trail_future_frames=60,
                 trail_starting_width=0.1,
                 trail_minimum_width=0.01,
-                trail_size_falloff=0.8,
+                trail_size_decay_rate=0.8,
                 trail_color=(1.0, 0.0, 1.0, 1.0),
             )
 
