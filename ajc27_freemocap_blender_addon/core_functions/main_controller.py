@@ -91,23 +91,30 @@ class MainController:
                                                        display_scale=1.0,
                                                        type="ARROWS")
         self._empty_parent_object = create_parent_empty(
-            name=f"empties",
+            name="empties_parent",
             parent_object=self._data_parent_object,
             type="PLAIN_AXES",
             display_scale=0.3,
         )
         self._rigid_body_meshes_parent_object = create_parent_empty(
-            name=f"rigid_body_meshes",
+            name="rigid_body_meshes_parent",
             parent_object=self._data_parent_object,
             type="CUBE",
             display_scale=0.2,
         )
         self._video_parent_object = create_parent_empty(
-            name=f"videos",
+            name="videos_parent",
+            parent_object=self._data_parent_object,
+            type="IMAGE",
+            display_scale=0.1,
+        )
+        self._center_of_mass_parent_object = create_parent_empty(
+            name="center_of_mass_data_parent",
             parent_object=self._data_parent_object,
             type="SPHERE",
             display_scale=0.1,
         )
+
 
     def load_freemocap_data(self):
         try:
@@ -187,6 +194,7 @@ class MainController:
             self.empties = create_freemocap_empties(
                 handler=self.freemocap_data_handler,
                 parent_object=self._empty_parent_object,
+                center_of_mass_data_parent=self._center_of_mass_parent_object,                
             )
             print(f"Finished creating keyframed empties: {self.empties.keys()}")
         except Exception as e:
@@ -265,7 +273,7 @@ class MainController:
         try:
             print("Adding Center of Mass Mesh")
             create_center_of_mass_mesh(
-                parent_object=self._rigid_body_meshes_parent_object,
+                parent_object=self._center_of_mass_parent_object,
                 center_of_mass_empty=self.center_of_mass_empty,
             )
         except Exception as e:
@@ -276,19 +284,10 @@ class MainController:
     def create_center_of_mass_trails(self):
         try:
             print("Adding Center of Mass trail meshes")
-            #
-            # def create_center_of_mass_trails(center_of_mass_empty: bpy.types.Object,
-            #                                  parent_empty: bpy.types.Object,
-            #                                  tail_past_frames: int,
-            #                                  trail_future_frames: int,
-            #                                  trail_starting_width: float,
-            #                                  trail_minimum_width: float,
-            #                                  trail_size_falloff: float,
-            #                                  trail_color: Tuple[float, float, float, float],
-            #                                  ):
+
             create_center_of_mass_trails(
                 center_of_mass_trajectory=np.squeeze(self.freemocap_data_handler.center_of_mass_trajectory),
-                parent_empty=self._rigid_body_meshes_parent_object,
+                parent_empty=self._center_of_mass_parent_object,
                 tail_past_frames=30,
                 trail_future_frames=30   ,
                 trail_starting_width=0.045,
@@ -330,6 +329,7 @@ class MainController:
         self._empty_parent_object.hide_set(True)
         self._rigid_body_meshes_parent_object.hide_set(True)
         self._video_parent_object.hide_set(True)
+        self._center_of_mass_parent_object.hide_set(True)
 
 
     def save_blender_file(self):

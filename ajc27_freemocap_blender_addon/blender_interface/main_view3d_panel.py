@@ -25,7 +25,9 @@ class VIEW3D_PT_freemocap_adapter(Panel):
 
         self._save_data_to_disk_panel(fmc_adapter_tool, layout)
 
-        self._center_of_mass_trail_panel(fmc_adapter_tool, layout)
+        # self._custom_checkbox_panel(fmc_adapter_tool, layout)
+
+        # self._center_of_mass_trail_panel(fmc_adapter_tool, layout)
 
         # self._load_data_panel(fmc_adapter_tool, layout)
         #
@@ -36,6 +38,10 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         # self._add_body_mesh_panel(fmc_adapter_tool, layout)
         #
         # self._fbx_export_panel(layout)
+    def _custom_checkbox_panel(self, fmc_adapter_tool, layout):
+        # Make sure to include this attribute in your tool properties beforehand
+        layout.prop(fmc_adapter_tool, "custom_checkbox", text="Custom Checkbox")  
+
     def _center_of_mass_trail_panel(self, fmc_adapter_tool, layout):
         box = layout.box()
         box.label(text="Center of Mass Trail:")

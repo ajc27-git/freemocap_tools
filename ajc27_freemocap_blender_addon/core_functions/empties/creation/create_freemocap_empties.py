@@ -11,6 +11,7 @@ BODY_EMPTY_SCALE = 0.03
 
 def create_freemocap_empties(handler: FreemocapDataHandler,
                              parent_object: bpy.types.Object,
+                             center_of_mass_data_parent: bpy.types.Object,
                              body_empty_scale: float = BODY_EMPTY_SCALE,
                              ):
     hand_empty_scale = body_empty_scale * 0.5
@@ -49,7 +50,7 @@ def create_freemocap_empties(handler: FreemocapDataHandler,
             names_list="center_of_mass",
             empty_scale=body_empty_scale * 3,
             empty_type="ARROWS",
-            parent_object=parent_object,
+            parent_object=center_of_mass_data_parent
         )
         return empties
 

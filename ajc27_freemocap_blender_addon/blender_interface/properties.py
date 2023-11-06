@@ -6,7 +6,11 @@ from bpy.props import StringProperty, BoolProperty
 
 class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
     print("Initializing FMC_ADAPTER_PROPERTIES class...")
-
+    custom_checkbox: bpy.props.BoolProperty(
+        name="Custom Checkbox",
+        description="This is a custom checkbox",
+        default = False
+    )
 
     data_parent_empty: bpy.props.PointerProperty(
         name="FreeMoCap data parent empty",
