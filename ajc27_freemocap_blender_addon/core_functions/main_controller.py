@@ -331,7 +331,7 @@ class MainController:
         self.save_bone_and_joint_data_from_rig()
         self.attach_rigid_body_mesh_to_rig()
         self.attach_skelly_mesh_to_rig()
-        # self.create_center_of_mass_mesh()
+        self.create_center_of_mass_mesh()
         self.add_videos()
         self.setup_scene()
         self.save_blender_file()

@@ -97,7 +97,7 @@ def attach_skelly_mesh_to_rig(rig: bpy.types.Object,
     bpy.ops.object.parent_set(type='ARMATURE_AUTO')
 
     # Rename the skelly mesh to fmc_mesh
-    skelly_mesh.name = 'fmc_mesh'
+    skelly_mesh.name = 'skelly_mesh'
 
 
 
