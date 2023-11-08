@@ -148,9 +148,8 @@ ALL_BONES_CONSTRAINT_DEFINITIONS = {
          'target': 'right_index',
          'track_axis': 'TRACK_Y'},
         {'type': 'LOCKED_TRACK',
-         'target': 'right_index',
+         'target': 'right_hand_thumb_cmc',
          'track_axis': 'TRACK_Z',
-
          'lock_axis': 'LOCK_Y',
          'influence': 1.0},
         {'type': 'LIMIT_ROTATION',
@@ -162,9 +161,8 @@ ALL_BONES_CONSTRAINT_DEFINITIONS = {
          'target': 'left_index',
          'track_axis': 'TRACK_Y'},
         {'type': 'LOCKED_TRACK',
-         'target': 'left_index',
+         'target': 'left_hand_thumb_cmc',
          'track_axis': 'TRACK_Z',
-
          'lock_axis': 'LOCK_Y',
          'influence': 1.0},
         {'type': 'LIMIT_ROTATION',
