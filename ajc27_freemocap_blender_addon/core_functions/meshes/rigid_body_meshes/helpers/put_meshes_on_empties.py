@@ -94,15 +94,15 @@ def get_bone_mesh_color_and_squish(parent_empty_name: str) -> Tuple[str, Tuple[f
         elif "left" in parent_empty_name:
             color = "#0000FF"
         else:
-            color = "#610088"
+            color = "#002500"
             squish_scale = (1.0, 1.0, 1.0)
 
     else:
         if "right" in parent_empty_name:
-            color = "#9f0000"
+            color = "#FF00FF"
 
         elif "left" in parent_empty_name:
-            color = "#00b630"
+            color = "#00FFFF"
 
         else:
             raise ValueError(f"All hand bones must have 'right' or 'left' in their name, not {parent_empty_name}")

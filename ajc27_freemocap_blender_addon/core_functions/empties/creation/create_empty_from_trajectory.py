@@ -46,7 +46,7 @@ def create_keyframed_empty_from_3d_trajectory_data(
     empty_object = bpy.context.editable_objects[-1]
     empty_object.name = trajectory_name
 
-    empty_object.scale = [empty_scale] * 3
+    empty_object.empty_display_size = empty_scale
 
     empty_object.parent = parent_object
 
