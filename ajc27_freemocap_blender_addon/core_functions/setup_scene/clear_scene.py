@@ -1,8 +1,9 @@
-import bpy
 
 
 def clear_scene():
     ###%% clear the scene - Scorch the earth \o/
+    import bpy
+
     print("Clearing scene...")
     try:
         bpy.ops.object.mode_set(mode="OBJECT")
