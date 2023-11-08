@@ -49,6 +49,7 @@ class FreemocapDataHandler:
     def center_of_mass_trajectory(self) -> np.ndarray:
         return self.freemocap_data.other["center_of_mass"].data
 
+
     @property
     def body_trajectories(self) -> Dict[str, np.ndarray]:
         return {trajectory_name: self.body_frame_name_xyz[:, trajectory_number]

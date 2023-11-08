@@ -3,7 +3,7 @@ from typing import Dict
 
 import bpy
 
-from .rigid_body_mesh.helpers.put_meshes_on_empties import put_bone_meshes_on_empties
+from .rigid_body_meshes.helpers.put_meshes_on_empties import put_bone_meshes_on_empties
 
 
 def attach_mesh_to_rig(rig: bpy.types.Object,
