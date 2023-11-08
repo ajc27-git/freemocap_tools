@@ -25,7 +25,7 @@ class VIEW3D_PT_freemocap_adapter(Panel):
 
         self._save_data_to_disk_panel(fmc_adapter_tool, layout)
 
-        self._center_of_mass_trail_panel(fmc_adapter_tool, layout)
+        # self._center_of_mass_trail_panel(fmc_adapter_tool, layout)
 
         # self._load_data_panel(fmc_adapter_tool, layout)
         #
