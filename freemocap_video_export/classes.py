@@ -184,8 +184,8 @@ class vc_plot_com_bos():
         self.scene.frame_set(frame_info.frame_start + frame_info.frame_number)
 
         # Get the x, y coordinates of the COM
-        com_x = bpy.data.objects['_full_body_center_of_mass'].matrix_world.translation[0]
-        com_y = bpy.data.objects['_full_body_center_of_mass'].matrix_world.translation[1]
+        com_x = bpy.data.objects['center_of_mass'].matrix_world.translation[0]
+        com_y = bpy.data.objects['center_of_mass'].matrix_world.translation[1]
 
         # Get the coordinates of the base of support points
         base_of_support_points = {

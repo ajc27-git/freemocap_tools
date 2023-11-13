@@ -126,7 +126,7 @@ def place_cameras(
         scene.frame_set(frame)
 
         for object in scene.objects:
-            if object.type == 'EMPTY' and object.name != 'freemocap_origin_axes' and object.name != 'world_origin' and object.name != '_full_body_center_of_mass' and object.name != 'head':
+            if object.type == 'EMPTY' and object.name != 'freemocap_origin_axes' and object.name != 'world_origin' and object.name != 'center_of_mass_data_parent' and object.name != 'head':
                 if object.matrix_world.translation[2] > highest_point[2]:
                     highest_point = object.matrix_world.translation.copy()
                 if object.matrix_world.translation[2] < lowest_point[2]:
