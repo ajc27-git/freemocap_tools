@@ -18,7 +18,8 @@ export_profiles = {
         'bitrate': 5000000,
         'visual_components': [
             'vc_logo',
-        ]
+        ],
+        'background_path': '/assets/charuco_board.png',
     },
     'scientific': {
         'resolution_x': 1920,

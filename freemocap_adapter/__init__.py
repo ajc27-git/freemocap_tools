@@ -1,9 +1,9 @@
 bl_info = {
-    'name'          : 'Freemocap Adapter',
+    'name'          : 'Freemocap Adapter Alt',
     'author'        : 'ajc27',
     'version'       : (1, 1, 12),
     'blender'       : (3, 0, 0),
-    'location'      : '3D Viewport > Sidebar > Freemocap Adapter',
+    'location'      : '3D Viewport > Sidebar > Freemocap Adapter Alt',
     'description'   : 'Add-on to adapt the Freemocap Blender output',
     'category'      : 'Development',
 }
@@ -3589,8 +3589,8 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
 class VIEW3D_PT_freemocap_adapter(Panel):
     bl_space_type   = "VIEW_3D"
     bl_region_type  = "UI"
-    bl_category     = "Freemocap Adapter"
-    bl_label        = "Freemocap Adapter"
+    bl_category     = "Freemocap Adapter Alt"
+    bl_label        = "Freemocap Adapter Alt"
     
     def draw(self, context):
         layout              = self.layout

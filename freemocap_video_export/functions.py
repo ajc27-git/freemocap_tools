@@ -34,7 +34,7 @@ def fmc_export_video(scene: bpy.types.Scene=None,
 
     # Add the render background for the export profiles that have background
     if export_profile in ('showcase'):
-        add_render_background(scene, file_directory)
+        add_render_background(scene, 'showcase')
 
     # Set the output directory
     video_folder = file_directory / 'video'
@@ -281,10 +281,11 @@ def add_visual_components(
     cv2.destroyAllWindows()
 
 def add_render_background(scene: bpy.types.Scene=None,
-                          file_directory: Path=None,):
+                          export_profile: str=None,):
     
     # Set the path to the PNG image
-    image_path = str(file_directory) + "/charuco_board.png"
+    image_path = os.path.dirname(os.path.realpath(__file__)) + export_profiles[export_profile]['background_path']
+    print(image_path)
     
     # check if the addon is enabled
     loaded_default, loaded_state = addon_utils.check('io_import_images_as_planes')
