@@ -46,7 +46,11 @@ def enforce_rigid_bones(handler: FreemocapDataHandler,
             bone_vector = tail_position - head_position
 
             # Get the normalized bone vector by dividing the bone_vector by its length
-            bone_vector_norm = bone_vector / raw_length
+            try:
+              bone_vector_norm = bone_vector / raw_length
+            except ZeroDivisionError:
+              raw_length = 0.0001
+              bone_vector_norm = bone_vector / raw_length
 
             # Calculate the new tail position delta by multiplying the normalized bone vector by the difference of desired_length and original_length
             position_delta = bone_vector_norm * (desired_length - raw_length)
