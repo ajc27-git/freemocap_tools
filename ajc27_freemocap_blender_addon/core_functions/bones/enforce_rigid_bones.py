@@ -37,7 +37,7 @@ def enforce_rigid_bones(handler: FreemocapDataHandler,
         tail_name = bone['tail']
 
         for frame_number, raw_length in enumerate(bone['lengths']):
-            if np.isnan(raw_length):
+            if np.isnan(raw_length) or raw_length == 0:
                 continue
 
             head_position = original_trajectories[head_name][frame_number, :]
