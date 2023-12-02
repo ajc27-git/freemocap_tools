@@ -1,7 +1,7 @@
 bl_info = {
     'name'          : 'Freemocap Adapter Alt',
     'author'        : 'ajc27',
-    'version'       : (1, 1, 12),
+    'version'       : (1, 1, 13),
     'blender'       : (3, 0, 0),
     'location'      : '3D Viewport > Sidebar > Freemocap Adapter Alt',
     'description'   : 'Add-on to adapt the Freemocap Blender output',
@@ -2928,9 +2928,12 @@ def export_fbx(self: Operator,
     # Deselect all
     bpy.ops.object.select_all(action='DESELECT')
 
-    # Select only the rig and the body_mesh
-    bpy.data.objects['root'].select_set(True)
-    bpy.data.objects['fmc_mesh'].select_set(True)
+    # Select only the rig and the body_mesh. First search the name of the rig
+    for capture_object in bpy.data.objects:
+        if capture_object.type == "ARMATURE" and "_rig" in capture_object.name:
+            capture_object.select_set(True)
+
+    bpy.data.objects['skelly_mesh'].select_set(True)
 
     # Get the Blender file directory
     file_directory = Path(bpy.data.filepath).parent
@@ -2986,6 +2989,7 @@ def export_fbx(self: Operator,
     # Load the io_scene_fbx addon
     addons = {os.path.basename(os.path.dirname(module.__file__)): module.__file__ for module in addon_utils.modules()}
     addon_folder_path = os.path.dirname(addons.get('io_scene_fbx'))
+    print(addon_folder_path)
     try:
         SourceFileLoader('io_scene_fbx', os.path.join(addon_folder_path, '__init__.py')).load_module()
     except RuntimeError as error:
