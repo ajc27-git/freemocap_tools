@@ -1,7 +1,7 @@
 bl_info = {
     'name'          : 'Freemocap Adapter Alt',
     'author'        : 'ajc27',
-    'version'       : (1, 1, 13),
+    'version'       : (1, 1, 14),
     'blender'       : (3, 0, 0),
     'location'      : '3D Viewport > Sidebar > Freemocap Adapter Alt',
     'description'   : 'Add-on to adapt the Freemocap Blender output',
@@ -35,7 +35,7 @@ import statistics
 # Variable to save if the function Adjust Empties has been already executed
 adjust_empties_executed = False
 
-# Location and rotation vectors of the freemocap_origin_axes in the Adjust Empties method just before resetting its location and rotation to (0, 0, 0)
+# Location and rotation vectors of the empties_parent in the Adjust Empties method just before resetting its location and rotation to (0, 0, 0)
 origin_location_pre_reset = (0, 0, 0)
 origin_rotation_pre_reset = (0, 0, 0)
 
@@ -177,377 +177,935 @@ anthropomorphic_dimensions = {
 # Also add variables to store each frame bone lengths, the median and the stdev.
 virtual_bones = {
     'pelvis.R': {
-        'head'      : 'hips_center',
-        'tail'      : 'right_hip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'hips_center',
+        'tail'              : 'right_hip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'pelvis.L': {
-        'head'      : 'hips_center',
-        'tail'      : 'left_hip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'hips_center',
+        'tail'              : 'left_hip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'spine': {
-        'head'      : 'hips_center',
-        'tail'      : 'trunk_center',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'hips_center',
+        'tail'              : 'trunk_center',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'spine.001': {
-        'head'      : 'trunk_center',
-        'tail'      : 'neck_center',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'trunk_center',
+        'tail'              : 'neck_center',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'neck': {
-        'head'      : 'neck_center',
-        'tail'      : 'head_center',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'neck_center',
+        'tail'              : 'head_center',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'head_nose': { # Auxiliary bone from head center to nose tip to align the face bones 
-        'head'      : 'head_center',
-        'tail'      : 'nose',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'head_center',
+        'tail'              : 'nose',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'shoulder.R': {
-        'head'      : 'neck_center',
-        'tail'      : 'right_shoulder',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'neck_center',
+        'tail'              : 'right_shoulder',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'shoulder.L': {
-        'head'      : 'neck_center',
-        'tail'      : 'left_shoulder',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'neck_center',
+        'tail'              : 'left_shoulder',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'upper_arm.R': {
-        'head'      : 'right_shoulder',
-        'tail'      : 'right_elbow',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_shoulder',
+        'tail'              : 'right_elbow',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'upper_arm.L': {
-        'head'      : 'left_shoulder',
-        'tail'      : 'left_elbow',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_shoulder',
+        'tail'              : 'left_elbow',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'forearm.R': {
-        'head'      : 'right_elbow',
-        'tail'      : 'right_wrist',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_elbow',
+        'tail'              : 'right_wrist',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'forearm.L': {
-        'head'      : 'left_elbow',
-        'tail'      : 'left_wrist',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_elbow',
+        'tail'              : 'left_wrist',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'hand.R': {
-        'head'      : 'right_wrist',
-        'tail'      : 'right_index',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_wrist',
+        'tail'              : 'right_index',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'hand.L': {
-        'head'      : 'left_wrist',
-        'tail'      : 'left_index',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_wrist',
+        'tail'              : 'left_index',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'thumb.carpal.R': { # Auxiliary bone to align the right_hand_thumb_cmc empty
-        'head'      : 'right_hand_wrist',
-        'tail'      : 'right_hand_thumb_cmc',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_hand_wrist',
+        'tail'              : 'right_hand_thumb_cmc',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'hands',
+        'parent_bone'       : 'hand.R',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'thumb.carpal.L': { # Auxiliary bone to align the left_hand_thumb_cmc empty
-        'head'      : 'left_hand_wrist',
-        'tail'      : 'left_hand_thumb_cmc',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_hand_wrist',
+        'tail'              : 'left_hand_thumb_cmc',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'hands',
+        'parent_bone'       : 'hand.L',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'thumb.01.R': {
-        'head'      : 'right_hand_thumb_cmc',
-        'tail'      : 'right_hand_thumb_mcp',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_hand_thumb_cmc',
+        'tail'              : 'right_hand_thumb_mcp',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'thumb.carpal.R',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'thumb.01.L': {
-        'head'      : 'left_hand_thumb_cmc',
-        'tail'      : 'left_hand_thumb_mcp',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_hand_thumb_cmc',
+        'tail'              : 'left_hand_thumb_mcp',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'thumb.carpal.L',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'thumb.02.R': {
-        'head'      : 'right_hand_thumb_mcp',
-        'tail'      : 'right_hand_thumb_ip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_hand_thumb_mcp',
+        'tail'              : 'right_hand_thumb_ip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'thumb.01.R',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'thumb.02.L': {
-        'head'      : 'left_hand_thumb_mcp',
-        'tail'      : 'left_hand_thumb_ip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_hand_thumb_mcp',
+        'tail'              : 'left_hand_thumb_ip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'thumb.01.L',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'thumb.03.R': {
-        'head'      : 'right_hand_thumb_ip',
-        'tail'      : 'right_hand_thumb_tip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_hand_thumb_ip',
+        'tail'              : 'right_hand_thumb_tip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'thumb.02.R',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'thumb.03.L': {
-        'head'      : 'left_hand_thumb_ip',
-        'tail'      : 'left_hand_thumb_tip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_hand_thumb_ip',
+        'tail'              : 'left_hand_thumb_tip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'thumb.02.L',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'palm.01.R': {
-        'head'      : 'right_hand_wrist',
-        'tail'      : 'right_hand_index_finger_mcp',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_hand_wrist',
+        'tail'              : 'right_hand_index_finger_mcp',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'hands',
+        'parent_bone'       : 'hand.R',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'palm.01.L': {
-        'head'      : 'left_hand_wrist',
-        'tail'      : 'left_hand_index_finger_mcp',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_hand_wrist',
+        'tail'              : 'left_hand_index_finger_mcp',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'hands',
+        'parent_bone'       : 'hand.L',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_index.01.R': {
-        'head'      : 'right_hand_index_finger_mcp',
-        'tail'      : 'right_hand_index_finger_pip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_hand_index_finger_mcp',
+        'tail'              : 'right_hand_index_finger_pip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'palm.01.R',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_index.01.L': {
-        'head'      : 'left_hand_index_finger_mcp',
-        'tail'      : 'left_hand_index_finger_pip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_hand_index_finger_mcp',
+        'tail'              : 'left_hand_index_finger_pip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'palm.01.L',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_index.02.R': {
-        'head'      : 'right_hand_index_finger_pip',
-        'tail'      : 'right_hand_index_finger_dip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_hand_index_finger_pip',
+        'tail'              : 'right_hand_index_finger_dip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'f_index.01.R',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_index.02.L': {
-        'head'      : 'left_hand_index_finger_pip',
-        'tail'      : 'left_hand_index_finger_dip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_hand_index_finger_pip',
+        'tail'              : 'left_hand_index_finger_dip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'f_index.01.L',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_index.03.R': {
-        'head'      : 'right_hand_index_finger_dip',
-        'tail'      : 'right_hand_index_finger_tip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_hand_index_finger_dip',
+        'tail'              : 'right_hand_index_finger_tip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'f_index.02.R',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_index.03.L': {
-        'head'      : 'left_hand_index_finger_dip',
-        'tail'      : 'left_hand_index_finger_tip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_hand_index_finger_dip',
+        'tail'              : 'left_hand_index_finger_tip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'f_index.02.L',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'palm.02.R': {
-        'head'      : 'right_hand_wrist',
-        'tail'      : 'right_hand_middle_finger_mcp',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_hand_wrist',
+        'tail'              : 'right_hand_middle_finger_mcp',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'hands',
+        'parent_bone'       : 'hand.R',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'palm.02.L': {
-        'head'      : 'left_hand_wrist',
-        'tail'      : 'left_hand_middle_finger_mcp',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_hand_wrist',
+        'tail'              : 'left_hand_middle_finger_mcp',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'hands',
+        'parent_bone'       : 'hand.L',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_middle.01.R': {
-        'head'      : 'right_hand_middle_finger_mcp',
-        'tail'      : 'right_hand_middle_finger_pip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_hand_middle_finger_mcp',
+        'tail'              : 'right_hand_middle_finger_pip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'palm.02.R',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_middle.01.L': {
-        'head'      : 'left_hand_middle_finger_mcp',
-        'tail'      : 'left_hand_middle_finger_pip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_hand_middle_finger_mcp',
+        'tail'              : 'left_hand_middle_finger_pip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'palm.02.L',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_middle.02.R': {
-        'head'      : 'right_hand_middle_finger_pip',
-        'tail'      : 'right_hand_middle_finger_dip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_hand_middle_finger_pip',
+        'tail'              : 'right_hand_middle_finger_dip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'f_middle.01.R',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_middle.02.L': {
-        'head'      : 'left_hand_middle_finger_pip',
-        'tail'      : 'left_hand_middle_finger_dip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_hand_middle_finger_pip',
+        'tail'              : 'left_hand_middle_finger_dip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'f_middle.01.L',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_middle.03.R': {
-        'head'      : 'right_hand_middle_finger_dip',
-        'tail'      : 'right_hand_middle_finger_tip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_hand_middle_finger_dip',
+        'tail'              : 'right_hand_middle_finger_tip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'f_middle.02.R',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_middle.03.L': {
-        'head'      : 'left_hand_middle_finger_dip',
-        'tail'      : 'left_hand_middle_finger_tip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_hand_middle_finger_dip',
+        'tail'              : 'left_hand_middle_finger_tip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'f_middle.02.L',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'palm.03.R': {
-        'head'      : 'right_hand_wrist',
-        'tail'      : 'right_hand_ring_finger_mcp',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_hand_wrist',
+        'tail'              : 'right_hand_ring_finger_mcp',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'hands',
+        'parent_bone'       : 'hand.R',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'palm.03.L': {
-        'head'      : 'left_hand_wrist',
-        'tail'      : 'left_hand_ring_finger_mcp',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_hand_wrist',
+        'tail'              : 'left_hand_ring_finger_mcp',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'hands',
+        'parent_bone'       : 'hand.L',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_ring.01.R': {
-        'head'      : 'right_hand_ring_finger_mcp',
-        'tail'      : 'right_hand_ring_finger_pip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_hand_ring_finger_mcp',
+        'tail'              : 'right_hand_ring_finger_pip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'palm.03.R',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_ring.01.L': {
-        'head'      : 'left_hand_ring_finger_mcp',
-        'tail'      : 'left_hand_ring_finger_pip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_hand_ring_finger_mcp',
+        'tail'              : 'left_hand_ring_finger_pip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'palm.03.L',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_ring.02.R': {
-        'head'      : 'right_hand_ring_finger_pip',
-        'tail'      : 'right_hand_ring_finger_dip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_hand_ring_finger_pip',
+        'tail'              : 'right_hand_ring_finger_dip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'f_ring.01.R',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_ring.02.L': {
-        'head'      : 'left_hand_ring_finger_pip',
-        'tail'      : 'left_hand_ring_finger_dip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_hand_ring_finger_pip',
+        'tail'              : 'left_hand_ring_finger_dip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'f_ring.01.L',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_ring.03.R': {
-        'head'      : 'right_hand_ring_finger_dip',
-        'tail'      : 'right_hand_ring_finger_tip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_hand_ring_finger_dip',
+        'tail'              : 'right_hand_ring_finger_tip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'f_ring.02.R',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_ring.03.L': {
-        'head'      : 'left_hand_ring_finger_dip',
-        'tail'      : 'left_hand_ring_finger_tip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_hand_ring_finger_dip',
+        'tail'              : 'left_hand_ring_finger_tip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'f_ring.02.L',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'palm.04.R': {
-        'head'      : 'right_hand_wrist',
-        'tail'      : 'right_hand_pinky_mcp',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_hand_wrist',
+        'tail'              : 'right_hand_pinky_mcp',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'hands',
+        'parent_bone'       : 'hand.R',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'palm.04.L': {
-        'head'      : 'left_hand_wrist',
-        'tail'      : 'left_hand_pinky_mcp',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_hand_wrist',
+        'tail'              : 'left_hand_pinky_mcp',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'hands',
+        'parent_bone'       : 'hand.L',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_pinky.01.R': {
-        'head'      : 'right_hand_pinky_mcp',
-        'tail'      : 'right_hand_pinky_pip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_hand_pinky_mcp',
+        'tail'              : 'right_hand_pinky_pip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'palm.04.R',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_pinky.01.L': {
-        'head'      : 'left_hand_pinky_mcp',
-        'tail'      : 'left_hand_pinky_pip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_hand_pinky_mcp',
+        'tail'              : 'left_hand_pinky_pip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'palm.04.L',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_pinky.02.R': {
-        'head'      : 'right_hand_pinky_pip',
-        'tail'      : 'right_hand_pinky_dip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_hand_pinky_pip',
+        'tail'              : 'right_hand_pinky_dip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'f_pinky.01.R',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_pinky.02.L': {
-        'head'      : 'left_hand_pinky_pip',
-        'tail'      : 'left_hand_pinky_dip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_hand_pinky_pip',
+        'tail'              : 'left_hand_pinky_dip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'f_pinky.01.L',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_pinky.03.R': {
-        'head'      : 'right_hand_pinky_dip',
-        'tail'      : 'right_hand_pinky_tip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_hand_pinky_dip',
+        'tail'              : 'right_hand_pinky_tip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'f_pinky.02.R',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'f_pinky.03.L': {
-        'head'      : 'left_hand_pinky_dip',
-        'tail'      : 'left_hand_pinky_tip',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_hand_pinky_dip',
+        'tail'              : 'left_hand_pinky_tip',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : 'fingers',
+        'parent_bone'       : 'f_pinky.02.L',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'thigh.R': {
-        'head'      : 'right_hip',
-        'tail'      : 'right_knee',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_hip',
+        'tail'              : 'right_knee',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'thigh.L': {
-        'head'      : 'left_hip',
-        'tail'      : 'left_knee',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_hip',
+        'tail'              : 'left_knee',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'shin.R': {
-        'head'      : 'right_knee',
-        'tail'      : 'right_ankle',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_knee',
+        'tail'              : 'right_ankle',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'shin.L': {
-        'head'      : 'left_knee',
-        'tail'      : 'left_ankle',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_knee',
+        'tail'              : 'left_ankle',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'foot.R': {
-        'head'      : 'right_ankle',
-        'tail'      : 'right_foot_index',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_ankle',
+        'tail'              : 'right_foot_index',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'foot.L': {
-        'head'      : 'left_ankle',
-        'tail'      : 'left_foot_index',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_ankle',
+        'tail'              : 'left_foot_index',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'heel.02.R': {
-        'head'      : 'right_ankle',
-        'tail'      : 'right_heel',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'right_ankle',
+        'tail'              : 'right_heel',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
     'heel.02.L': {
-        'head'      : 'left_ankle',
-        'tail'      : 'left_heel',
-        'lengths'   : [],
-        'median'    : 0,
-        'stdev'     : 0},
+        'head'              : 'left_ankle',
+        'tail'              : 'left_heel',
+        'lengths'           : [],
+        'median'            : 0,
+        'stdev'             : 0,
+        'category'          : '',
+        'parent_bone'       : '',
+        'bone_x_axis'       : (0,0,0),
+        'bone_y_axis'       : (0,0,0),
+        'bone_z_axis'       : (0,0,0),
+        'rot_limit_min_x'   : 0,
+        'rot_limit_max_x'   : 0,
+        'rot_limit_min_z'   : 0,
+        'rot_limit_max_z'   : 0},
 }
 
 # Dictionary containing the empty children for each of the capture empties.
@@ -692,7 +1250,7 @@ def update_empty_positions():
 
     # Reset the empty positions dictionary with empty arrays for each empty
     for object in bpy.data.objects:
-        if object.type == 'EMPTY' and object.name != 'freemocap_origin_axes' and object.name != 'world_origin' and object.name != '_full_body_center_of_mass':
+        if object.type == 'EMPTY' and object.name != 'empties_parent' and '_origin' not in object.name and 'center_of_mass' not in object.name and object.name != 'rigid_body_meshes_parent':
             empty_positions[object.name] = {'x': [], 'y': [], 'z': []}
 
     # Iterate through each scene frame and save the coordinates of each empty in the dictionary.
@@ -701,7 +1259,7 @@ def update_empty_positions():
         scene.frame_set(frame)
         # Iterate through each object
         for object in bpy.data.objects:
-            if object.type == 'EMPTY' and object.name != 'freemocap_origin_axes' and object.name != 'world_origin' and object.name != '_full_body_center_of_mass':
+            if object.type == 'EMPTY' and object.name != 'empties_parent' and '_origin' not in object.name and 'center_of_mass' not in object.name and object.name != 'rigid_body_meshes_parent':
                 # Save the x, y, z position of the empty
                 empty_positions[object.name]['x'].append(bpy.data.objects[object.name].location[0])
                 empty_positions[object.name]['y'].append(bpy.data.objects[object.name].location[1])
@@ -725,7 +1283,7 @@ def update_empty_speeds(recording_fps):
 
     # Reset the empty speeds dictionary with an array with one element of value zero for each empty marker
     for object in bpy.data.objects:
-        if object.type == 'EMPTY' and object.name != 'freemocap_origin_axes' and object.name != 'world_origin' and object.name != '_full_body_center_of_mass':
+        if object.type == 'EMPTY' and object.name != 'empties_parent' and '_origin' not in object.name and 'center_of_mass' not in object.name and object.name != 'rigid_body_meshes_parent':
             empty_speeds[object.name] = {'speed': [0]}
 
     # Iterate through each scene frame starting from frame start + 1 and save the speed of each empty in the dictionary
@@ -734,7 +1292,7 @@ def update_empty_speeds(recording_fps):
         scene.frame_set(frame)
         # Iterate through each object
         for object in bpy.data.objects:
-            if object.type == 'EMPTY' and object.name != 'freemocap_origin_axes' and object.name != 'world_origin' and object.name != '_full_body_center_of_mass':
+            if object.type == 'EMPTY' and object.name != 'empties_parent' and '_origin' not in object.name and 'center_of_mass' not in object.name and object.name != 'rigid_body_meshes_parent':
                 # Save the speed of the empty based on the recording fps and the distance to the position of the empty in the previous frame
                 #print('length:' + str(len(empty_positions[object.name]['x'])))
                 #print('frame:'+str(frame))
@@ -835,8 +1393,8 @@ def add_hands_middle_empties():
         left_hand_middle.animation_data.action = bpy.data.actions["left_" + middle_references[0] + "Action"].copy()
         left_hand_middle.animation_data.action.name = 'left_hand_middleAction'
 
-        # Move the freemocap_origin_axes empty to the position and rotation previous to the Adjust Empties method ending
-        origin = bpy.data.objects['freemocap_origin_axes']
+        # Move the empties_parent empty to the position and rotation previous to the Adjust Empties method ending
+        origin = bpy.data.objects['empties_parent']
         origin.location         = origin_location_pre_reset
         origin.rotation_euler   = origin_rotation_pre_reset
 
@@ -845,8 +1403,8 @@ def add_hands_middle_empties():
         left_hand_middle.select_set(True)
 
         # Set the origin active in 3Dview
-        bpy.context.view_layer.objects.active = bpy.data.objects['freemocap_origin_axes']
-        # Parent selected empties to freemocap_origin_axes keeping transforms
+        bpy.context.view_layer.objects.active = bpy.data.objects['empties_parent']
+        # Parent selected empties to empties_parent keeping transforms
         bpy.ops.object.parent_set(type='OBJECT', keep_transform=True)
 
         # Reset the position and rotation of the origin
@@ -884,7 +1442,7 @@ def add_hands_middle_empties():
 
 # Function to draw a vector for ik constraints debbuging purposes
 def draw_vector(origin, angle, name):
-    bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=origin, rotation=angle, scale=(0.01, 0.01, 0.01))
+    bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=origin, rotation=angle, scale=(0.002, 0.002, 0.002))
     bpy.data.objects["Empty"].name = name
 
 # Function to calculate the pole angle necessary to make the ik base bone point to the pole target empty marker
@@ -1027,14 +1585,14 @@ def adjust_empties(z_align_ref_empty: str='left_knee',
         if "sphere" in object.name:
             bpy.data.objects.remove(object, do_unlink=True)
 
-    ### Unparent empties from freemocap_origin_axes ###
+    ### Unparent empties from empties_parent ###
     for object in bpy.data.objects:
-        if object.type == "EMPTY" and object.name != "freemocap_origin_axes" and object.name != "world_origin":
+        if object.type == "EMPTY" and object.name != 'empties_parent' and '_origin' not in object.name and 'center_of_mass' not in object.name and object.name != 'rigid_body_meshes_parent':
             object.parent = None
 
-    ### Move freemocap_origin_axes to the hips_center empty and rotate it so the ###
+    ### Move empties_parent to the hips_center empty and rotate it so the ###
     ### z axis intersects the trunk_center empty and the x axis intersects the left_hip empty ###
-    origin = bpy.data.objects['freemocap_origin_axes']
+    origin = bpy.data.objects['empties_parent']
     hips_center = bpy.data.objects['hips_center']
 
     left_hip = bpy.data.objects['left_hip']
@@ -1119,9 +1677,9 @@ def adjust_empties(z_align_ref_empty: str='left_knee',
     # Deselect all
     bpy.ops.object.select_all(action='DESELECT') 
 
-    ### Reparent all the capture empties to the origin (freemocap_origin_axes) ###
+    ### Reparent all the capture empties to the origin (empties_parent) ###
     for object in bpy.data.objects:
-        if object.type == "EMPTY" and object.name != "freemocap_origin_axes" and object.name != "world_origin":
+        if object.type == "EMPTY" and object.name != 'empties_parent' and '_origin' not in object.name and 'center_of_mass' not in object.name and object.name != 'rigid_body_meshes_parent':
             # Select empty
             object.select_set(True)
 
@@ -1170,7 +1728,7 @@ def adjust_empties(z_align_ref_empty: str='left_knee',
 
     # Deselect all objects
     bpy.ops.object.select_all(action='DESELECT')
-    bpy.data.objects['freemocap_origin_axes'].select_set(True)
+    bpy.data.objects['empties_parent'].select_set(True)
 
     # Change the adjust_empties_executed variable
     adjust_empties_executed = True
@@ -1301,6 +1859,86 @@ def translate_empty(empties_dict, empty, frame_index, delta):
     if empty in empties_dict:
         for child in empties_dict[empty]['children']:
             translate_empty(empties_dict, child, frame_index, delta)
+
+# Function to add fingers rotation limits constraints. Starting from the fingers mcp, each hand virtual bone rotation will be
+# analysed. If the rotation is outside the limits, the bone tail empty will be translated around the bone head empty.
+# The resulting rotation will be just on the border of the limits interval. The rotation analysis will be done separately
+# on the local x and z axes of the virtual bone. When an empty is rotated, all of its children empties will be rotated equally recursevily
+def add_finger_rotation_limits():
+
+    # Calculate the hand bones origin axes
+    for side in ['left', 'right']:
+        # y_axis
+        hand_y_axis = bpy.data.objects[side + '_hand_middle'].matrix_world.translation - bpy.data.objects[side + '_wrist'].matrix_world.translation
+        
+        # z_axis
+        hand_to_thumb_cmc = bpy.data.objects[side + '_hand_thumb_cmc'].matrix_world.translation - bpy.data.objects[side + '_wrist'].matrix_world.translation
+        hand_z_axis = hand_to_thumb_cmc - hand_y_axis * (hand_y_axis.dot(hand_to_thumb_cmc) / hand_y_axis.length_squared)
+        # draw_vector(bpy.data.objects[side +'_wrist'].matrix_world.translation, mathutils.Vector([0,0,1]).rotation_difference(hand_z_axis).to_euler(), side + '_hand_z_axis')
+        # x_axis as the orthogonal vector of the y_axis and z_axis
+        hand_x_axis = hand_y_axis.cross(hand_z_axis)
+        # draw_vector(bpy.data.objects[side + '_wrist'].matrix_world.translation, mathutils.Vector([0,0,1]).rotation_difference(hand_x_axis).to_euler(), side + '_hand_x_axis')
+
+        # Save the vectors in the virtual_bones dictionary
+        virtual_bones['hand.' + side[0].upper()]['bone_x_axis'] = mathutils.Vector(hand_x_axis)
+        virtual_bones['hand.' + side[0].upper()]['bone_y_axis'] = mathutils.Vector(hand_y_axis)
+        virtual_bones['hand.' + side[0].upper()]['bone_z_axis'] = mathutils.Vector(hand_z_axis)
+    
+    # Iterate through the virtual bones dictionary and add constraints if the bone has the finger category
+    for bone in virtual_bones:
+
+        # If the bone has the hands or fingers category then calculate its origin axes based on its parent bone's axes
+        if virtual_bones[bone]['category'] == 'hands' or virtual_bones[bone]['category'] == 'fingers':
+            
+            # Calculate the bone's y axis
+            bone_y_axis = mathutils.Vector(bpy.data.objects[virtual_bones[bone]['tail']].matrix_world.translation - bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation)
+
+            # Calculate the difference between the bone's y axis and its parent bone's y axis
+            rotation_quat = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_y_axis'].rotation_difference(bone_y_axis)
+
+            # Rotate the parent x and z axes to get the bones local x and z axes
+            bone_x_axis = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_x_axis'].copy()
+            bone_x_axis.rotate(rotation_quat)
+            bone_z_axis = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_z_axis'].copy()
+            bone_z_axis.rotate(rotation_quat)
+
+            # If the bone has the fingers category then calculate its origin axes based on its parent bone's axes and rotate the tail empty (and its children) to meet the constraints
+            if virtual_bones[bone]['category'] == 'fingers' and bone == 'thumb.01.R':
+                parent_bone = virtual_bones[bone]['parent_bone']
+                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, mathutils.Vector([0,0,1]).rotation_difference(bone_x_axis).to_euler(), bone + '_x_axis')
+                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, mathutils.Vector([0,0,1]).rotation_difference(bone_y_axis).to_euler(), bone + '_y_axis')
+                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, mathutils.Vector([0,0,1]).rotation_difference(bone_z_axis).to_euler(), bone + '_z_axis')
+
+                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, mathutils.Vector([0,0,1]).rotation_difference(virtual_bones[parent_bone]['bone_x_axis']).to_euler(), parent_bone + '_x_axis')
+                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, mathutils.Vector([0,0,1]).rotation_difference(virtual_bones[parent_bone]['bone_y_axis']).to_euler(), parent_bone + '_y_axis')
+                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, mathutils.Vector([0,0,1]).rotation_difference(virtual_bones[parent_bone]['bone_z_axis']).to_euler(), parent_bone + '_z_axis')
+
+                # Calculate the rotation angle between the x axes and the z axes of the bone and its parent bone
+                x_angle = bone_x_axis.angle(virtual_bones[parent_bone]['bone_x_axis'])
+                x_angle = virtual_bones[parent_bone]['bone_x_axis'].angle(bone_x_axis)
+                print(bone + ' x_angle: ' + str(m.degrees(x_angle)))
+           
+
+            # Save the vectors in the virtual_bones dictionary
+            virtual_bones[bone]['bone_x_axis'] = bone_x_axis
+            virtual_bones[bone]['bone_y_axis'] = bone_y_axis
+            virtual_bones[bone]['bone_z_axis'] = bone_z_axis
+
+        
+        
+
+
+
+            
+            
+            # Calculate the bone's parent vector direction
+            # parent_bone         = virtual_bones[bone]['parent_bone']
+            # parent_bone_head    = bpy.data.objects[virtual_bones[parent_bone]['head']]
+            # parent_bone_tail    = bpy.data.objects[virtual_bones[parent_bone]['tail']]
+            # parent_bone_vector  = parent_bone_tail.matrix_world.translation - parent_bone_head.matrix_world.translation
+
+            # draw_vector(parent_bone_head.matrix_world.translation, mathutils.Vector([0,0,1]).rotation_difference(parent_bone_vector).to_euler(), 'parent_bone_vector')
+            
 
 # IN DEVELOPMENT
 # Function to reduce sudden movements of empties with an acceleration above a threshold
@@ -2504,7 +3142,9 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
             object.select_set(False)
 
         # Get reference to armature
-        rig = bpy.data.objects['root']
+        for capture_object in bpy.data.objects:
+            if capture_object.type == "ARMATURE" and ("_rig" in capture_object.name or capture_object.name == "root"):
+                rig = capture_object
 
         # Select the rig
         rig.select_set(True)
@@ -2557,8 +3197,8 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
         # Parent the body_mesh and the rig with automatic weights
         bpy.ops.object.parent_set(type='ARMATURE_AUTO')
 
-        # Rename the skelly mesh to fmc_mesh
-        skelly_mesh.name = 'fmc_mesh'
+        # Rename the skelly mesh to skelly_mesh
+        skelly_mesh.name = 'skelly_mesh'
 
     elif body_mesh_mode == "can_man":
     
@@ -2928,9 +3568,9 @@ def export_fbx(self: Operator,
     # Deselect all
     bpy.ops.object.select_all(action='DESELECT')
 
-    # Select only the rig and the body_mesh. First search the name of the rig
+    # Select only the rig and the body_mesh.
     for capture_object in bpy.data.objects:
-        if capture_object.type == "ARMATURE" and "_rig" in capture_object.name:
+        if capture_object.type == "ARMATURE" and ("_rig" in capture_object.name or capture_object.name == "root"):
             capture_object.select_set(True)
 
     bpy.data.objects['skelly_mesh'].select_set(True)
@@ -3702,11 +4342,15 @@ class VIEW3D_PT_freemocap_adapter(Panel):
 
         box.operator('fmc_adapter.export_fbx', text='5. Export FBX')
 
+        # # Add Finger Rotation Limits
+        # box = layout.box()
+        # box.operator('fmc_adapter.add_finger_rotation_limits', text='Add Finger Rotation Limits')
+
 # Operator classes that executes the methods
 class FMC_ADAPTER_OT_adjust_empties(Operator):
     bl_idname       = 'fmc_adapter.adjust_empties'
     bl_label        = 'Freemocap Adapter - Adjust Empties'
-    bl_description  = "Change the position of the freemocap_origin_axes empty to so it is placed in an imaginary ground plane of the capture between the actor's feet"
+    bl_description  = "Change the position of the empties_parent empty so it is placed in an imaginary ground plane of the capture between the actor's feet"
     bl_options      = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
@@ -3841,9 +4485,13 @@ class FMC_ADAPTER_OT_add_body_mesh(Operator):
         #                 )
         
         # Execute Add Rig if there is no rig in the scene
-        try:
-            root = bpy.data.objects['root']
-        except:
+        scene_has_rig = False
+        for obj in bpy.data.objects:
+            if obj.type == 'ARMATURE':
+                scene_has_rig = True
+                break
+
+        if not scene_has_rig:
             print('Executing Add Rig to have a rig for the mesh...')
             add_rig(keep_symmetry=fmc_adapter_tool.keep_symmetry,
                     add_fingers_constraints=fmc_adapter_tool.add_fingers_constraints,
@@ -3884,6 +4532,31 @@ class FMC_ADAPTER_OT_export_fbx(Operator):
         print('Finished. Execution time (s): ' + str(m.trunc((end - start)*1000)/1000))
 
         return {'FINISHED'}
+    
+class FMC_ADAPTER_OT_add_finger_rotation_limits(Operator):
+    bl_idname       = 'fmc_adapter.add_finger_rotation_limits'
+    bl_label        = 'Freemocap Adapter - Add Finger Rotation Limits'
+    bl_description  = 'Translate the finger marker empties so the bones respect the rotation constraint'
+    bl_options      = {'REGISTER', 'UNDO_GROUPED'}
+
+    def execute(self, context):
+
+        scene               = context.scene
+        fmc_adapter_tool    = scene.fmc_adapter_tool
+
+        # Get start time
+        start = time.time()
+
+        print('Executing Add Finger Rotation Limits...')
+
+        # Execute export fbx function
+        add_finger_rotation_limits()
+
+        # Get end time and print execution time
+        end = time.time()
+        print('Finished. Execution time (s): ' + str(m.trunc((end - start)*1000)/1000))
+
+        return {'FINISHED'}
 
 classes = [FMC_ADAPTER_PROPERTIES,
            VIEW3D_PT_freemocap_adapter,
@@ -3892,7 +4565,8 @@ classes = [FMC_ADAPTER_PROPERTIES,
            FMC_ADAPTER_OT_reduce_shakiness,
            FMC_ADAPTER_OT_add_rig,
            FMC_ADAPTER_OT_add_body_mesh,
-           FMC_ADAPTER_OT_export_fbx
+           FMC_ADAPTER_OT_export_fbx,
+           FMC_ADAPTER_OT_add_finger_rotation_limits
 ]
 
 def register():
