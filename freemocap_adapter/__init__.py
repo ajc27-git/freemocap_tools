@@ -1,7 +1,7 @@
 bl_info = {
     'name'          : 'Freemocap Adapter Alt',
     'author'        : 'ajc27',
-    'version'       : (1, 1, 14),
+    'version'       : (1, 1, 15),
     'blender'       : (3, 0, 0),
     'location'      : '3D Viewport > Sidebar > Freemocap Adapter Alt',
     'description'   : 'Add-on to adapt the Freemocap Blender output',
@@ -1442,8 +1442,18 @@ def add_hands_middle_empties():
 
 # Function to draw a vector for ik constraints debbuging purposes
 def draw_vector(origin, angle, name):
-    bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=origin, rotation=angle, scale=(0.002, 0.002, 0.002))
+    # bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=origin, rotation=angle, scale=(0.002, 0.002, 0.002))
+    bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=origin, rotation=mathutils.Vector([0,0,1]).rotation_difference(angle).to_euler(), scale=(0.002, 0.002, 0.002))
+    
     bpy.data.objects["Empty"].name = name
+    # bpy.ops.object.empty_add(type='SPHERE', align='WORLD', location=origin, rotation=mathutils.Vector([0,0,1]).rotation_difference(angle).to_euler(), scale=(0.002, 0.002, 0.002))
+    bpy.ops.object.empty_add(type='SPHERE', align='WORLD', location=(origin+angle*25), scale=(0.001, 0.001, 0.001))
+    bpy.data.objects["Empty"].scale = (0.01, 0.01, 0.01)
+    bpy.data.objects["Empty"].name = 'Sphere_' + name
+    #bpy.ops.mesh.primitive_uv_sphere_add(radius=.01, enter_editmode=False, align='WORLD', location=(origin+mathutils.Vector([0, 0.1, 0])@angle.to_matrix()), scale=(1, 1, 1))
+    # bpy.ops.mesh.primitive_uv_sphere_add(radius=.005, enter_editmode=False, align='WORLD', location=(origin+angle*5), scale=(1, 1, 1))
+    
+
 
 # Function to calculate the pole angle necessary to make the ik base bone point to the pole target empty marker
 def calculate_ik_pole_angle(rig_name: str='root',
@@ -1866,6 +1876,57 @@ def translate_empty(empties_dict, empty, frame_index, delta):
 # on the local x and z axes of the virtual bone. When an empty is rotated, all of its children empties will be rotated equally recursevily
 def add_finger_rotation_limits():
 
+    def update_bone_axes(bone):
+        # Calculate the bone's y axis
+        bone_y_axis = mathutils.Vector(bpy.data.objects[virtual_bones[bone]['tail']].matrix_world.translation - bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation)
+
+        # Calculate the difference between the bone's y axis and its parent bone's y axis
+        rotation_quat = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_y_axis'].rotation_difference(bone_y_axis)
+
+        # Rotate the parent x and z axes to get the bones local x and z axes
+        bone_x_axis = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_x_axis'].copy()
+        bone_x_axis.rotate(rotation_quat)
+        bone_z_axis = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_z_axis'].copy()
+        bone_z_axis.rotate(rotation_quat)
+
+        # Save the vectors in the virtual_bones dictionary
+        virtual_bones[bone]['bone_x_axis'] = mathutils.Vector(bone_x_axis)
+        virtual_bones[bone]['bone_y_axis'] = mathutils.Vector(bone_y_axis)
+        virtual_bones[bone]['bone_z_axis'] = mathutils.Vector(bone_z_axis)
+
+        return
+    
+    def get_rot_angle_bone_parent(bone, axis):
+
+        # Set the bone axis
+        bone_axis = virtual_bones[bone]['bone_' + axis + '_axis']
+        # Set the parent bone axis
+        parent_bone_axis = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_' + axis + '_axis']
+        # Set the parent bone ortogonal axis
+        parent_bone_ort_axis = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_z_axis'] if axis == 'x' else virtual_bones[virtual_bones[bone]['parent_bone']]['bone_x_axis']
+
+        # Calculate the dot product between the x axes of the bone and its parent bone
+        dot_product = bone_axis.dot(parent_bone_axis)
+
+        # Based on the dot product calculate the rotation angle between the x axes of the bone and its parent bone
+        angle = m.acos(dot_product / (bone_axis.magnitude * parent_bone_axis.magnitude))
+        print(bone + ' x_angle pre: ' + str(m.degrees(angle)))
+
+        # Calculate the cross product between the x axes of the bone and its parent bone
+        cross_product = mathutils.Vector(bone_axis.cross(parent_bone_axis))
+
+        # Normalize the cross product
+        cross_product.normalize()
+
+        # Calculate the dot product between the x cross product and the parent z axis
+        cross_dot_product = cross_product.dot(parent_bone_ort_axis)
+
+        # If the dot product is negative then the rotation angle is negative
+        if cross_dot_product < 0:
+            angle = -angle
+
+        return angle
+
     # Calculate the hand bones origin axes
     for side in ['left', 'right']:
         # y_axis
@@ -1890,55 +1951,232 @@ def add_finger_rotation_limits():
         # If the bone has the hands or fingers category then calculate its origin axes based on its parent bone's axes
         if virtual_bones[bone]['category'] == 'hands' or virtual_bones[bone]['category'] == 'fingers':
             
-            # Calculate the bone's y axis
-            bone_y_axis = mathutils.Vector(bpy.data.objects[virtual_bones[bone]['tail']].matrix_world.translation - bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation)
+            # # Calculate the bone's y axis
+            # bone_y_axis = mathutils.Vector(bpy.data.objects[virtual_bones[bone]['tail']].matrix_world.translation - bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation)
 
-            # Calculate the difference between the bone's y axis and its parent bone's y axis
-            rotation_quat = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_y_axis'].rotation_difference(bone_y_axis)
+            # # Calculate the difference between the bone's y axis and its parent bone's y axis
+            # rotation_quat = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_y_axis'].rotation_difference(bone_y_axis)
 
-            # Rotate the parent x and z axes to get the bones local x and z axes
-            bone_x_axis = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_x_axis'].copy()
-            bone_x_axis.rotate(rotation_quat)
-            bone_z_axis = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_z_axis'].copy()
-            bone_z_axis.rotate(rotation_quat)
+            # # Rotate the parent x and z axes to get the bones local x and z axes
+            # bone_x_axis = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_x_axis'].copy()
+            # bone_x_axis.rotate(rotation_quat)
+            # bone_z_axis = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_z_axis'].copy()
+            # bone_z_axis.rotate(rotation_quat)
+
+            update_bone_axes(bone)
 
             # If the bone has the fingers category then calculate its origin axes based on its parent bone's axes and rotate the tail empty (and its children) to meet the constraints
-            if virtual_bones[bone]['category'] == 'fingers' and bone == 'thumb.01.R':
-                parent_bone = virtual_bones[bone]['parent_bone']
-                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, mathutils.Vector([0,0,1]).rotation_difference(bone_x_axis).to_euler(), bone + '_x_axis')
-                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, mathutils.Vector([0,0,1]).rotation_difference(bone_y_axis).to_euler(), bone + '_y_axis')
-                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, mathutils.Vector([0,0,1]).rotation_difference(bone_z_axis).to_euler(), bone + '_z_axis')
+            # if virtual_bones[bone]['category'] == 'fingers' and (bone == 'thumb.01.Ri' or bone == 'thumb.02.R' or bone == 'thumb.03.R'):
+            if virtual_bones[bone]['category'] == 'fingers' and (bone == 'f_index.01.Ri' or bone == 'f_index.02.R' or bone == 'f_index.03.Ri'):
 
-                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, mathutils.Vector([0,0,1]).rotation_difference(virtual_bones[parent_bone]['bone_x_axis']).to_euler(), parent_bone + '_x_axis')
-                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, mathutils.Vector([0,0,1]).rotation_difference(virtual_bones[parent_bone]['bone_y_axis']).to_euler(), parent_bone + '_y_axis')
-                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, mathutils.Vector([0,0,1]).rotation_difference(virtual_bones[parent_bone]['bone_z_axis']).to_euler(), parent_bone + '_z_axis')
+                bone_x_axis = virtual_bones[bone]['bone_x_axis']
+                bone_y_axis = virtual_bones[bone]['bone_y_axis']
+                bone_z_axis = virtual_bones[bone]['bone_z_axis']
+
+                parent_bone = virtual_bones[bone]['parent_bone']
+                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, bone_x_axis, bone + '_x_axis')
+                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, bone_y_axis, bone + '_y_axis')
+                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, bone_z_axis, bone + '_z_axis')
+
+                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, virtual_bones[parent_bone]['bone_x_axis'], parent_bone + '_x_axis')
+                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, virtual_bones[parent_bone]['bone_y_axis'], parent_bone + '_y_axis')
+                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, virtual_bones[parent_bone]['bone_z_axis'], parent_bone + '_z_axis')
 
                 # Calculate the rotation angle between the x axes and the z axes of the bone and its parent bone
-                x_angle = bone_x_axis.angle(virtual_bones[parent_bone]['bone_x_axis'])
-                x_angle = virtual_bones[parent_bone]['bone_x_axis'].angle(bone_x_axis)
+                # Calculate the dot product between the x axes of the bone and its parent bone
+                dot_product = bone_x_axis.dot(virtual_bones[parent_bone]['bone_x_axis'])
+
+                # Based on the dot product calculate the rotation angle between the x axes of the bone and its parent bone
+                x_angle = m.acos(dot_product / (bone_x_axis.magnitude * virtual_bones[parent_bone]['bone_x_axis'].magnitude))
+                print(bone + ' x_angle pre: ' + str(m.degrees(x_angle)))
+
+                # Calculate the cross product between the x axes of the bone and its parent bone
+                x_cross_product = mathutils.Vector(bone_x_axis.cross(virtual_bones[parent_bone]['bone_x_axis']))
+
+                # Normalize the cross product
+                x_cross_product.normalize()
+
+                # Calculate the dot product between the x cross product and the parent z axis
+                x_dot_product = x_cross_product.dot(virtual_bones[parent_bone]['bone_z_axis'])
+
+                # If the dot product is negative then the rotation angle is negative
+                if x_dot_product < 0:
+                    x_angle = -x_angle
+
                 print(bone + ' x_angle: ' + str(m.degrees(x_angle)))
-           
 
-            # Save the vectors in the virtual_bones dictionary
-            virtual_bones[bone]['bone_x_axis'] = bone_x_axis
-            virtual_bones[bone]['bone_y_axis'] = bone_y_axis
-            virtual_bones[bone]['bone_z_axis'] = bone_z_axis
+                # x_angle = get_rot_angle_bone_parent(bone, 'x')
 
-        
-        
+                # Check if the x_angle is within the rotation limit values. If it is outside, rotate the bone tail empty on the xy plane so the x_angle is on the closest limit.
+                # Rotate the bone tail children by the same amount recursively
+                rot_x_delta = 0
+                
+                # Calculate the angle difference between the rotation limit and the x_angle
+                if x_angle < virtual_bones[bone]['rot_limit_min_x']:
+                    rot_x_delta = x_angle -virtual_bones[bone]['rot_limit_min_x']
+                elif x_angle > virtual_bones[bone]['rot_limit_max_x']:
+                    rot_x_delta = x_angle - virtual_bones[bone]['rot_limit_max_x']
+
+                # If the rot_x_delta is different than 0 then rotate the bone tail empty
+                if rot_x_delta != 0:
+                    print('Rot_x_delta: ' + str(m.degrees(rot_x_delta)))
+                    draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, x_cross_product, 'x_cross_product')
+                    # Get the rotation matrix of the delta angle around the x axis cross product
+                    # x_matrix_axis = virtual_bones[parent_bone]['bone_z_axis'].copy()
+                    x_matrix_axis = x_cross_product.copy()
+                    # x_matrix_axis.normalize()
+                    rot_x_matrix = mathutils.Matrix.Rotation(rot_x_delta, 4, x_matrix_axis)
+
+                    # Rotate the virtual bone tail empty
+                    rotate_virtual_bone(virtual_bones[bone]['tail'], bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, rot_x_matrix)
+
+                update_bone_axes(bone)
+
+                # Calculate the dot product between the z axes of the bone and its parent bone
+                dot_product = bone_z_axis.dot(virtual_bones[parent_bone]['bone_z_axis'])
+                # dot_product = virtual_bones[parent_bone]['bone_z_axis'].dot(bone_z_axis)
+
+                # Based on the dot product calculate the rotation angle between the x axes of the bone and its parent bone
+                z_angle = m.acos(dot_product / (bone_z_axis.magnitude * virtual_bones[parent_bone]['bone_z_axis'].magnitude))
+                print(bone + ' z_angle pre: ' + str(m.degrees(z_angle)))
+                # Calculate the cross product between the Z axes of the bone and its parent bone
+                # z_cross_product = mathutils.Vector(virtual_bones[parent_bone]['bone_z_axis'].cross(bone_z_axis))
+                z_cross_product = mathutils.Vector(bone_z_axis.cross(virtual_bones[parent_bone]['bone_z_axis']))
+
+                # Normalize the cross product
+                z_cross_product.normalize()
+
+                # Calculate the dot product between the z cross product and the parent X axis
+                z_dot_product = z_cross_product.dot(virtual_bones[parent_bone]['bone_x_axis'])
+                print('z_dot_product' + str(z_dot_product))
+
+                # If the dot product is negative then the rotation angle is negative
+                if z_dot_product < 0:
+                    z_angle = -z_angle
+
+                print(bone + ' z_angle: ' + str(m.degrees(z_angle)))
+
+                # z_angle = get_rot_angle_bone_parent(bone, 'z')
+
+                
+
+                # Check if the z_angle is within the rotation limit values. If it is outside, rotate the bone tail empty on the xy plane so the z_angle is on the closest limit.
+                # Rotate the bone tail children by the same amount recursively
+                rot_z_delta = 0
+
+                # Calculate the angle difference between the rotation limit and the z_angle
+                if z_angle < virtual_bones[bone]['rot_limit_min_z']:
+                    rot_z_delta = z_angle - virtual_bones[bone]['rot_limit_min_z']
+                elif z_angle > virtual_bones[bone]['rot_limit_max_z']:
+                    rot_z_delta = z_angle - virtual_bones[bone]['rot_limit_max_z']
+
+                # If the rot_z_delta is different than 0 then rotate the bone tail empty
+                if rot_z_delta != 0:
+                    print('Rot_z_delta: ' + str(rot_z_delta))
+                    draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, z_cross_product, 'z_cross_product')
+                    # Get the rotation matrix of the delta angle around the z axis cross product
+                    # z_matrix_axis = virtual_bones[parent_bone]['bone_x_axis'].copy()
+                    z_matrix_axis = z_cross_product.copy()
+                    z_matrix_axis.normalize()
+                    rot_z_matrix = mathutils.Matrix.Rotation(rot_z_delta, 4, z_matrix_axis)
+
+                    # Rotate the virtual bone tail empty
+                    rotate_virtual_bone(virtual_bones[bone]['tail'], bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, rot_z_matrix)
+
+                # If rot_x_delta or rot_z_delta is different than 0 then recalculate the bone axes vectors
+                if rot_x_delta != 0 or rot_z_delta != 0:
+                    # Calculate the bone's y axis
+                    bone_y_axis = mathutils.Vector(bpy.data.objects[virtual_bones[bone]['tail']].matrix_world.translation - bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation)
+
+                    # Calculate the difference between the bone's y axis and its parent bone's y axis
+                    rotation_quat = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_y_axis'].rotation_difference(bone_y_axis)
+
+                    # Rotate the parent x and z axes to get the bones local x and z axes
+                    bone_x_axis = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_x_axis'].copy()
+                    bone_x_axis.rotate(rotation_quat)
+                    bone_z_axis = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_z_axis'].copy()
+                    bone_z_axis.rotate(rotation_quat)
+
+                # Save the vectors in the virtual_bones dictionary
+                virtual_bones[bone]['bone_x_axis'] = mathutils.Vector(bone_x_axis)
+                virtual_bones[bone]['bone_y_axis'] = mathutils.Vector(bone_y_axis)
+                virtual_bones[bone]['bone_z_axis'] = mathutils.Vector(bone_z_axis)
+
+# Function to rotate the virtual bones by its tail empty using a rotation matrix. Do it recursively for its children
+def rotate_virtual_bone(empty, origin, rot_matrix: mathutils.Matrix):
+    # print('origin: ' + str(origin))
+    frame_index = bpy.context.scene.frame_current
+
+    empty_current_location = bpy.data.objects[empty].matrix_world.translation
+    # Get local vector from virtual bone tail empty to the origin
+    empty_local_vector = empty_current_location - origin
+    # print('empty_local_vector: ' + str(empty_local_vector))
+    # # Get the local vector magnitude
+    # empty_local_magnitude = empty_local_vector.magnitude
+
+    # print('empty_local_magnitude: ' + str(empty_local_magnitude))
+
+    # # Normalize the local vector
+    # empty_local_vector_normalized = empty_local_vector / empty_local_magnitude
+
+    # print('empty_local_vector_normalized_magnitude: ' + str(empty_local_vector_normalized.magnitude))
+
+    # # Rotate the empty vector
+    # rotated_empty_vector_normalized = rot_matrix @ empty_local_vector_normalized
+
+    # print('rotated_empty_vector_normalized_magnitude: ' + str(rotated_empty_vector_normalized.magnitude))
+
+    # rotated_empty_vector = rotated_empty_vector_normalized * empty_local_magnitude
+
+    # print('rotated_empty_vector_magnitude: ' + str(rotated_empty_vector.magnitude))
 
 
+    # print('rotated_empty_vector: ' + str(rotated_empty_vector))
+    
 
-            
-            
-            # Calculate the bone's parent vector direction
-            # parent_bone         = virtual_bones[bone]['parent_bone']
-            # parent_bone_head    = bpy.data.objects[virtual_bones[parent_bone]['head']]
-            # parent_bone_tail    = bpy.data.objects[virtual_bones[parent_bone]['tail']]
-            # parent_bone_vector  = parent_bone_tail.matrix_world.translation - parent_bone_head.matrix_world.translation
+    # rotated_empty_vector = mathutils.Matrix.Rotation(angle, 3, axis) @ empty_local_vector
+    # draw_vector(origin, rotated_empty_vector, 'rotated_empty_vector')
+    rotated_empty_vector = rot_matrix @ empty_local_vector
+    # Get the world space rotated empty vector
+    new_empty_vector = origin + rotated_empty_vector
+    # print('new_empty_vector: ' + str(new_empty_vector))
 
-            # draw_vector(parent_bone_head.matrix_world.translation, mathutils.Vector([0,0,1]).rotation_difference(parent_bone_vector).to_euler(), 'parent_bone_vector')
-            
+    
+    #new_empty_vector = origin + mathutils.Matrix.Rotation(rotated_empty_vector, 3, mathutils.Vector((0, 0, 1)))
+    # draw_vector(origin, new_empty_vector, 'new_empty_vector')
+    bpy.ops.object.empty_add(type='SPHERE', align='WORLD', location=new_empty_vector, scale=(0.001, 0.001, 0.001))
+    bpy.data.objects["Empty"].scale = (0.002, 0.002, 0.002)
+    bpy.data.objects["Empty"].name = 'Sphere_' + empty + '_new_empty_vector'
+    # print('new_empty_vector_x: ' + str(new_empty_vector[0]))
+
+    # Get the translation delta vector as the animation curves are in local space
+    delta_vector = new_empty_vector - empty_current_location
+    
+    # Translate the empty in the animation location curve
+    try:
+        actual_x = bpy.data.objects[empty].animation_data.action.fcurves[0].keyframe_points[frame_index].co[1]
+        # bpy.data.objects[empty].animation_data.action.fcurves[0].keyframe_points[frame_index].co[1] = actual_x + delta_vector[0]
+        bpy.data.objects[empty].animation_data.action.fcurves[0].keyframe_points[frame_index].co[1] = new_empty_vector[0]
+        actual_y = bpy.data.objects[empty].animation_data.action.fcurves[1].keyframe_points[frame_index].co[1]
+        # bpy.data.objects[empty].animation_data.action.fcurves[1].keyframe_points[frame_index].co[1] = actual_y + delta_vector[1]
+        bpy.data.objects[empty].animation_data.action.fcurves[1].keyframe_points[frame_index].co[1] = new_empty_vector[1]
+        actual_z = bpy.data.objects[empty].animation_data.action.fcurves[2].keyframe_points[frame_index].co[1]
+        # bpy.data.objects[empty].animation_data.action.fcurves[2].keyframe_points[frame_index].co[1] = actual_z + delta_vector[2]
+        bpy.data.objects[empty].animation_data.action.fcurves[2].keyframe_points[frame_index].co[1] = new_empty_vector[2]
+    except:
+        # Empty does not exist or does not have animation data
+        #print('Empty ' + empty + ' does not have animation data on frame ' + str(frame_index))
+        pass
+
+    # If empty has children then call this function for every child
+    if empty in empties_dict:
+        for child in empties_dict[empty]['children']:
+            pass
+            # rotate_virtual_bone(child, origin, rot_matrix)
+
+    
+
+
 
 # IN DEVELOPMENT
 # Function to reduce sudden movements of empties with an acceleration above a threshold
@@ -3768,13 +4006,30 @@ def export_fbx(self: Operator,
                 loc, rot, scale, _m, _mr = ob_obj.fbx_object_tx(scene_data, rot_euler_compat=p_rot)
 
                 p_rots[ob_obj] = rot
-                anim_loc.add_keyframe(real_currframe, loc * location_multiple)
-                anim_rot.add_keyframe(real_currframe, tuple(convert_rad_to_deg_iter(rot)))
-                anim_scale.add_keyframe(real_currframe, scale / scale_factor)
-            for anim_shape, me, shape in animdata_shapes.values():
-                anim_shape.add_keyframe(real_currframe, (shape.value * scale_factor,))
-            for anim_camera, camera in animdata_cameras.values():
-                anim_camera.add_keyframe(real_currframe, (camera.lens,))
+
+                # Check Blender version to adjust code for version >=4.0
+                if bpy.app.version_string[0] < '4':
+                    anim_loc.add_keyframe(real_currframe, loc * location_multiple)
+                    anim_rot.add_keyframe(real_currframe, tuple(convert_rad_to_deg_iter(rot)))
+                    anim_scale.add_keyframe(real_currframe, scale / scale_factor)
+                else:
+                    anim_loc.set_keyframes(real_currframe, loc * location_multiple)
+                    anim_rot.set_keyframes(real_currframe, tuple(convert_rad_to_deg_iter(rot)))
+                    anim_scale.set_keyframes(real_currframe, scale / scale_factor)
+
+                for anim_shape, me, shape in animdata_shapes.values():
+                    # Check Blender version to adjust code for version >=4.0
+                    if bpy.app.version_string[0] < '4':
+                        anim_shape.add_keyframe(real_currframe, (shape.value * scale_factor,))
+                    else:
+                        anim_shape.set_keyframes(real_currframe, (shape.value * scale_factor,))
+                for anim_camera, camera in animdata_cameras.values():
+                    # Check Blender version to adjust code for version >=4.0
+                    if bpy.app.version_string[0] < '4':
+                        anim_camera.add_keyframe(real_currframe, (camera.lens,))
+                    else:
+                        anim_camera.set_keyframes(real_currframe, (camera.lens,))
+                
             currframe += bake_step
 
         scene.frame_set(back_currframe, subframe=0.0)
@@ -4342,7 +4597,7 @@ class VIEW3D_PT_freemocap_adapter(Panel):
 
         box.operator('fmc_adapter.export_fbx', text='5. Export FBX')
 
-        # # Add Finger Rotation Limits
+        # Add Finger Rotation Limits
         # box = layout.box()
         # box.operator('fmc_adapter.add_finger_rotation_limits', text='Add Finger Rotation Limits')
 
@@ -4436,16 +4691,16 @@ class FMC_ADAPTER_OT_add_rig(Operator):
         # Reset the scene frame to the start
         scene.frame_set(scene.frame_start)
 
-        if not adjust_empties_executed:
-            print('Executing First Adjust Empties...')
+        # if not adjust_empties_executed:
+        #     print('Executing First Adjust Empties...')
 
-            # Execute Adjust Empties first
-            adjust_empties(z_align_ref_empty=fmc_adapter_tool.vertical_align_reference,
-                        z_align_angle_offset=fmc_adapter_tool.vertical_align_angle_offset,
-                        ground_ref_empty=fmc_adapter_tool.ground_align_reference,
-                        z_translation_offset=fmc_adapter_tool.vertical_align_position_offset  ,
-                        add_hand_middle_empty=fmc_adapter_tool.add_hand_middle_empty,                     
-                        )
+        #     # Execute Adjust Empties first
+        #     adjust_empties(z_align_ref_empty=fmc_adapter_tool.vertical_align_reference,
+        #                 z_align_angle_offset=fmc_adapter_tool.vertical_align_angle_offset,
+        #                 ground_ref_empty=fmc_adapter_tool.ground_align_reference,
+        #                 z_translation_offset=fmc_adapter_tool.vertical_align_position_offset  ,
+        #                 add_hand_middle_empty=fmc_adapter_tool.add_hand_middle_empty,                     
+        #                 )
         
         print('Executing Add Rig...')
 
