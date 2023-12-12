@@ -4,7 +4,7 @@ import time
 
 from bpy.types import Operator
 
-from ...core_functions.export.fbx import export_fbx
+from ...core_functions.fbx_export.fbx import export_fbx
 
 import sys
 

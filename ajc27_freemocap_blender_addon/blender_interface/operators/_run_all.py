@@ -24,9 +24,9 @@ class FMC_ADAPTER_run_all(bpy.types.Operator):
             return {'CANCELLED'}
         config = load_default_parameters_config()
         try:
-            print(f"Executing `main_contoller.run_all() with config:{config}")
+            print(f"Executing `main_controller.run_all() with config:{config}")
             controller = MainController(recording_path=recording_path,
-                                        save_path=str(Path(recording_path)/(Path(recording_path).stem+".blend")),
+                                        blend_file_path=str(Path(recording_path) / (Path(recording_path).stem + ".blend")),
                                         config=config)
             fmc_adapter_tool.data_parent_empty = controller.data_parent_object
             controller.run_all()

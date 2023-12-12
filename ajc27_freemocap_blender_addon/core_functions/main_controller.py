@@ -8,6 +8,7 @@ from .meshes.center_of_mass.center_of_mass_mesh import create_center_of_mass_mes
 from .meshes.center_of_mass.center_of_mass_trails import create_center_of_mass_trails
 from .meshes.skelly_mesh.attach_skelly_mesh import attach_skelly_mesh_to_rig
 from .rig.save_bone_and_joint_angles_from_rig import save_bone_and_joint_angles_from_rig
+from .video_output.create_video_output import create_video_output
 from ..core_functions.bones.enforce_rigid_bones import enforce_rigid_bones
 from ..core_functions.empties.creation.create_freemocap_empties import (
     create_freemocap_empties,
@@ -38,7 +39,7 @@ class MainController:
     This class is used to run the program as a main script.
     """
 
-    def __init__(self, recording_path: str, save_path: str, config: Config):
+    def __init__(self, recording_path: str, blend_file_path: str, config: Config):
         self.rig = None
         self.empties = None
         self._data_parent_object = None
@@ -49,8 +50,9 @@ class MainController:
         self.config = config
 
         self.recording_path = recording_path
-        self.save_path = save_path
+        self.blend_file_path = blend_file_path
         self.recording_name = Path(self.recording_path).stem
+        self._output_video_path = str(Path(self.blend_file_path).parent / f"{self.recording_name}_video_output.mp4")
         self.origin_name = f"{self.recording_name}_origin"
         self.rig_name = f"{self.recording_name}_rig"
         self._create_parent_empties()
@@ -223,7 +225,7 @@ class MainController:
         try:
             print("Saving joint angles...")
             csv_file_path = str(
-                Path(self.save_path).parent / "saved_data" / f"{self.recording_name}_bone_and_joint_data.csv")
+                Path(self.blend_file_path).parent / "saved_data" / f"{self.recording_name}_bone_and_joint_data.csv")
             save_bone_and_joint_angles_from_rig(
                 rig=self.rig,
                 csv_save_path=csv_file_path,
@@ -332,12 +334,16 @@ class MainController:
         self._center_of_mass_parent_object.hide_set(True)
 
 
+    def create_video_output(self):
+        import bpy
+        create_video_output(video_save_path=self.blend_file_path, )
+
     def save_blender_file(self):
         print("Saving blender file...")
         import bpy
 
-        bpy.ops.wm.save_as_mainfile(filepath=str(self.save_path))
-        print(f"Saved .blend file to: {self.save_path}")
+        bpy.ops.wm.save_as_mainfile(filepath=str(self.blend_file_path))
+        print(f"Saved .blend file to: {self.blend_file_path}")
 
     def run_all(self):
         print("Running all stages...")
@@ -360,5 +366,7 @@ class MainController:
         # self.create_center_of_mass_trails()
         self.add_videos()
         self.setup_scene()
+        self.create_video_output()
         self.save_blender_file()
         # export_fbx(recording_path=recording_path, )
+
