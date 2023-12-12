@@ -1,7 +1,7 @@
 """A Blender Add-on for working with Freemocap Data (based on @ajc27's addon)"""
 __author__ = """Skelly FreeMoCap"""
 __email__ = "info@freemocap.org"
-__version__ = "v2023.10.1011"
+__version__ = "v2023.10.1012"
 
 #######################################################################
 ### Add-on to adapt the Freemocap Blender output. It can adjust the
