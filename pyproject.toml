@@ -5,6 +5,7 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "ajc27_freemocap_blender_addon"
+description="A Blender Add-on for working with Freemocap Data (based on @ajc27's addon)"
 readme = "README.md"
 authors = [
     { name = "Skelly FreeMoCap", email = "info@freemocap.org" },
