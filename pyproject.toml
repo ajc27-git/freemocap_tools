@@ -20,9 +20,6 @@ Homepage = "https://freemocap.org"
 Documentation = "https://freemocap.github.io/documentation/"
 Github = "https://github.com/freemocap/ajc27_freemocap_blender_addon"
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
 
 [tool.bumpver]
 current_version = "v2023.10.1012"
