@@ -10,6 +10,7 @@ authors = [
     { name = "Skelly FreeMoCap", email = "info@freemocap.org" },
 ]
 license = { file = "LICENSE" }
+dynamic = ["version"]
 
 requires-python = ">=3.9,<3.12"
 
