@@ -1,15 +1,21 @@
 import cv2
 
+from freemocap_video_export.visual_overlays.frame_number_overlay import VisualComponentFrameNumber
+from freemocap_video_export.visual_overlays.image_overlays import VisualComponentLogo
+from freemocap_video_export.visual_overlays.json_table_overlays import VisualComponentRecordingParameters, \
+    VisualComponentMediapipeSkeletonSegmentLengths
+from freemocap_video_export.visual_overlays.matplotlib_plot_overlays import VisualComponentPlotComBos
+
 export_profiles = {
     'debug': {
         'resolution_x': 1920,
         'resolution_y': 1080,
         'bitrate': 2000000,
         'visual_components': [
-            'vc_frame_number',
-            'vc_logo',
-            'vc_recording_parameters',
-            'vc_mediapipe_skeleton_segment_lengths',
+            VisualComponentFrameNumber,
+            VisualComponentLogo,
+            VisualComponentRecordingParameters,
+            VisualComponentMediapipeSkeletonSegmentLengths,
         ],
     },
     'showcase': {
@@ -26,11 +32,11 @@ export_profiles = {
         'resolution_y': 1080,
         'bitrate': 3000000,
         'visual_components': [
-            'vc_frame_number',
-            'vc_logo',
-            'vc_mediapipe_skeleton_segment_lengths',
-            'vc_plot_com_bos',
-            'vc_plot_foot_deviation',
+            VisualComponentFrameNumber,
+            VisualComponentLogo,
+            VisualComponentRecordingParameters,
+            VisualComponentMediapipeSkeletonSegmentLengths,
+            VisualComponentPlotComBos,
         ],
     },
 }
