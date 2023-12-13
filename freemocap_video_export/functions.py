@@ -1,22 +1,20 @@
-import time
-import bpy
 import math
-import mathutils
-import os
-import cv2
-import numpy as np
+import time
 from pathlib import Path
-from importlib.machinery import SourceFileLoader
+
 import addon_utils
-from .config_variables import *
+import bpy
+import cv2
+import mathutils
+
 from .classes import *
 
+
 # Export the Freemocap Blender output as a video file
-def fmc_export_video(scene: bpy.types.Scene=None,
-                     export_profile: str='debug') -> None:
-    
+def fmc_export_video(scene: bpy.types.Scene = None,
+                     export_profile: str = 'debug') -> None:
     print("Exporting fmc video...")
-    
+
     # Get start time
     start = time.time()
 
@@ -60,8 +58,8 @@ def fmc_export_video(scene: bpy.types.Scene=None,
         setattr(context, key_parts[-1], value)
 
     # Set the render resolution based on the export profile
-    bpy.context.scene.render.resolution_x               = export_profiles[export_profile]['resolution_x']
-    bpy.context.scene.render.resolution_y               = export_profiles[export_profile]['resolution_y']
+    bpy.context.scene.render.resolution_x = export_profiles[export_profile]['resolution_x']
+    bpy.context.scene.render.resolution_y = export_profiles[export_profile]['resolution_y']
 
     # Set the output file
     render_path = os.path.join(video_folder, output_file)
@@ -80,22 +78,23 @@ def fmc_export_video(scene: bpy.types.Scene=None,
     try:
         os.remove(render_path)
     except:
-        print('Error while removing the auxiliary video file.')    
+        print('Error while removing the auxiliary video file.')
 
-    # Get end time and print execution time
+        # Get end time and print execution time
     end = time.time()
-    print('Finished Rendering. Execution time (s): ' + str(math.trunc((end - start)*1000)/1000))
+    print('Finished Rendering. Execution time (s): ' + str(math.trunc((end - start) * 1000) / 1000))
 
 
 def place_cameras(
-    scene: bpy.types.Scene=None,
-    export_profile: str='debug'
+        scene: bpy.types.Scene = None,
+        export_profile: str = 'debug'
 ) -> list:
-    
     # Set the horizontal and vertical FOV according to the aspect ratio
     if export_profiles[export_profile]['resolution_x'] / export_profiles[export_profile]['resolution_y'] >= 1:
-        camera_horizontal_fov = lens_FOVs['50mm']['horizontal_fov'] # 39.6 # 2 * math.atan((0.5 * render_width) / (0.5 * render_height / math.tan(vFOV / 2)))
-        camera_vertical_fov = lens_FOVs['50mm']['vertical_fov'] # 22.8965642148994 # 2 * math.atan((0.5 * render_height) / (0.5 * render_width / math.tan(hFOV / 2)))
+        camera_horizontal_fov = lens_FOVs['50mm'][
+            'horizontal_fov']  # 39.6 # 2 * math.atan((0.5 * render_width) / (0.5 * render_height / math.tan(vFOV / 2)))
+        camera_vertical_fov = lens_FOVs['50mm'][
+            'vertical_fov']  # 22.8965642148994 # 2 * math.atan((0.5 * render_height) / (0.5 * render_width / math.tan(hFOV / 2)))
     else:
         camera_horizontal_fov = lens_FOVs['50mm']['vertical_fov']
         camera_vertical_fov = lens_FOVs['50mm']['horizontal_fov']
@@ -115,14 +114,14 @@ def place_cameras(
     scene.camera = camera
 
     # Set the starting extreme points
-    highest_point  = mathutils.Vector([0, 0, 0])
-    lowest_point    = mathutils.Vector([0, 0, 0])
-    leftmost_point  = mathutils.Vector([0, 0, 0])
+    highest_point = mathutils.Vector([0, 0, 0])
+    lowest_point = mathutils.Vector([0, 0, 0])
+    leftmost_point = mathutils.Vector([0, 0, 0])
     rightmost_point = mathutils.Vector([0, 0, 0])
 
     # Find the extreme points as the highest, lowest, leftmost, rightmost considering all the frames
-    for frame in range (scene.frame_start, scene.frame_end):
-        
+    for frame in range(scene.frame_start, scene.frame_end):
+
         scene.frame_set(frame)
 
         for object in scene.objects:
@@ -145,20 +144,25 @@ def place_cameras(
     # bpy.data.objects['Sphere'].name = 'leftmost_point'
     # bpy.ops.mesh.primitive_uv_sphere_add(radius=0.05, enter_editmode=False, align='WORLD', location=rightmost_point, scale=(1, 1, 1))
     # bpy.data.objects['Sphere'].name = 'rightmost_point'
-            
+
     # Calculate the position of the camera assuming is centered at 0 on the x axis and pointing towards the y axis
     # and covers the extreme points including a margin
 
     # Camera distances to just cover the leftmost and rightmost points
-    camera_y_axis_distance_leftmost     = leftmost_point[1] - abs(leftmost_point[0]) / math.atan(math.radians(camera_horizontal_fov * angle_margin / 2))
-    camera_y_axis_distance_rightmost    = rightmost_point[1] - abs(rightmost_point[0]) / math.atan(math.radians(camera_horizontal_fov * angle_margin / 2))
+    camera_y_axis_distance_leftmost = leftmost_point[1] - abs(leftmost_point[0]) / math.atan(
+        math.radians(camera_horizontal_fov * angle_margin / 2))
+    camera_y_axis_distance_rightmost = rightmost_point[1] - abs(rightmost_point[0]) / math.atan(
+        math.radians(camera_horizontal_fov * angle_margin / 2))
 
     # Camera distances to just cover the highest and lowest points considering its centered between the two points on the z axis
-    camera_y_axis_distance_highest      = highest_point[1] - ((highest_point[2] - lowest_point[2]) / 2) / math.atan(math.radians(camera_vertical_fov * angle_margin / 2))
-    camera_y_axis_distance_lowest       = lowest_point[1] - ((highest_point[2] - lowest_point[2]) / 2) / math.atan(math.radians(camera_vertical_fov * angle_margin / 2))
+    camera_y_axis_distance_highest = highest_point[1] - ((highest_point[2] - lowest_point[2]) / 2) / math.atan(
+        math.radians(camera_vertical_fov * angle_margin / 2))
+    camera_y_axis_distance_lowest = lowest_point[1] - ((highest_point[2] - lowest_point[2]) / 2) / math.atan(
+        math.radians(camera_vertical_fov * angle_margin / 2))
 
     # Calculate the final y position of the camera as the minimum distance
-    camera_y_axis_distance = min(camera_y_axis_distance_leftmost, camera_y_axis_distance_rightmost, camera_y_axis_distance_highest, camera_y_axis_distance_lowest)
+    camera_y_axis_distance = min(camera_y_axis_distance_leftmost, camera_y_axis_distance_rightmost,
+                                 camera_y_axis_distance_highest, camera_y_axis_distance_lowest)
 
     camera.location = (0, camera_y_axis_distance, highest_point[2] - (highest_point[2] - lowest_point[2]) / 2)
     camera.rotation_euler = (math.radians(90), 0, 0)
@@ -168,11 +172,11 @@ def place_cameras(
 
     return cameras_positions
 
-def place_lights(
-    scene: bpy.types.Scene=None,
-    cameras_positions: list=None
-) -> None:
 
+def place_lights(
+        scene: bpy.types.Scene = None,
+        cameras_positions: list = None
+) -> None:
     # Lights vertical offset in Blender units
     lights_vertical_offset = 2
 
@@ -182,19 +186,20 @@ def place_lights(
     scene.collection.objects.link(light)
 
     # Set the strength of the light
-    light.data.energy = 200 * math.sqrt(lights_vertical_offset**2 + cameras_positions[0][1]**2) 
+    light.data.energy = 200 * math.sqrt(lights_vertical_offset ** 2 + cameras_positions[0][1] ** 2)
 
     # Set the location of the light
-    light.location = (cameras_positions[0][0], cameras_positions[0][1], cameras_positions[0][2] + lights_vertical_offset)
+    light.location = (
+    cameras_positions[0][0], cameras_positions[0][1], cameras_positions[0][2] + lights_vertical_offset)
 
     # Set the rotation of the light so it points to the point (0, 0, cameras_positions[0][2])
     light.rotation_euler = (math.atan(abs(cameras_positions[0][1]) / lights_vertical_offset), 0, 0)
 
-def rearrange_background_videos(
-    scene: bpy.types.Scene=None,
-    videos_x_separation: float=0.1
-) -> None:
 
+def rearrange_background_videos(
+        scene: bpy.types.Scene = None,
+        videos_x_separation: float = 0.1
+) -> None:
     # Create a list with the background videos
     background_videos = []
 
@@ -211,17 +216,17 @@ def rearrange_background_videos(
 
     # Iterate through the background videos
     for video_index in range(len(background_videos)):
-        
         # Set the location of the video
-        background_videos[video_index].location[0] = first_video_x_position + video_index * (videos_x_dimension + videos_x_separation)
+        background_videos[video_index].location[0] = first_video_x_position + video_index * (
+                    videos_x_dimension + videos_x_separation)
+
 
 def add_visual_components(
-    render_path: str,
-    file_directory: Path,
-    export_profile: str='debug',
-    scene: bpy.types.Scene=None,
+        render_path: str,
+        file_directory: Path,
+        export_profile: str = 'debug',
+        scene: bpy.types.Scene = None,
 ) -> None:
-
     # Get a reference to the render
     video = cv2.VideoCapture(render_path)
 
@@ -232,11 +237,11 @@ def add_visual_components(
         render_parameters['scene.render.fps'],
         (export_profiles[export_profile]['resolution_x'],
          export_profiles[export_profile]['resolution_y']),
-         export_profiles[export_profile]['bitrate'],
+        export_profiles[export_profile]['bitrate'],
     )
-    
+
     # Create new frame_info object
-    frame_info  = frame_information(
+    frame_info = frame_information(
         file_directory=str(file_directory),
         width=export_profiles[export_profile]['resolution_x'],
         height=export_profiles[export_profile]['resolution_y'],
@@ -280,13 +285,13 @@ def add_visual_components(
     output_writer.release()
     cv2.destroyAllWindows()
 
-def add_render_background(scene: bpy.types.Scene=None,
-                          export_profile: str=None,):
-    
+
+def add_render_background(scene: bpy.types.Scene = None,
+                          export_profile: str = None, ):
     # Set the path to the PNG image
     image_path = os.path.dirname(os.path.realpath(__file__)) + export_profiles[export_profile]['background_path']
     print(image_path)
-    
+
     # check if the addon is enabled
     loaded_default, loaded_state = addon_utils.check('io_import_images_as_planes')
     if not loaded_state:
@@ -297,9 +302,10 @@ def add_render_background(scene: bpy.types.Scene=None,
     bpy.ops.import_image.to_plane(files=[{"name": str(image_path)}],
                                   size_mode='ABSOLUTE',
                                   height=render_background['height'],
-    )
+                                  )
 
     # Change the location of the plane ot be behind the video_0 element
     bpy.data.objects['charuco_board'].location = (bpy.data.objects['charuco_board'].location[0],
-                                                  bpy.data.objects['video_0'].location[1] + render_background['y_axis_offset'],
+                                                  bpy.data.objects['video_0'].location[1] + render_background[
+                                                      'y_axis_offset'],
                                                   bpy.data.objects['Front_Camera'].location[2])
