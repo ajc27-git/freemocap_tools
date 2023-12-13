@@ -5,7 +5,6 @@ from . import config_variables
 from .functions import fmc_export_video
 
 
-# Class with the different properties of the methods
 class FMC_VIDEO_EXPORT_PROPERTIES(bpy.types.PropertyGroup):
     export_profile: bpy.props.EnumProperty(
         name='',
@@ -16,7 +15,7 @@ class FMC_VIDEO_EXPORT_PROPERTIES(bpy.types.PropertyGroup):
                ],
     )
 
-    scientific_ground_contact_threshold: bpy.props.FloatProperty(
+    ground_contact_threshold: bpy.props.FloatProperty(
         name='',
         default=0.05,
         description='Ground contact threshold (m)'
@@ -63,7 +62,7 @@ class FMC_ADAPTER_OT_export_video(Operator):
         print("Exporting video.......")
 
         config_variables.visual_components['vc_plot_com_bos'][
-            'ground_contact_threshold'] = fmc_video_export_tool.scientific_ground_contact_threshold
+            'ground_contact_threshold'] = fmc_video_export_tool.ground_contact_threshold
 
         fmc_export_video(scene=scene, export_profile=fmc_video_export_tool.export_profile)
 

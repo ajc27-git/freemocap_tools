@@ -1,4 +1,5 @@
 import math
+import os
 import time
 from pathlib import Path
 
@@ -7,11 +8,13 @@ import bpy
 import cv2
 import mathutils
 
+from .config_variables import render_parameters, export_profiles, lens_FOVs
 from .frame_information_dataclass import *
+from .visual_overlays.frame_information_dataclass import FrameInformation
 
 
 # Export the Freemocap Blender output as a video file
-def fmc_export_video(scene: bpy.types.Scene = None,
+def fmc_export_video(scene: bpy.types.Scene,
                      export_profile: str = 'debug') -> None:
     print("Exporting fmc video...")
 
@@ -259,8 +262,8 @@ def add_visual_components(
     index_frame = 0
     # Add the logo to the video
     while video.isOpened():
-        ret, frame = video.read()
-        if not ret:
+        success, image = video.read()
+        if not success:
             break
 
         # Update the frame number in frame_info
@@ -268,10 +271,10 @@ def add_visual_components(
 
         # Add each visual component
         for visual_component in visual_components_list:
-            frame = visual_component.add_component(frame, frame_info)
+            image = visual_component.add_component(image, frame_info)
 
         # Write the frame
-        output_writer.write(frame)
+        output_writer.write(image)
 
         index_frame += 1
 

@@ -1,3 +1,5 @@
+from freemocap_video_export.utilities.install_dependencies import check_and_install_dependencies
+
 bl_info = {
     'name': 'Freemocap Video Export',
     'author': 'ajc27',
@@ -12,11 +14,16 @@ import bpy
 
 
 def register():
+    print(f"Registering {bl_info['name']} addon...")
     # Import addon classes
     from freemocap_video_export.addon_interface import FMC_VIDEO_EXPORT_PROPERTIES, VIEW3D_PT_freemocap_video_export, \
         FMC_ADAPTER_OT_export_video
 
+    print("Checking and/or installing dependencies...")
+    check_and_install_dependencies()
+
     # Register addon classes
+    print("Registering addon classes...")
     bpy.utils.register_class(FMC_VIDEO_EXPORT_PROPERTIES)
     bpy.utils.register_class(VIEW3D_PT_freemocap_video_export)
     bpy.utils.register_class(FMC_ADAPTER_OT_export_video)
