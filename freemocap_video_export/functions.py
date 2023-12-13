@@ -7,7 +7,7 @@ import bpy
 import cv2
 import mathutils
 
-from .classes import *
+from .frame_information_dataclass import *
 
 
 # Export the Freemocap Blender output as a video file
@@ -241,7 +241,7 @@ def add_visual_components(
     )
 
     # Create new frame_info object
-    frame_info = frame_information(
+    frame_info = FrameInformation(
         file_directory=str(file_directory),
         width=export_profiles[export_profile]['resolution_x'],
         height=export_profiles[export_profile]['resolution_y'],
