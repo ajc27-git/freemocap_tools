@@ -1,4 +1,3 @@
-import logging
 from dataclasses import dataclass
 from typing import Any, Dict, Optional, Union, Literal
 
@@ -10,8 +9,6 @@ from .helpers.freemocap_data_paths import FreemocapDataPaths
 from .helpers.freemocap_data_stats import FreemocapDataStats
 from ..mediapipe_names.mediapipe_trajectory_names import MediapipeTrajectoryNames, \
     HumanTrajectoryNames
-
-import sys
 
 FREEMOCAP_DATA_COMPONENT_TYPES = Literal["body", "right_hand", "left_hand", "face", "other"]
 

@@ -4,34 +4,31 @@ from typing import List
 
 import numpy as np
 
+
+
+
+from ajc27_freemocap_blender_addon.freemocap_data_handler.utilities.get_or_create_freemocap_data_handler import (
+    get_or_create_freemocap_data_handler,
+)
+
+from ajc27_freemocap_blender_addon.freemocap_data_handler.utilities.load_data import load_freemocap_data
+from ajc27_freemocap_blender_addon.core_functions.load_videos.load_videos import load_videos
+from ajc27_freemocap_blender_addon.core_functions.meshes.attach_mesh_to_rig import attach_mesh_to_rig
+from ajc27_freemocap_blender_addon.core_functions.rig.add_rig import add_rig
+
+from .create_video.create_video import create_video
+from .empties.creation.create_freemocap_empties import create_freemocap_empties
 from .meshes.center_of_mass.center_of_mass_mesh import create_center_of_mass_mesh
 from .meshes.center_of_mass.center_of_mass_trails import create_center_of_mass_trails
 from .meshes.skelly_mesh.attach_skelly_mesh import attach_skelly_mesh_to_rig
 from .rig.save_bone_and_joint_angles_from_rig import save_bone_and_joint_angles_from_rig
-from .video_output.create_video_output import create_video_output
-from ..core_functions.bones.enforce_rigid_bones import enforce_rigid_bones
-from ..core_functions.empties.creation.create_freemocap_empties import (
-    create_freemocap_empties,
-)
-from ..core_functions.freemocap_data_handler.helpers.get_or_create_freemocap_data_handler import (
-    get_or_create_freemocap_data_handler,
-)
-from ..core_functions.freemocap_data_handler.helpers.saver import FreemocapDataSaver
-from ..core_functions.freemocap_data_handler.operations.fix_hand_data import (
-    fix_hand_data,
-)
-from ..core_functions.freemocap_data_handler.operations.put_skeleton_on_ground import (
-    put_skeleton_on_ground,
-)
-from ..core_functions.load_data.load_freemocap_data import load_freemocap_data
-from ..core_functions.load_data.load_videos import load_videos
-from ..core_functions.meshes.attach_mesh_to_rig import attach_mesh_to_rig
-from ..core_functions.rig.add_rig import add_rig
-from ..core_functions.setup_scene.make_parent_empties import (
-    create_parent_empty,
-)
-from ..core_functions.setup_scene.set_start_end_frame import set_start_end_frame
+from .setup_scene.make_parent_empties import create_parent_empty
+from .setup_scene.set_start_end_frame import set_start_end_frame
 from ..data_models.parameter_models.parameter_models import Config
+from ..freemocap_data_handler.helpers.saver import FreemocapDataSaver
+from ..freemocap_data_handler.operations.enforce_rigid_bones.enforce_rigid_bones import enforce_rigid_bones
+from ..freemocap_data_handler.operations.fix_hand_data import fix_hand_data
+from ..freemocap_data_handler.operations.put_skeleton_on_ground import put_skeleton_on_ground
 
 
 class MainController:
@@ -334,9 +331,14 @@ class MainController:
         self._center_of_mass_parent_object.hide_set(True)
 
 
-    def create_video_output(self):
+    def create_video(self):
+        print("Creating export video...")
         import bpy
-        create_video_output(video_save_path=self.blend_file_path, )
+        create_video(
+            scene=bpy.context.scene,
+            recording_folder=self.recording_path,
+        )
+
 
     def save_blender_file(self):
         print("Saving blender file...")
@@ -366,7 +368,7 @@ class MainController:
         # self.create_center_of_mass_trails()
         self.add_videos()
         self.setup_scene()
-        self.create_video_output()
+        self.create_video()
         self.save_blender_file()
         # export_fbx(recording_path=recording_path, )
 

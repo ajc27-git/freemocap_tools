@@ -1,10 +1,8 @@
-import logging
-
 import bpy
 
 
 from .create_empty_from_trajectory import create_empties
-from ...freemocap_data_handler.handler import FreemocapDataHandler
+from ajc27_freemocap_blender_addon.freemocap_data_handler.handler import FreemocapDataHandler
 
 BODY_EMPTY_SCALE = 0.03
 

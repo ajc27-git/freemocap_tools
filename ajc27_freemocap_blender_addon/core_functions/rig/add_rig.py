@@ -6,7 +6,7 @@ from typing import Dict, List
 import bpy
 import mathutils
 
-from ...data_models.bones.bone_constraints import ALL_BONES_CONSTRAINT_DEFINITIONS
+from ajc27_freemocap_blender_addon.data_models.bones.bone_constraints import ALL_BONES_CONSTRAINT_DEFINITIONS
 
 import sys
 

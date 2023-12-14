@@ -1,12 +1,9 @@
-import logging
 import math as m
 import time
 
 from bpy.types import Operator
 
-from ...core_functions.empties.reduce_shakiness import reduce_shakiness
-
-import sys
+from ajc27_freemocap_blender_addon.core_functions.empties import reduce_shakiness
 
 
 class FMC_ADAPTER_OT_reduce_shakiness(Operator):

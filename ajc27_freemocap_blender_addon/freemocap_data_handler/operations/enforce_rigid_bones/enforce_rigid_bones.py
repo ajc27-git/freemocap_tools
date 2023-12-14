@@ -1,16 +1,13 @@
-import logging
 from copy import deepcopy
-from typing import Dict, Any, Tuple
+from typing import Dict, Any
 
 import numpy as np
 
 from .calculate_body_dimensions import calculate_body_dimensions
-from ..bones.calculate_bone_length_statistics import calculate_bone_length_statistics
-from ..freemocap_data_handler.handler import     FreemocapDataHandler
-from ...data_models.bones.bone_definitions import BONE_DEFINITIONS
-from ...data_models.mediapipe_names.mediapipe_heirarchy import MEDIAPIPE_HIERARCHY
-
-import sys
+from ..enforce_rigid_bones.calculate_bone_length_statistics import calculate_bone_length_statistics
+from ajc27_freemocap_blender_addon.data_models.bones.bone_definitions import BONE_DEFINITIONS
+from ajc27_freemocap_blender_addon.data_models.mediapipe_names.mediapipe_heirarchy import MEDIAPIPE_HIERARCHY
+from ...handler import FreemocapDataHandler
 
 
 def enforce_rigid_bones(handler: FreemocapDataHandler,

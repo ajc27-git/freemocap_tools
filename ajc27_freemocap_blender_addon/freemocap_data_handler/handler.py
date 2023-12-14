@@ -1,17 +1,14 @@
-import logging
 from copy import deepcopy
 from typing import List, Union, Dict, Any
 
 import numpy as np
 
 from .operations.estimate_good_frame import estimate_good_frame
-from ..empties.creation.create_virtual_trajectories import calculate_virtual_trajectories
+from ajc27_freemocap_blender_addon.core_functions.empties.creation.create_virtual_trajectories import calculate_virtual_trajectories
 from ..freemocap_data_handler.helpers.saver import FreemocapDataSaver
 from ..freemocap_data_handler.helpers.transformer import FreemocapDataTransformer
-from ...data_models.freemocap_data.freemocap_data_model import FreemocapData, FREEMOCAP_DATA_COMPONENT_TYPES
-from ...data_models.freemocap_data.helpers.freemocap_component_data import FreemocapComponentData
-
-import sys
+from ajc27_freemocap_blender_addon.data_models.freemocap_data.freemocap_data_model import FreemocapData, FREEMOCAP_DATA_COMPONENT_TYPES
+from ajc27_freemocap_blender_addon.data_models.freemocap_data.helpers.freemocap_component_data import FreemocapComponentData
 
 
 class FreemocapDataHandler:

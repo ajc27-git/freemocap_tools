@@ -1,12 +1,9 @@
-import logging
 from pathlib import Path
 
-from ...core_functions.empties.creation.create_freemocap_empties import create_freemocap_empties
-from ...core_functions.load_data.load_freemocap_data import load_freemocap_data
-from ...core_functions.setup_scene.make_parent_empties import create_parent_empty
-from ...core_functions.setup_scene.set_start_end_frame import set_start_end_frame
-
-import sys
+from ajc27_freemocap_blender_addon.core_functions.empties import create_freemocap_empties
+from ajc27_freemocap_blender_addon.freemocap_data_handler.utilities.load_data import load_freemocap_data
+from ajc27_freemocap_blender_addon.core_functions.setup_scene import create_parent_empty
+from ajc27_freemocap_blender_addon.core_functions.setup_scene import set_start_end_frame
 
 import bpy
 

@@ -1,12 +1,7 @@
-import logging
-
 import bpy
 
-from ...core_functions.freemocap_data_handler.operations.freemocap_empties_from_parent_object import \
+from ajc27_freemocap_blender_addon.freemocap_data_handler.operations import \
     freemocap_empties_from_parent_object
-
-
-import sys
 
 
 class FMC_ADAPTER_save_data_to_disk(bpy.types.Operator):

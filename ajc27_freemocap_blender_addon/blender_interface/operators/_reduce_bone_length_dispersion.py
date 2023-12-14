@@ -1,13 +1,10 @@
-import logging
 import math as m
 import time
 
 from bpy.types import Operator
 
-from ...core_functions.bones.enforce_rigid_bones import enforce_rigid_bones
-from ...core_functions.load_data.load_freemocap_data import load_freemocap_data
-
-import sys
+from ajc27_freemocap_blender_addon.freemocap_data_handler.operations.enforce_rigid_bones import enforce_rigid_bones
+from ajc27_freemocap_blender_addon.freemocap_data_handler.utilities.load_data import load_freemocap_data
 
 
 class FMC_ADAPTER_OT_reduce_bone_length_dispersion(Operator):

@@ -4,9 +4,9 @@ import time
 import bpy
 from bpy.types import Operator
 
-from ...core_functions.meshes.attach_mesh_to_rig import attach_mesh_to_rig
-from ...core_functions.empties.reorient_empties import reorient_empties
-from ...core_functions.rig.add_rig import add_rig
+from ajc27_freemocap_blender_addon.core_functions.meshes.attach_mesh_to_rig import attach_mesh_to_rig
+from ajc27_freemocap_blender_addon.core_functions.empties.reorient_empties import reorient_empties
+from ajc27_freemocap_blender_addon.core_functions.rig.add_rig import add_rig
 
 REORIENT_EMPTIES_EXECUTED = True
 

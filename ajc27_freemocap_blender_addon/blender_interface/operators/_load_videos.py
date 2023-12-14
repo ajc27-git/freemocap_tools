@@ -1,10 +1,6 @@
-import logging
-
 import bpy
 
-import sys
-
-from ...core_functions.load_data.load_videos import load_videos
+from ajc27_freemocap_blender_addon.core_functions.load_videos.load_videos import load_videos
 
 
 class FMC_ADAPTER_load_videos(bpy.types.Operator):
