@@ -1,10 +1,5 @@
 import cv2
 
-from freemocap_video_export.visual_overlays.frame_number_overlay import VisualComponentFrameNumber
-from freemocap_video_export.visual_overlays.image_overlays import VisualComponentLogo
-from freemocap_video_export.visual_overlays.json_table_overlays import VisualComponentRecordingParameters, \
-    VisualComponentMediapipeSkeletonSegmentLengths
-from freemocap_video_export.visual_overlays.matplotlib_plot_overlays import VisualComponentPlotComBos
 
 export_profiles = {
     'debug': {
@@ -12,10 +7,10 @@ export_profiles = {
         'resolution_y': 1080,
         'bitrate': 2000000,
         'visual_components': [
-            VisualComponentFrameNumber,
-            VisualComponentLogo,
-            VisualComponentRecordingParameters,
-            VisualComponentMediapipeSkeletonSegmentLengths,
+            "VisualComponentFrameNumber",
+            "VisualComponentLogo",
+            "VisualComponentRecordingParameters",
+            "VisualComponentMediapipeSkeletonSegmentLengths",
         ],
     },
     'showcase': {
@@ -23,7 +18,7 @@ export_profiles = {
         'resolution_y': 1920,
         'bitrate': 5000000,
         'visual_components': [
-            'vc_logo',
+            "VisualComponentLogo",
         ],
         'background_path': '/assets/charuco_board.png',
     },
@@ -32,11 +27,11 @@ export_profiles = {
         'resolution_y': 1080,
         'bitrate': 3000000,
         'visual_components': [
-            VisualComponentFrameNumber,
-            VisualComponentLogo,
-            VisualComponentRecordingParameters,
-            VisualComponentMediapipeSkeletonSegmentLengths,
-            VisualComponentPlotComBos,
+            "VisualComponentFrameNumber",
+            "VisualComponentLogo",
+            "VisualComponentRecordingParameters",
+            "VisualComponentMediapipeSkeletonSegmentLengths",
+            "VisualComponentPlotComBos",
         ],
     },
 }
@@ -176,14 +171,14 @@ visual_components = {
             },
         },
     },
-    'vc_plot_com_bos': {
+    'VisualComponentComBos': {
         'topleft_x_pct': 0.75,
         'topleft_y_pct': 0.7,
         'width_pct': 0.23,
         'height_pct': 0.25,
         'ground_contact_threshold': 0.05,
     },
-    'vc_plot_foot_deviation': {
+    'VisualComponentFootDeviation': {
         'topleft_x_pct': 0.75,
         'topleft_y_pct': 0.4,
         'width_pct': 0.23,
