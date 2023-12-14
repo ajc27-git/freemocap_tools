@@ -1,7 +1,7 @@
 import subprocess
 import sys
 
-REQUIRED_LIBRARIES = ["opencv-contrib-python", "matplotlib"]
+REQUIRED_PACKAGES = ["opencv-contrib-python", "matplotlib"]
 
 
 def check_and_install_dependencies():
@@ -20,23 +20,23 @@ def check_and_install_dependencies():
     print("\nInstalled packages:", installed_packages, "\n")
 
     packages_to_install = []
-    for library in REQUIRED_LIBRARIES:
-        if library in installed_packages:
-            print(f"{library!r} already installed!")
+    for package_name in REQUIRED_PACKAGES:
+        if package_name in installed_packages:
+            print(f"{package_name} already installed!")
         else:
-            print(f"{library!r} not installed, will install...")
-            packages_to_install.append(library)
+            print(f"{package_name} not installed, will install...")
+            packages_to_install.append(package_name)
 
     if len(packages_to_install) > 0:
         subprocess.call([python_executable, "-m", "ensurepip", "--user"])
         # update pip
         subprocess.call([python_executable, "-m", "pip", "install", "--upgrade", "pip"])
 
-    for library in REQUIRED_LIBRARIES:
-        print(f"Installing {library!r}...")
-        subprocess.call([python_executable, "-m", "pip", "install", library])
+    for package_name in packages_to_install:
+        print(f"Installing {package_name}...")
+        subprocess.call([python_executable, "-m", "pip", "install", package_name])
 
-        print(f"{library!r} installed successfully!")
+        print(f"{package_name} installed successfully!")
 
     print("All required packages installed! Done!")
 

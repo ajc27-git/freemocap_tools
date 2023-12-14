@@ -43,7 +43,7 @@ class VIEW3D_PT_freemocap_video_export(Panel):
         box.label(text='Scientific Profile Options')
         split = box.column().row().split(factor=0.6)
         split.column().label(text='Ground Contact Threshold (m)')
-        split.split().column().prop(fmc_video_export_tool, 'scientific_ground_contact_threshold')
+        split.split().column().prop(fmc_video_export_tool, 'ground_contact_threshold')
 
         box.operator('fmc_export_video.export_video', text='Export Video')
 
