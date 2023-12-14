@@ -1,16 +1,15 @@
 import cv2
 
-
 export_profiles = {
     'debug': {
         'resolution_x': 1920,
         'resolution_y': 1080,
         'bitrate': 2000000,
         'visual_components': [
-            "VisualComponentFrameNumber",
-            "VisualComponentLogo",
-            "VisualComponentRecordingParameters",
-            "VisualComponentMediapipeSkeletonSegmentLengths",
+            "frame_number",
+            "logo",
+            "recording_parameters",
+            "mediapipe_skeleton_segment_lengths",
         ],
     },
     'showcase': {
@@ -18,7 +17,7 @@ export_profiles = {
         'resolution_y': 1920,
         'bitrate': 5000000,
         'visual_components': [
-            "VisualComponentLogo",
+            "logo",
         ],
         'background_path': '/assets/charuco_board.png',
     },
@@ -27,11 +26,11 @@ export_profiles = {
         'resolution_y': 1080,
         'bitrate': 3000000,
         'visual_components': [
-            "VisualComponentFrameNumber",
-            "VisualComponentLogo",
-            "VisualComponentRecordingParameters",
-            "VisualComponentMediapipeSkeletonSegmentLengths",
-            "VisualComponentPlotComBos",
+            "frame_number",
+            "logo",
+            "recording_parameters",
+            "mediapipe_skeleton_segment_lengths",
+            "plot_com_bos",
         ],
     },
 }
@@ -171,14 +170,14 @@ visual_components = {
             },
         },
     },
-    'VisualComponentComBos': {
+    'plot_com_bos': {
         'topleft_x_pct': 0.75,
         'topleft_y_pct': 0.7,
         'width_pct': 0.23,
         'height_pct': 0.25,
         'ground_contact_threshold': 0.05,
     },
-    'VisualComponentFootDeviation': {
+    'plot_foot_deviation': {
         'topleft_x_pct': 0.75,
         'topleft_y_pct': 0.4,
         'width_pct': 0.23,

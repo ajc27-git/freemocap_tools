@@ -6,6 +6,7 @@ from freemocap_video_export.config_variables import render_parameters, export_pr
 import bpy
 import cv2
 
+from freemocap_video_export.create_video.visual_overlays import VIDEO_OVERLAY_CLASSES
 from freemocap_video_export.create_video.visual_overlays.frame_information_dataclass import FrameInformation
 
 
@@ -41,8 +42,11 @@ def add_visual_components(
     # Creat the visual component objects list
     visual_components_list = []
     for visual_component in export_profiles[export_profile]['visual_components']:
-        visual_component_class = globals()[visual_component]
-        visual_components_list.append(visual_component_class(frame_info))
+        visual_component_class = VIDEO_OVERLAY_CLASSES[visual_component]
+        try:
+            visual_components_list.append(visual_component_class(frame_info))
+        except Exception as e:
+            print(f"Error instantiating {visual_component_class}: {e}, skipping...")
 
 
     index_frame = 0

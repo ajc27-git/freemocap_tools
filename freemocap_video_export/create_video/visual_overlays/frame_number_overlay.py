@@ -8,7 +8,7 @@ from freemocap_video_export.create_video.visual_overlays.frame_information_datac
 
 
 class VisualComponentFrameNumber:
-    def __init__(self):
+    def __init__(self, **kwargs):
         self.position_x_pct = visual_components['frame_number']['position_x_pct']
         self.position_y_pct = visual_components['frame_number']['position_y_pct']
 

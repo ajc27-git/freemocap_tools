@@ -61,7 +61,7 @@ class FMC_ADAPTER_OT_export_video(Operator):
 
         print("Exporting video.......")
 
-        config_variables.visual_components['VisualComponentComBos'][
+        config_variables.visual_components['plot_com_bos'][
             'ground_contact_threshold'] = fmc_video_export_tool.ground_contact_threshold
 
         create_export_video(scene=scene, export_profile=fmc_video_export_tool.export_profile)
