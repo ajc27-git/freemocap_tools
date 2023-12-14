@@ -1,9 +1,11 @@
 import numpy as np
 
-from freemocap_video_export.visual_overlays.frame_information_dataclass import FrameInformation
 from freemocap_video_export.config_variables import visual_components
 
 import cv2
+
+from freemocap_video_export.create_video.visual_overlays.frame_information_dataclass import FrameInformation
+
 
 class VisualComponentFrameNumber:
     def __init__(self):

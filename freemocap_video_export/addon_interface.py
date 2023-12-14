@@ -2,7 +2,7 @@ import bpy
 from bpy.types import Operator, Panel
 
 from . import config_variables
-from .functions import fmc_export_video
+from .create_video.create_video import create_export_video
 
 
 class FMC_VIDEO_EXPORT_PROPERTIES(bpy.types.PropertyGroup):
@@ -61,10 +61,10 @@ class FMC_ADAPTER_OT_export_video(Operator):
 
         print("Exporting video.......")
 
-        config_variables.visual_components['vc_plot_com_bos'][
+        config_variables.visual_components['VisualComponentComBos'][
             'ground_contact_threshold'] = fmc_video_export_tool.ground_contact_threshold
 
-        fmc_export_video(scene=scene, export_profile=fmc_video_export_tool.export_profile)
+        create_export_video(scene=scene, export_profile=fmc_video_export_tool.export_profile)
 
         print("Video export completed.")
 

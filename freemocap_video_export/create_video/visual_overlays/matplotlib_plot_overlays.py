@@ -1,11 +1,12 @@
 import numpy as np
 
-from freemocap_video_export.visual_overlays.frame_information_dataclass import FrameInformation
 from freemocap_video_export.config_variables import visual_components, color_palette
 
 import bpy
 from matplotlib import pyplot as plt
 import cv2
+
+from freemocap_video_export.create_video.visual_overlays.frame_information_dataclass import FrameInformation
 
 
 class VisualComponentPlotComBos:
@@ -59,8 +60,8 @@ class VisualComponentPlotComBos:
 
         # Create the plot with size according to the component size
         fig, ax = plt.subplots(figsize=(6.4,
-                                        6.4 * frame_info.height * visual_components['vc_plot_com_bos']['height_pct'] / (
-                                                frame_info.width * visual_components['vc_plot_com_bos']['width_pct'])))
+                                        6.4 * frame_info.height * visual_components['VisualComponentComBos']['height_pct'] / (
+                                                frame_info.width * visual_components['VisualComponentComBos']['width_pct'])))
 
         # Plot the COM
         ax.scatter(0, 0, marker='o', color=color_palette['dark_terra_cotta']['hex'], zorder=2)
@@ -68,11 +69,11 @@ class VisualComponentPlotComBos:
         # Filter out points that are above the ground contact threshold
         filtered_base_of_support_points = {
             'x': [x for x, z in zip(base_of_support_points['x'], base_of_support_points['z']) if
-                  z < visual_components['vc_plot_com_bos']['ground_contact_threshold']],
+                  z < visual_components['VisualComponentComBos']['ground_contact_threshold']],
             'y': [y for y, z in zip(base_of_support_points['y'], base_of_support_points['z']) if
-                  z < visual_components['vc_plot_com_bos']['ground_contact_threshold']],
+                  z < visual_components['VisualComponentComBos']['ground_contact_threshold']],
             'z': [z for z in base_of_support_points['z'] if
-                  z < visual_components['vc_plot_com_bos']['ground_contact_threshold']],
+                  z < visual_components['VisualComponentComBos']['ground_contact_threshold']],
         }
 
         # Plot the base of support
@@ -88,7 +89,7 @@ class VisualComponentPlotComBos:
 
         # Filter the labels based on the filtered base of support points
         filtered_scatter_labels = [label for label, z in zip(scatter_labels, base_of_support_points['z']) if
-                                   z < visual_components['vc_plot_com_bos']['ground_contact_threshold']]
+                                   z < visual_components['VisualComponentComBos']['ground_contact_threshold']]
 
         for point in range(0, len(filtered_base_of_support_points['x'])):
             plt.text(filtered_base_of_support_points['x'][point],
@@ -159,7 +160,7 @@ class VisualComponentPlotComBos:
         img = cv2.imread(str(frame_info.file_directory) + '/video/' + 'plot_aux.png', cv2.IMREAD_UNCHANGED)
 
         # Resize the component
-        component = visual_components['vc_plot_com_bos']
+        component = visual_components['VisualComponentComBos']
         img_resized = cv2.resize(img,
                                  (int(frame_info.width * component['width_pct']),
                                   int(frame_info.height * component['height_pct'])),
@@ -246,8 +247,8 @@ class VisualComponentPlotFootDeviation:
         ### Plot setup ###
 
         # Create the plot objects
-        fig, ax = plt.subplots(figsize=(6.4, 6.4 * frame_info.height * visual_components['vc_plot_foot_deviation'][
-            'height_pct'] / (frame_info.width * visual_components['vc_plot_foot_deviation']['width_pct'])))
+        fig, ax = plt.subplots(figsize=(6.4, 6.4 * frame_info.height * visual_components['VisualComponentFootDeviation'][
+            'height_pct'] / (frame_info.width * visual_components['VisualComponentFootDeviation']['width_pct'])))
 
         # Plot the fixed points
         for fixed_point in fixed_points:
@@ -350,7 +351,7 @@ class VisualComponentPlotFootDeviation:
         img = cv2.imread(str(frame_info.file_directory) + '/video/' + 'plot_aux.png', cv2.IMREAD_UNCHANGED)
 
         # Resize the component
-        component = visual_components['vc_plot_foot_deviation']
+        component = visual_components['VisualComponentFootDeviation']
         img_resized = cv2.resize(img,
                                  (int(frame_info.width * component['width_pct']),
                                   int(frame_info.height * component['height_pct'])),
