@@ -454,7 +454,7 @@ def export_fbx(recording_path: str, ):
             #             (object_world_location[2] - asset_world_location[2]) * SCALE_FACTOR
             #         ))
 
-            #         if bpy.context.scene.send2ue.extensions.instance_assets.place_in_active_level:
+            #         if bpy.context.scene.send2ue.extensions.instance_assets.create_in_active_level:
             #             # clear rotation and scale only if spawning actor
             #             # https://github.com/EpicGames/BlenderTools/issues/610
             #             rot = (0, 0, 0)

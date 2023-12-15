@@ -2,7 +2,7 @@ import math
 
 import bpy
 
-def place_lights(
+def create_lights(
         scene: bpy.types.Scene = None,
         cameras_positions: list = None
 ) -> None:

@@ -1,8 +1,8 @@
 import time
 from pathlib import Path
 
-from ajc27_freemocap_blender_addon.core_functions.setup_scene.scene_objects.cameras.place_cameras import place_cameras
-from ajc27_freemocap_blender_addon.core_functions.setup_scene.scene_objects.place_lights import place_lights
+from ajc27_freemocap_blender_addon.core_functions.setup_scene.scene_objects.cameras.create_cameras import create_cameras
+from ajc27_freemocap_blender_addon.core_functions.setup_scene.scene_objects.lights.create_lights import create_lights
 
 import bpy 
 
@@ -34,10 +34,10 @@ def create_video(scene: bpy.types.Scene,
     start = time.time()
 
     # Place the required cameras
-    cameras_positions = place_cameras(scene, export_profile)
+    cameras_positions = create_cameras(scene, export_profile)
 
     # Place the required lights
-    place_lights(scene, cameras_positions)
+    create_lights(scene, cameras_positions)
 
     # Rearrange the background videos
 

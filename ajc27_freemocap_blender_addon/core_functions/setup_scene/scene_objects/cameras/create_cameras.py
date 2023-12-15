@@ -48,8 +48,8 @@ def calculate_camera_distance(
 
     return camera_y_axis_distance
 
-def place_cameras(
-        scene: bpy.types.Scene = None,
+def create_cameras(
+        scene: bpy.types.Scene,
         export_profile: str = 'debug'
 ) -> list:
     if export_profiles[export_profile]['resolution_x'] / export_profiles[export_profile]['resolution_y'] >= 1:

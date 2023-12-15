@@ -330,6 +330,8 @@ class MainController:
         self._video_parent_object.hide_set(True)
         self._center_of_mass_parent_object.hide_set(True)
 
+        create_scene_objects()
+
 
     def create_video(self):
         print("Creating export video...")
