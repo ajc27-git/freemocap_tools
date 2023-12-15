@@ -3,9 +3,10 @@ import math
 import bpy
 
 def create_lights(
-        scene: bpy.types.Scene = None,
-        cameras_positions: list = None
+        scene: bpy.types.Scene,
+        cameras_positions: list
 ) -> None:
+
     # Lights vertical offset in Blender units
     lights_vertical_offset = 2
 

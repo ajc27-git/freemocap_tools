@@ -23,6 +23,7 @@ from .meshes.center_of_mass.center_of_mass_trails import create_center_of_mass_t
 from .meshes.skelly_mesh.attach_skelly_mesh import attach_skelly_mesh_to_rig
 from .rig.save_bone_and_joint_angles_from_rig import save_bone_and_joint_angles_from_rig
 from .setup_scene.make_parent_empties import create_parent_empty
+from .setup_scene.scene_objects.create_scene_objects import create_scene_objects
 from .setup_scene.set_start_end_frame import set_start_end_frame
 from ..data_models.parameter_models.parameter_models import Config
 from ..freemocap_data_handler.helpers.saver import FreemocapDataSaver
@@ -330,7 +331,7 @@ class MainController:
         self._video_parent_object.hide_set(True)
         self._center_of_mass_parent_object.hide_set(True)
 
-        create_scene_objects()
+        create_scene_objects(scene=bpy.context.scene)
 
 
     def create_video(self):
@@ -339,6 +340,8 @@ class MainController:
         create_video(
             scene=bpy.context.scene,
             recording_folder=self.recording_path,
+            start_frame=bpy.context.scene.frame_start,
+            end_frame=bpy.context.scene.frame_end,
         )
 
 

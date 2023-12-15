@@ -8,9 +8,9 @@ import bpy
 
 def create_video(scene: bpy.types.Scene,
                  recording_folder: str,
-                 export_profile: str = 'debug',
-                 start_frame: int = 1,
-                 end_frame: int = 250) -> None:
+                 start_frame: int,
+                 end_frame: int,
+                 export_profile: str = 'debug',) -> None:
 
     # Set the output file name
     video_file_name = Path(recording_folder).name + '.mp4'
@@ -33,13 +33,6 @@ def create_video(scene: bpy.types.Scene,
     # Get start time
     start = time.time()
 
-    # Place the required cameras
-    cameras_positions = create_cameras(scene, export_profile)
-
-    # Place the required lights
-    create_lights(scene, cameras_positions)
-
-    # Rearrange the background videos
 
     # Render the animation
     bpy.ops.render.render(animation=True)

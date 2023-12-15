@@ -3,12 +3,20 @@ from ajc27_freemocap_blender_addon.core_functions.setup_scene.scene_objects.grou
     create_ground_plane
 from ajc27_freemocap_blender_addon.core_functions.setup_scene.scene_objects.lights.create_lights import create_lights
 
-
-def create_scene_objects():
-    create_cameras()
-    create_lights()
+import bpy
+def create_scene_objects(scene: bpy.types.Scene, export_profile: str = 'debug') -> None:
+    cameras = create_cameras(scene=scene, export_profile=export_profile)
+    create_lights(scene=scene, cameras_positions=cameras)
     create_ground_plane()
+
+    # Place the required cameras
+    cameras_positions = create_cameras(scene, export_profile)
+
+    # Place the required lights
+    create_lights(scene, cameras_positions)
+
 
 
 if __name__ == "__main__":
-    create_scene_objects()
+    print('hiiii')
+    create_scene_objects(bpy.context.scene, export_profile='debug')

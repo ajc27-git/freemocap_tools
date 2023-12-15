@@ -52,6 +52,7 @@ def create_cameras(
         scene: bpy.types.Scene,
         export_profile: str = 'debug'
 ) -> list:
+    print(f"Creating cameras for export profile: {export_profile}")
     if export_profiles[export_profile]['resolution_x'] / export_profiles[export_profile]['resolution_y'] >= 1:
         camera_horizontal_fov = lens_FOVs['50mm']['horizontal_fov']
         camera_vertical_fov = lens_FOVs['50mm']['vertical_fov']
@@ -66,14 +67,23 @@ def create_cameras(
     camera = bpy.data.objects.new(name="Front_Camera", object_data=camera_data)
     scene.collection.objects.link(camera)
     scene.camera = camera
+    if len(scene.objects) > 1:
+        highest_point, lowest_point, leftmost_point, rightmost_point = calculate_extreme_points(scene)
+        camera_x_position = 0
+        camera_y_position = calculate_camera_distance(scene, camera_horizontal_fov, camera_vertical_fov, angle_margin)
+        camera_z_position = highest_point[2] - (highest_point[2] - lowest_point[2]) / 2
+    else:
+        camera_y_position = 0
+        camera_x_position = 0
+        camera_z_position = 0
 
-    highest_point, lowest_point, leftmost_point, rightmost_point = calculate_extreme_points(scene)
-
-    camera_y_axis_distance = calculate_camera_distance(scene, camera_horizontal_fov, camera_vertical_fov, angle_margin)
-
-    camera.location = (0, camera_y_axis_distance, highest_point[2] - (highest_point[2] - lowest_point[2]) / 2)
+    print("Creating camera at: ", camera_x_position, camera_y_position, camera_z_position)
+    camera.location = (camera_x_position, camera_y_position, camera_z_position)
     camera.rotation_euler = (math.radians(90), 0, 0)
 
     cameras_positions.append(camera.location)
 
     return cameras_positions
+
+if __name__ == "__main__":
+    create_cameras(bpy.context.scene, export_profile='debug')
