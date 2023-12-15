@@ -1,8 +1,6 @@
 from typing import Union, List
 
-import numpy as np
-
-from .create_material import create_material
+from ajc27_freemocap_blender_addon.core_functions.materials.create_material import create_material
 
 import bpy
 

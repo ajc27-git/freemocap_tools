@@ -66,7 +66,7 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         box.prop(fmc_adapter_tool,
                  "data_parent_empty",
                  text="Data Parent Empty")
-        box.operator('fmc_adapter._save_data_to_disk', text='Save Data to Disk')
+        # box.operator('fmc_adapter._save_data_to_disk', text='Save Data to Disk')
 
     def _fbx_export_panel(self, layout):
         # FBX Export

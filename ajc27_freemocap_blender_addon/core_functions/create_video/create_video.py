@@ -1,19 +1,10 @@
-import math
-import os
 import time
 from pathlib import Path
 
+from ajc27_freemocap_blender_addon.core_functions.setup_scene.scene_objects.cameras.place_cameras import place_cameras
+from ajc27_freemocap_blender_addon.core_functions.setup_scene.scene_objects.place_lights import place_lights
 
-import bpy
-
-from ajc27_freemocap_blender_addon.core_functions.create_video.helpers.add_render_background import \
-    add_render_background
-
-from ajc27_freemocap_blender_addon.core_functions.create_video.helpers.place_cameras import place_cameras
-from ajc27_freemocap_blender_addon.core_functions.create_video.helpers.place_lights import place_lights
-from ajc27_freemocap_blender_addon.core_functions.create_video.helpers.rearrange_background_videos import \
-    rearrange_background_videos
-from ajc27_freemocap_blender_addon.data_models.parameter_models.video_config import render_parameters, export_profiles
+import bpy 
 
 def create_video(scene: bpy.types.Scene,
                  recording_folder: str,

@@ -1,6 +1,6 @@
 import bpy
 
-from ajc27_freemocap_blender_addon.core_functions.meshes.center_of_mass.center_of_mass_material import create_center_of_mass_material
+from ajc27_freemocap_blender_addon.core_functions.materials.create_checkerboard_material import create_checkerboard_material
 
 
 def create_center_of_mass_mesh(parent_object: bpy.types.Object,
@@ -14,7 +14,7 @@ def create_center_of_mass_mesh(parent_object: bpy.types.Object,
     location_constraint = mesh.constraints.new(type="COPY_LOCATION")
     location_constraint.target = center_of_mass_empty
 
-    material = create_center_of_mass_material()
+    material = create_checkerboard_material(name="center_of_mass_material")
 
     mesh.active_material = material
     mesh.data.materials.append(material)
