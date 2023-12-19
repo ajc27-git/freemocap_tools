@@ -1,7 +1,7 @@
 bl_info = {
     'name'          : 'Freemocap Adapter Alt',
     'author'        : 'ajc27',
-    'version'       : (1, 1, 15),
+    'version'       : (1, 2, 0),
     'blender'       : (3, 0, 0),
     'location'      : '3D Viewport > Sidebar > Freemocap Adapter Alt',
     'description'   : 'Add-on to adapt the Freemocap Blender output',
@@ -427,10 +427,10 @@ virtual_bones = {
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
-        'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_min_x'   : -50,
+        'rot_limit_max_x'   : 50,
+        'rot_limit_min_z'   : -60,
+        'rot_limit_max_z'   : 30},
     'thumb.01.L': {
         'head'              : 'left_hand_thumb_cmc',
         'tail'              : 'left_hand_thumb_mcp',
@@ -442,10 +442,10 @@ virtual_bones = {
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
-        'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_min_x'   : -50,
+        'rot_limit_max_x'   : 50,
+        'rot_limit_min_z'   : -60,
+        'rot_limit_max_z'   : 30},
     'thumb.02.R': {
         'head'              : 'right_hand_thumb_mcp',
         'tail'              : 'right_hand_thumb_ip',
@@ -458,9 +458,9 @@ virtual_bones = {
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
         'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
-        'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_x'   : 40,
+        'rot_limit_min_z'   : -10,
+        'rot_limit_max_z'   : 10},
     'thumb.02.L': {
         'head'              : 'left_hand_thumb_mcp',
         'tail'              : 'left_hand_thumb_ip',
@@ -472,10 +472,10 @@ virtual_bones = {
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
+        'rot_limit_min_x'   : -40,
         'rot_limit_max_x'   : 0,
-        'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_min_z'   : -10,
+        'rot_limit_max_z'   : 10},
     'thumb.03.R': {
         'head'              : 'right_hand_thumb_ip',
         'tail'              : 'right_hand_thumb_tip',
@@ -487,8 +487,8 @@ virtual_bones = {
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
+        'rot_limit_min_x'   : -10,
+        'rot_limit_max_x'   : 90,
         'rot_limit_min_z'   : 0,
         'rot_limit_max_z'   : 0},
     'thumb.03.L': {
@@ -502,8 +502,8 @@ virtual_bones = {
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
+        'rot_limit_min_x'   : -90,
+        'rot_limit_max_x'   : 10,
         'rot_limit_min_z'   : 0,
         'rot_limit_max_z'   : 0},
     'palm.01.R': {
@@ -512,30 +512,30 @@ virtual_bones = {
         'lengths'           : [],
         'median'            : 0,
         'stdev'             : 0,
-        'category'          : 'hands',
+        'category'          : 'fingers',
         'parent_bone'       : 'hand.R',
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
-        'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_min_x'   : -360,
+        'rot_limit_max_x'   : 360,
+        'rot_limit_min_z'   : 14,
+        'rot_limit_max_z'   : 16},
     'palm.01.L': {
         'head'              : 'left_hand_wrist',
         'tail'              : 'left_hand_index_finger_mcp',
         'lengths'           : [],
         'median'            : 0,
         'stdev'             : 0,
-        'category'          : 'hands',
+        'category'          : 'fingers',
         'parent_bone'       : 'hand.L',
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
-        'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_min_x'   : -180,
+        'rot_limit_max_x'   : 180,
+        'rot_limit_min_z'   : 14,
+        'rot_limit_max_z'   : 16},
     'f_index.01.R': {
         'head'              : 'right_hand_index_finger_mcp',
         'tail'              : 'right_hand_index_finger_pip',
@@ -547,10 +547,10 @@ virtual_bones = {
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
-        'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_min_x'   : -30,
+        'rot_limit_max_x'   : 60,
+        'rot_limit_min_z'   : -30,
+        'rot_limit_max_z'   : 40},
     'f_index.01.L': {
         'head'              : 'left_hand_index_finger_mcp',
         'tail'              : 'left_hand_index_finger_pip',
@@ -562,10 +562,10 @@ virtual_bones = {
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
-        'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_min_x'   : -60,
+        'rot_limit_max_x'   : 30,
+        'rot_limit_min_z'   : -30,
+        'rot_limit_max_z'   : 40},
     'f_index.02.R': {
         'head'              : 'right_hand_index_finger_pip',
         'tail'              : 'right_hand_index_finger_dip',
@@ -578,7 +578,7 @@ virtual_bones = {
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
         'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
+        'rot_limit_max_x'   : 90,
         'rot_limit_min_z'   : 0,
         'rot_limit_max_z'   : 0},
     'f_index.02.L': {
@@ -592,7 +592,7 @@ virtual_bones = {
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
+        'rot_limit_min_x'   : -90,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
         'rot_limit_max_z'   : 0},
@@ -608,7 +608,7 @@ virtual_bones = {
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
         'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
+        'rot_limit_max_x'   : 60,
         'rot_limit_min_z'   : 0,
         'rot_limit_max_z'   : 0},
     'f_index.03.L': {
@@ -622,7 +622,7 @@ virtual_bones = {
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
+        'rot_limit_min_x'   : -60,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
         'rot_limit_max_z'   : 0},
@@ -632,13 +632,13 @@ virtual_bones = {
         'lengths'           : [],
         'median'            : 0,
         'stdev'             : 0,
-        'category'          : 'hands',
+        'category'          : 'fingers',
         'parent_bone'       : 'hand.R',
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
+        'rot_limit_min_x'   : -180,
+        'rot_limit_max_x'   : 180,
         'rot_limit_min_z'   : 0,
         'rot_limit_max_z'   : 0},
     'palm.02.L': {
@@ -647,13 +647,13 @@ virtual_bones = {
         'lengths'           : [],
         'median'            : 0,
         'stdev'             : 0,
-        'category'          : 'hands',
+        'category'          : 'fingers',
         'parent_bone'       : 'hand.L',
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
+        'rot_limit_min_x'   : -180,
+        'rot_limit_max_x'   : 180,
         'rot_limit_min_z'   : 0,
         'rot_limit_max_z'   : 0},
     'f_middle.01.R': {
@@ -667,10 +667,10 @@ virtual_bones = {
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
-        'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_min_x'   : -30,
+        'rot_limit_max_x'   : 60,
+        'rot_limit_min_z'   : -30,
+        'rot_limit_max_z'   : 30},
     'f_middle.01.L': {
         'head'              : 'left_hand_middle_finger_mcp',
         'tail'              : 'left_hand_middle_finger_pip',
@@ -682,10 +682,10 @@ virtual_bones = {
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
-        'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_min_x'   : -60,
+        'rot_limit_max_x'   : 30,
+        'rot_limit_min_z'   : -30,
+        'rot_limit_max_z'   : 30},
     'f_middle.02.R': {
         'head'              : 'right_hand_middle_finger_pip',
         'tail'              : 'right_hand_middle_finger_dip',
@@ -698,7 +698,7 @@ virtual_bones = {
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
         'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
+        'rot_limit_max_x'   : 90,
         'rot_limit_min_z'   : 0,
         'rot_limit_max_z'   : 0},
     'f_middle.02.L': {
@@ -712,7 +712,7 @@ virtual_bones = {
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
+        'rot_limit_min_x'   : -90,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
         'rot_limit_max_z'   : 0},
@@ -728,7 +728,7 @@ virtual_bones = {
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
         'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
+        'rot_limit_max_x'   : 60,
         'rot_limit_min_z'   : 0,
         'rot_limit_max_z'   : 0},
     'f_middle.03.L': {
@@ -742,7 +742,7 @@ virtual_bones = {
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
+        'rot_limit_min_x'   : -60,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
         'rot_limit_max_z'   : 0},
@@ -752,30 +752,30 @@ virtual_bones = {
         'lengths'           : [],
         'median'            : 0,
         'stdev'             : 0,
-        'category'          : 'hands',
+        'category'          : 'fingers',
         'parent_bone'       : 'hand.R',
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
-        'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_min_x'   : -180,
+        'rot_limit_max_x'   : 180,
+        'rot_limit_min_z'   : -16,
+        'rot_limit_max_z'   : -14},
     'palm.03.L': {
         'head'              : 'left_hand_wrist',
         'tail'              : 'left_hand_ring_finger_mcp',
         'lengths'           : [],
         'median'            : 0,
         'stdev'             : 0,
-        'category'          : 'hands',
+        'category'          : 'fingers',
         'parent_bone'       : 'hand.L',
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
-        'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_min_x'   : -180,
+        'rot_limit_max_x'   : 180,
+        'rot_limit_min_z'   : -16,
+        'rot_limit_max_z'   : -14},
     'f_ring.01.R': {
         'head'              : 'right_hand_ring_finger_mcp',
         'tail'              : 'right_hand_ring_finger_pip',
@@ -787,10 +787,10 @@ virtual_bones = {
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
-        'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_min_x'   : -30,
+        'rot_limit_max_x'   : 60,
+        'rot_limit_min_z'   : -20,
+        'rot_limit_max_z'   : 30},
     'f_ring.01.L': {
         'head'              : 'left_hand_ring_finger_mcp',
         'tail'              : 'left_hand_ring_finger_pip',
@@ -802,10 +802,10 @@ virtual_bones = {
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
-        'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_min_x'   : -60,
+        'rot_limit_max_x'   : 30,
+        'rot_limit_min_z'   : -20,
+        'rot_limit_max_z'   : 30},
     'f_ring.02.R': {
         'head'              : 'right_hand_ring_finger_pip',
         'tail'              : 'right_hand_ring_finger_dip',
@@ -818,7 +818,7 @@ virtual_bones = {
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
         'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
+        'rot_limit_max_x'   : 90,
         'rot_limit_min_z'   : 0,
         'rot_limit_max_z'   : 0},
     'f_ring.02.L': {
@@ -832,7 +832,7 @@ virtual_bones = {
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
+        'rot_limit_min_x'   : -90,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
         'rot_limit_max_z'   : 0},
@@ -848,7 +848,7 @@ virtual_bones = {
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
         'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
+        'rot_limit_max_x'   : 60,
         'rot_limit_min_z'   : 0,
         'rot_limit_max_z'   : 0},
     'f_ring.03.L': {
@@ -862,7 +862,7 @@ virtual_bones = {
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
+        'rot_limit_min_x'   : -60,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
         'rot_limit_max_z'   : 0},
@@ -872,30 +872,30 @@ virtual_bones = {
         'lengths'           : [],
         'median'            : 0,
         'stdev'             : 0,
-        'category'          : 'hands',
+        'category'          : 'fingers',
         'parent_bone'       : 'hand.R',
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
-        'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_min_x'   : -180,
+        'rot_limit_max_x'   : 180,
+        'rot_limit_min_z'   : -31,
+        'rot_limit_max_z'   : -29},
     'palm.04.L': {
         'head'              : 'left_hand_wrist',
         'tail'              : 'left_hand_pinky_mcp',
         'lengths'           : [],
         'median'            : 0,
         'stdev'             : 0,
-        'category'          : 'hands',
+        'category'          : 'fingers',
         'parent_bone'       : 'hand.L',
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
-        'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_min_x'   : -180,
+        'rot_limit_max_x'   : 180,
+        'rot_limit_min_z'   : -31,
+        'rot_limit_max_z'   : -29},
     'f_pinky.01.R': {
         'head'              : 'right_hand_pinky_mcp',
         'tail'              : 'right_hand_pinky_pip',
@@ -907,10 +907,10 @@ virtual_bones = {
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
-        'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_min_x'   : -30,
+        'rot_limit_max_x'   : 60,
+        'rot_limit_min_z'   : -30,
+        'rot_limit_max_z'   : 40},
     'f_pinky.01.L': {
         'head'              : 'left_hand_pinky_mcp',
         'tail'              : 'left_hand_pinky_pip',
@@ -922,10 +922,10 @@ virtual_bones = {
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
-        'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_min_x'   : -60,
+        'rot_limit_max_x'   : 30,
+        'rot_limit_min_z'   : -30,
+        'rot_limit_max_z'   : 40},
     'f_pinky.02.R': {
         'head'              : 'right_hand_pinky_pip',
         'tail'              : 'right_hand_pinky_dip',
@@ -938,7 +938,7 @@ virtual_bones = {
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
         'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
+        'rot_limit_max_x'   : 90,
         'rot_limit_min_z'   : 0,
         'rot_limit_max_z'   : 0},
     'f_pinky.02.L': {
@@ -952,7 +952,7 @@ virtual_bones = {
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
+        'rot_limit_min_x'   : -90,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
         'rot_limit_max_z'   : 0},
@@ -968,7 +968,7 @@ virtual_bones = {
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
         'rot_limit_min_x'   : 0,
-        'rot_limit_max_x'   : 0,
+        'rot_limit_max_x'   : 60,
         'rot_limit_min_z'   : 0,
         'rot_limit_max_z'   : 0},
     'f_pinky.03.L': {
@@ -982,7 +982,7 @@ virtual_bones = {
         'bone_x_axis'       : (0,0,0),
         'bone_y_axis'       : (0,0,0),
         'bone_z_axis'       : (0,0,0),
-        'rot_limit_min_x'   : 0,
+        'rot_limit_min_x'   : -60,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
         'rot_limit_max_z'   : 0},
@@ -1440,20 +1440,17 @@ def add_hands_middle_empties():
 
         print('Adding Hand Middle completed.')
 
-# Function to draw a vector for ik constraints debbuging purposes
+# Function to draw a vector for debbuging purposes
 def draw_vector(origin, angle, name):
-    # bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=origin, rotation=angle, scale=(0.002, 0.002, 0.002))
-    bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=origin, rotation=mathutils.Vector([0,0,1]).rotation_difference(angle).to_euler(), scale=(0.002, 0.002, 0.002))
     
+    bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=origin, rotation=mathutils.Vector([0,0,1]).rotation_difference(angle).to_euler(), scale=(0.002, 0.002, 0.002))
     bpy.data.objects["Empty"].name = name
-    # bpy.ops.object.empty_add(type='SPHERE', align='WORLD', location=origin, rotation=mathutils.Vector([0,0,1]).rotation_difference(angle).to_euler(), scale=(0.002, 0.002, 0.002))
-    bpy.ops.object.empty_add(type='SPHERE', align='WORLD', location=(origin+angle*25), scale=(0.001, 0.001, 0.001))
+    
+    bpy.ops.object.empty_add(type='SPHERE', align='WORLD', location=(origin+angle*5), scale=(0.001, 0.001, 0.001))
     bpy.data.objects["Empty"].scale = (0.01, 0.01, 0.01)
     bpy.data.objects["Empty"].name = 'Sphere_' + name
-    #bpy.ops.mesh.primitive_uv_sphere_add(radius=.01, enter_editmode=False, align='WORLD', location=(origin+mathutils.Vector([0, 0.1, 0])@angle.to_matrix()), scale=(1, 1, 1))
-    # bpy.ops.mesh.primitive_uv_sphere_add(radius=.005, enter_editmode=False, align='WORLD', location=(origin+angle*5), scale=(1, 1, 1))
-    
 
+    return
 
 # Function to calculate the pole angle necessary to make the ik base bone point to the pole target empty marker
 def calculate_ik_pole_angle(rig_name: str='root',
@@ -1875,8 +1872,8 @@ def translate_empty(empties_dict, empty, frame_index, delta):
 # The resulting rotation will be just on the border of the limits interval. The rotation analysis will be done separately
 # on the local x and z axes of the virtual bone. When an empty is rotated, all of its children empties will be rotated equally recursevily
 def add_finger_rotation_limits():
-
-    def update_bone_axes(bone):
+    
+    def calculate_bone_axes_from_parent(bone):
         # Calculate the bone's y axis
         bone_y_axis = mathutils.Vector(bpy.data.objects[virtual_bones[bone]['tail']].matrix_world.translation - bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation)
 
@@ -1896,286 +1893,169 @@ def add_finger_rotation_limits():
 
         return
     
-    def get_rot_angle_bone_parent(bone, axis):
+    def get_rot_delta(bone, axis):
+
+        # Get the ortogonal axis
+        ort_axis = 'z' if axis == 'x' else 'x'
 
         # Set the bone axis
         bone_axis = virtual_bones[bone]['bone_' + axis + '_axis']
         # Set the parent bone axis
         parent_bone_axis = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_' + axis + '_axis']
         # Set the parent bone ortogonal axis
-        parent_bone_ort_axis = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_z_axis'] if axis == 'x' else virtual_bones[virtual_bones[bone]['parent_bone']]['bone_x_axis']
+        parent_bone_ort_axis = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_' + ort_axis + '_axis']
 
         # Calculate the dot product between the x axes of the bone and its parent bone
         dot_product = bone_axis.dot(parent_bone_axis)
 
-        # Based on the dot product calculate the rotation angle between the x axes of the bone and its parent bone
-        angle = m.acos(dot_product / (bone_axis.magnitude * parent_bone_axis.magnitude))
-        print(bone + ' x_angle pre: ' + str(m.degrees(angle)))
+        # Based on the dot product calculate the rotation angle cosine between the axis of the bone and its parent bone
+        angle_cosine = dot_product / (bone_axis.magnitude * parent_bone_axis.magnitude)
 
-        # Calculate the cross product between the x axes of the bone and its parent bone
-        cross_product = mathutils.Vector(bone_axis.cross(parent_bone_axis))
+        # Calculate the angle between the perpendicular vectors in radians
+        if angle_cosine > 1:
+            angle = m.acos(1)
+        elif angle_cosine < -1:
+            angle = m.acos(-1)
+        else:
+            angle = m.acos(angle_cosine)
 
-        # Normalize the cross product
-        cross_product.normalize()
+        # Calculate the cross product between the axis of the bone and its parent bone axis
+        cross_product = mathutils.Vector(parent_bone_axis.cross(bone_axis))
 
-        # Calculate the dot product between the x cross product and the parent z axis
+        # Calculate the dot product between the cross product and the parent ortogonal axis
         cross_dot_product = cross_product.dot(parent_bone_ort_axis)
 
         # If the dot product is negative then the rotation angle is negative
         if cross_dot_product < 0:
             angle = -angle
 
-        return angle
+        # Check if the angle is within the rotation limit values.
+        # If it is outside, rotate the bone tail empty around the cross product
+        # so the angle is on the closest rotation limit.
+        # Rotate the bone tail children by the same delta recursively.
+        rot_delta = 0
 
-    # Calculate the hand bones origin axes
-    for side in ['left', 'right']:
-        # y_axis
-        hand_y_axis = bpy.data.objects[side + '_hand_middle'].matrix_world.translation - bpy.data.objects[side + '_wrist'].matrix_world.translation
-        
-        # z_axis
-        hand_to_thumb_cmc = bpy.data.objects[side + '_hand_thumb_cmc'].matrix_world.translation - bpy.data.objects[side + '_wrist'].matrix_world.translation
-        hand_z_axis = hand_to_thumb_cmc - hand_y_axis * (hand_y_axis.dot(hand_to_thumb_cmc) / hand_y_axis.length_squared)
-        # draw_vector(bpy.data.objects[side +'_wrist'].matrix_world.translation, mathutils.Vector([0,0,1]).rotation_difference(hand_z_axis).to_euler(), side + '_hand_z_axis')
-        # x_axis as the orthogonal vector of the y_axis and z_axis
-        hand_x_axis = hand_y_axis.cross(hand_z_axis)
-        # draw_vector(bpy.data.objects[side + '_wrist'].matrix_world.translation, mathutils.Vector([0,0,1]).rotation_difference(hand_x_axis).to_euler(), side + '_hand_x_axis')
+        # Calculate the angle difference between the rotation limit and the x_angle
+        if angle < m.radians(virtual_bones[bone]['rot_limit_min_' + axis]):
+            rot_delta = m.radians(virtual_bones[bone]['rot_limit_min_' + axis]) - angle
+        elif angle > m.radians(virtual_bones[bone]['rot_limit_max_' + axis]):
+            rot_delta = m.radians(virtual_bones[bone]['rot_limit_max_' + axis]) - angle
 
-        # Save the vectors in the virtual_bones dictionary
-        virtual_bones['hand.' + side[0].upper()]['bone_x_axis'] = mathutils.Vector(hand_x_axis)
-        virtual_bones['hand.' + side[0].upper()]['bone_y_axis'] = mathutils.Vector(hand_y_axis)
-        virtual_bones['hand.' + side[0].upper()]['bone_z_axis'] = mathutils.Vector(hand_z_axis)
-    
-    # Iterate through the virtual bones dictionary and add constraints if the bone has the finger category
-    for bone in virtual_bones:
+        # Adjust the rotation delta according to the dot product
+        if cross_dot_product < 0:
+            rot_delta = -rot_delta
 
-        # If the bone has the hands or fingers category then calculate its origin axes based on its parent bone's axes
-        if virtual_bones[bone]['category'] == 'hands' or virtual_bones[bone]['category'] == 'fingers':
+        return rot_delta
+
+    # Get the scene context
+    scene = bpy.context.scene
+
+    for frame in range (scene.frame_start, scene.frame_end):
+
+        # Set scene frame
+        scene.frame_set(frame)
+
+        # Calculate the hand bones origin axes
+        for side in ['left', 'right']:
+            # y_axis
+            hand_y_axis = bpy.data.objects[side + '_hand_middle'].matrix_world.translation - bpy.data.objects[side + '_wrist'].matrix_world.translation
             
-            # # Calculate the bone's y axis
-            # bone_y_axis = mathutils.Vector(bpy.data.objects[virtual_bones[bone]['tail']].matrix_world.translation - bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation)
+            # z_axis
+            hand_to_thumb_cmc = bpy.data.objects[side + '_hand_thumb_cmc'].matrix_world.translation - bpy.data.objects[side + '_wrist'].matrix_world.translation
+            hand_z_axis = hand_to_thumb_cmc - hand_y_axis * (hand_y_axis.dot(hand_to_thumb_cmc) / hand_y_axis.length_squared)
 
-            # # Calculate the difference between the bone's y axis and its parent bone's y axis
-            # rotation_quat = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_y_axis'].rotation_difference(bone_y_axis)
+            # x_axis as the orthogonal vector of the y_axis and z_axis
+            hand_x_axis = mathutils.Vector(hand_y_axis.cross(hand_z_axis))
 
-            # # Rotate the parent x and z axes to get the bones local x and z axes
-            # bone_x_axis = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_x_axis'].copy()
-            # bone_x_axis.rotate(rotation_quat)
-            # bone_z_axis = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_z_axis'].copy()
-            # bone_z_axis.rotate(rotation_quat)
+            # Save the vectors in the virtual_bones dictionary
+            virtual_bones['hand.' + side[0].upper()]['bone_x_axis'] = mathutils.Vector(hand_x_axis)
+            virtual_bones['hand.' + side[0].upper()]['bone_y_axis'] = mathutils.Vector(hand_y_axis)
+            virtual_bones['hand.' + side[0].upper()]['bone_z_axis'] = mathutils.Vector(hand_z_axis)
 
-            update_bone_axes(bone)
+        # Iterate through the virtual bones dictionary and add constraints if the bone has the finger category
+        for bone in virtual_bones:
 
-            # If the bone has the fingers category then calculate its origin axes based on its parent bone's axes and rotate the tail empty (and its children) to meet the constraints
-            # if virtual_bones[bone]['category'] == 'fingers' and (bone == 'thumb.01.Ri' or bone == 'thumb.02.R' or bone == 'thumb.03.R'):
-            if virtual_bones[bone]['category'] == 'fingers' and (bone == 'f_index.01.Ri' or bone == 'f_index.02.R' or bone == 'f_index.03.Ri'):
-
-                bone_x_axis = virtual_bones[bone]['bone_x_axis']
-                bone_y_axis = virtual_bones[bone]['bone_y_axis']
-                bone_z_axis = virtual_bones[bone]['bone_z_axis']
-
-                parent_bone = virtual_bones[bone]['parent_bone']
-                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, bone_x_axis, bone + '_x_axis')
-                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, bone_y_axis, bone + '_y_axis')
-                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, bone_z_axis, bone + '_z_axis')
-
-                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, virtual_bones[parent_bone]['bone_x_axis'], parent_bone + '_x_axis')
-                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, virtual_bones[parent_bone]['bone_y_axis'], parent_bone + '_y_axis')
-                draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, virtual_bones[parent_bone]['bone_z_axis'], parent_bone + '_z_axis')
-
-                # Calculate the rotation angle between the x axes and the z axes of the bone and its parent bone
-                # Calculate the dot product between the x axes of the bone and its parent bone
-                dot_product = bone_x_axis.dot(virtual_bones[parent_bone]['bone_x_axis'])
-
-                # Based on the dot product calculate the rotation angle between the x axes of the bone and its parent bone
-                x_angle = m.acos(dot_product / (bone_x_axis.magnitude * virtual_bones[parent_bone]['bone_x_axis'].magnitude))
-                print(bone + ' x_angle pre: ' + str(m.degrees(x_angle)))
-
-                # Calculate the cross product between the x axes of the bone and its parent bone
-                x_cross_product = mathutils.Vector(bone_x_axis.cross(virtual_bones[parent_bone]['bone_x_axis']))
-
-                # Normalize the cross product
-                x_cross_product.normalize()
-
-                # Calculate the dot product between the x cross product and the parent z axis
-                x_dot_product = x_cross_product.dot(virtual_bones[parent_bone]['bone_z_axis'])
-
-                # If the dot product is negative then the rotation angle is negative
-                if x_dot_product < 0:
-                    x_angle = -x_angle
-
-                print(bone + ' x_angle: ' + str(m.degrees(x_angle)))
-
-                # x_angle = get_rot_angle_bone_parent(bone, 'x')
-
-                # Check if the x_angle is within the rotation limit values. If it is outside, rotate the bone tail empty on the xy plane so the x_angle is on the closest limit.
-                # Rotate the bone tail children by the same amount recursively
-                rot_x_delta = 0
+            # If the bone has the hands or fingers category then calculate its origin axes based on its parent bone's axes
+            if virtual_bones[bone]['category'] in ['hands', 'fingers']:
                 
-                # Calculate the angle difference between the rotation limit and the x_angle
-                if x_angle < virtual_bones[bone]['rot_limit_min_x']:
-                    rot_x_delta = x_angle -virtual_bones[bone]['rot_limit_min_x']
-                elif x_angle > virtual_bones[bone]['rot_limit_max_x']:
-                    rot_x_delta = x_angle - virtual_bones[bone]['rot_limit_max_x']
+                calculate_bone_axes_from_parent(bone)
 
-                # If the rot_x_delta is different than 0 then rotate the bone tail empty
-                if rot_x_delta != 0:
-                    print('Rot_x_delta: ' + str(m.degrees(rot_x_delta)))
-                    draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, x_cross_product, 'x_cross_product')
-                    # Get the rotation matrix of the delta angle around the x axis cross product
-                    # x_matrix_axis = virtual_bones[parent_bone]['bone_z_axis'].copy()
-                    x_matrix_axis = x_cross_product.copy()
-                    # x_matrix_axis.normalize()
-                    rot_x_matrix = mathutils.Matrix.Rotation(rot_x_delta, 4, x_matrix_axis)
+                # If the bone has the fingers category then calculate its origin axes based on its parent bone's axes and rotate the tail empty (and its children) to meet the constraints
+                if virtual_bones[bone]['category'] == 'fingers':
 
-                    # Rotate the virtual bone tail empty
-                    rotate_virtual_bone(virtual_bones[bone]['tail'], bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, rot_x_matrix)
+                    parent_bone = virtual_bones[bone]['parent_bone']
 
-                update_bone_axes(bone)
+                    for axis in ['x', 'z']:
 
-                # Calculate the dot product between the z axes of the bone and its parent bone
-                dot_product = bone_z_axis.dot(virtual_bones[parent_bone]['bone_z_axis'])
-                # dot_product = virtual_bones[parent_bone]['bone_z_axis'].dot(bone_z_axis)
+                        # Get the rotation delta
+                        rot_delta = get_rot_delta(bone, axis)
+                        
+                        # If the rot_delta is different than 0 then rotate the bone tail empty
+                        if rot_delta != 0:
+                            
+                            # Calculate the rotation matrix axis as the cross products of the bone and parent axes
+                            matrix_axis = mathutils.Vector(virtual_bones[parent_bone]['bone_' + axis + '_axis'].cross(virtual_bones[bone]['bone_' + axis + '_axis']))
+                            matrix_axis.normalize()
+                            
+                            # Get the otation matrix
+                            rot_matrix = mathutils.Matrix.Rotation(rot_delta, 4, matrix_axis)
 
-                # Based on the dot product calculate the rotation angle between the x axes of the bone and its parent bone
-                z_angle = m.acos(dot_product / (bone_z_axis.magnitude * virtual_bones[parent_bone]['bone_z_axis'].magnitude))
-                print(bone + ' z_angle pre: ' + str(m.degrees(z_angle)))
-                # Calculate the cross product between the Z axes of the bone and its parent bone
-                # z_cross_product = mathutils.Vector(virtual_bones[parent_bone]['bone_z_axis'].cross(bone_z_axis))
-                z_cross_product = mathutils.Vector(bone_z_axis.cross(virtual_bones[parent_bone]['bone_z_axis']))
+                            # Rotate the virtual bone tail empty
+                            rotate_virtual_bone(virtual_bones[bone]['tail'], bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, rot_matrix)
 
-                # Normalize the cross product
-                z_cross_product.normalize()
+                            # Recalculate the bone's y axis
+                            bone_y_axis = mathutils.Vector(bpy.data.objects[virtual_bones[bone]['tail']].matrix_world.translation - bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation)
 
-                # Calculate the dot product between the z cross product and the parent X axis
-                z_dot_product = z_cross_product.dot(virtual_bones[parent_bone]['bone_x_axis'])
-                print('z_dot_product' + str(z_dot_product))
+                            # Calculate the difference between the bone's y axis and its parent bone's y axis
+                            rotation_quat = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_y_axis'].rotation_difference(bone_y_axis)
 
-                # If the dot product is negative then the rotation angle is negative
-                if z_dot_product < 0:
-                    z_angle = -z_angle
+                            # Rotate the parent x and z axes to get the bones local x and z axes
+                            bone_x_axis = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_x_axis'].copy()
+                            bone_x_axis.rotate(rotation_quat)
+                            bone_z_axis = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_z_axis'].copy()
+                            bone_z_axis.rotate(rotation_quat)
 
-                print(bone + ' z_angle: ' + str(m.degrees(z_angle)))
+                            # Save the vectors in the virtual_bones dictionary
+                            virtual_bones[bone]['bone_x_axis'] = mathutils.Vector(bone_x_axis)
+                            virtual_bones[bone]['bone_y_axis'] = mathutils.Vector(bone_y_axis)
+                            virtual_bones[bone]['bone_z_axis'] = mathutils.Vector(bone_z_axis)
 
-                # z_angle = get_rot_angle_bone_parent(bone, 'z')
-
-                
-
-                # Check if the z_angle is within the rotation limit values. If it is outside, rotate the bone tail empty on the xy plane so the z_angle is on the closest limit.
-                # Rotate the bone tail children by the same amount recursively
-                rot_z_delta = 0
-
-                # Calculate the angle difference between the rotation limit and the z_angle
-                if z_angle < virtual_bones[bone]['rot_limit_min_z']:
-                    rot_z_delta = z_angle - virtual_bones[bone]['rot_limit_min_z']
-                elif z_angle > virtual_bones[bone]['rot_limit_max_z']:
-                    rot_z_delta = z_angle - virtual_bones[bone]['rot_limit_max_z']
-
-                # If the rot_z_delta is different than 0 then rotate the bone tail empty
-                if rot_z_delta != 0:
-                    print('Rot_z_delta: ' + str(rot_z_delta))
-                    draw_vector(bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, z_cross_product, 'z_cross_product')
-                    # Get the rotation matrix of the delta angle around the z axis cross product
-                    # z_matrix_axis = virtual_bones[parent_bone]['bone_x_axis'].copy()
-                    z_matrix_axis = z_cross_product.copy()
-                    z_matrix_axis.normalize()
-                    rot_z_matrix = mathutils.Matrix.Rotation(rot_z_delta, 4, z_matrix_axis)
-
-                    # Rotate the virtual bone tail empty
-                    rotate_virtual_bone(virtual_bones[bone]['tail'], bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation, rot_z_matrix)
-
-                # If rot_x_delta or rot_z_delta is different than 0 then recalculate the bone axes vectors
-                if rot_x_delta != 0 or rot_z_delta != 0:
-                    # Calculate the bone's y axis
-                    bone_y_axis = mathutils.Vector(bpy.data.objects[virtual_bones[bone]['tail']].matrix_world.translation - bpy.data.objects[virtual_bones[bone]['head']].matrix_world.translation)
-
-                    # Calculate the difference between the bone's y axis and its parent bone's y axis
-                    rotation_quat = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_y_axis'].rotation_difference(bone_y_axis)
-
-                    # Rotate the parent x and z axes to get the bones local x and z axes
-                    bone_x_axis = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_x_axis'].copy()
-                    bone_x_axis.rotate(rotation_quat)
-                    bone_z_axis = virtual_bones[virtual_bones[bone]['parent_bone']]['bone_z_axis'].copy()
-                    bone_z_axis.rotate(rotation_quat)
-
-                # Save the vectors in the virtual_bones dictionary
-                virtual_bones[bone]['bone_x_axis'] = mathutils.Vector(bone_x_axis)
-                virtual_bones[bone]['bone_y_axis'] = mathutils.Vector(bone_y_axis)
-                virtual_bones[bone]['bone_z_axis'] = mathutils.Vector(bone_z_axis)
+    # Reset the scene frame
+    scene.frame_set(scene.frame_start)
 
 # Function to rotate the virtual bones by its tail empty using a rotation matrix. Do it recursively for its children
 def rotate_virtual_bone(empty, origin, rot_matrix: mathutils.Matrix):
-    # print('origin: ' + str(origin))
+    # Get the scene current frame
     frame_index = bpy.context.scene.frame_current
 
+    # Get the current location of the empty
     empty_current_location = bpy.data.objects[empty].matrix_world.translation
-    # Get local vector from virtual bone tail empty to the origin
+
+    # Get local vector from origin to the virtual bone tail empty
     empty_local_vector = empty_current_location - origin
-    # print('empty_local_vector: ' + str(empty_local_vector))
-    # # Get the local vector magnitude
-    # empty_local_magnitude = empty_local_vector.magnitude
 
-    # print('empty_local_magnitude: ' + str(empty_local_magnitude))
-
-    # # Normalize the local vector
-    # empty_local_vector_normalized = empty_local_vector / empty_local_magnitude
-
-    # print('empty_local_vector_normalized_magnitude: ' + str(empty_local_vector_normalized.magnitude))
-
-    # # Rotate the empty vector
-    # rotated_empty_vector_normalized = rot_matrix @ empty_local_vector_normalized
-
-    # print('rotated_empty_vector_normalized_magnitude: ' + str(rotated_empty_vector_normalized.magnitude))
-
-    # rotated_empty_vector = rotated_empty_vector_normalized * empty_local_magnitude
-
-    # print('rotated_empty_vector_magnitude: ' + str(rotated_empty_vector.magnitude))
-
-
-    # print('rotated_empty_vector: ' + str(rotated_empty_vector))
-    
-
-    # rotated_empty_vector = mathutils.Matrix.Rotation(angle, 3, axis) @ empty_local_vector
-    # draw_vector(origin, rotated_empty_vector, 'rotated_empty_vector')
+    # Rotate the local vector using the rotation matrix
     rotated_empty_vector = rot_matrix @ empty_local_vector
+
     # Get the world space rotated empty vector
     new_empty_vector = origin + rotated_empty_vector
-    # print('new_empty_vector: ' + str(new_empty_vector))
 
-    
-    #new_empty_vector = origin + mathutils.Matrix.Rotation(rotated_empty_vector, 3, mathutils.Vector((0, 0, 1)))
-    # draw_vector(origin, new_empty_vector, 'new_empty_vector')
-    bpy.ops.object.empty_add(type='SPHERE', align='WORLD', location=new_empty_vector, scale=(0.001, 0.001, 0.001))
-    bpy.data.objects["Empty"].scale = (0.002, 0.002, 0.002)
-    bpy.data.objects["Empty"].name = 'Sphere_' + empty + '_new_empty_vector'
-    # print('new_empty_vector_x: ' + str(new_empty_vector[0]))
+    # Change the position of the empty in the world space
+    bpy.data.objects[empty].matrix_world.translation = new_empty_vector
 
-    # Get the translation delta vector as the animation curves are in local space
-    delta_vector = new_empty_vector - empty_current_location
-    
     # Translate the empty in the animation location curve
     try:
-        actual_x = bpy.data.objects[empty].animation_data.action.fcurves[0].keyframe_points[frame_index].co[1]
-        # bpy.data.objects[empty].animation_data.action.fcurves[0].keyframe_points[frame_index].co[1] = actual_x + delta_vector[0]
         bpy.data.objects[empty].animation_data.action.fcurves[0].keyframe_points[frame_index].co[1] = new_empty_vector[0]
-        actual_y = bpy.data.objects[empty].animation_data.action.fcurves[1].keyframe_points[frame_index].co[1]
-        # bpy.data.objects[empty].animation_data.action.fcurves[1].keyframe_points[frame_index].co[1] = actual_y + delta_vector[1]
         bpy.data.objects[empty].animation_data.action.fcurves[1].keyframe_points[frame_index].co[1] = new_empty_vector[1]
-        actual_z = bpy.data.objects[empty].animation_data.action.fcurves[2].keyframe_points[frame_index].co[1]
-        # bpy.data.objects[empty].animation_data.action.fcurves[2].keyframe_points[frame_index].co[1] = actual_z + delta_vector[2]
         bpy.data.objects[empty].animation_data.action.fcurves[2].keyframe_points[frame_index].co[1] = new_empty_vector[2]
     except:
         # Empty does not exist or does not have animation data
-        #print('Empty ' + empty + ' does not have animation data on frame ' + str(frame_index))
-        pass
+        print('Empty ' + empty + ' does not have animation data on frame ' + str(frame_index))
 
     # If empty has children then call this function for every child
     if empty in empties_dict:
         for child in empties_dict[empty]['children']:
-            pass
-            # rotate_virtual_bone(child, origin, rot_matrix)
-
-    
-
+            rotate_virtual_bone(child, origin, rot_matrix)
 
 
 # IN DEVELOPMENT
@@ -4387,12 +4267,12 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
     )
     correct_fingers_empties: bpy.props.BoolProperty(
         name        = '',
-        default     = True,
+        default     = False,
         description = 'Correct the fingers empties. Match hand_wrist (axis empty) position to wrist (sphere empty)'
     )
     add_hand_middle_empty: bpy.props.BoolProperty(
         name        = '',
-        default     = True,
+        default     = False,
         description = 'Add an empty in the middle of the hand between index and pinky empties. This empty is used for a better orientation of the hand (experimental)'
     )
     
@@ -4553,7 +4433,11 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         # split.split().column().prop(fmc_adapter_tool, 'recording_fps')
 
         # box.operator('fmc_adapter.reduce_shakiness', text='Reduce Shakiness')
-        
+
+        # Add Finger Rotation Limits
+        box = layout.box()
+        box.operator('fmc_adapter.add_finger_rotation_limits', text='3. Add Finger Rotation Limits')
+
         # Add Rig Options
         box = layout.box()
         #box.label(text='Add Rig Options')
@@ -4577,7 +4461,7 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         split.column().label(text='Clear constraints')
         split.split().column().prop(fmc_adapter_tool, 'clear_constraints')
         
-        box.operator('fmc_adapter.add_rig', text='3. Add Rig')
+        box.operator('fmc_adapter.add_rig', text='4. Add Rig')
         
         # Add Body Mesh Options
         box = layout.box()
@@ -4587,7 +4471,7 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         split.column().label(text='Body Mesh Mode')
         split.split().column().prop(fmc_adapter_tool, 'body_mesh_mode')
         
-        box.operator('fmc_adapter.add_body_mesh', text='4. Add Body Mesh')
+        box.operator('fmc_adapter.add_body_mesh', text='5. Add Body Mesh')
 
         # FBX Export
         box = layout.box()
@@ -4595,11 +4479,7 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         split.column().label(text='FBX Export Type')
         split.split().column().prop(fmc_adapter_tool, 'fbx_type')
 
-        box.operator('fmc_adapter.export_fbx', text='5. Export FBX')
-
-        # Add Finger Rotation Limits
-        # box = layout.box()
-        # box.operator('fmc_adapter.add_finger_rotation_limits', text='Add Finger Rotation Limits')
+        box.operator('fmc_adapter.export_fbx', text='6. Export FBX')
 
 # Operator classes that executes the methods
 class FMC_ADAPTER_OT_adjust_empties(Operator):
