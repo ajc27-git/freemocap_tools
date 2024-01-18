@@ -5,6 +5,8 @@ from typing import Dict, List
 
 import bpy
 import mathutils
+import addon_utils
+
 from ajc27_freemocap_blender_addon.data_models.bones.bone_constraints import ALL_BONES_CONSTRAINT_DEFINITIONS
 
 
@@ -20,6 +22,11 @@ def add_rig(empty_names: List[str],
         # Deselect all objects
         for object in bpy.data.objects:
             object.select_set(False)
+        try:
+            addon_utils.enable("rigify")
+        except Exception as e:
+            print("Rigify addon not found, and could not be automatically enabled - Please install it and try again")
+            raise e
 
         # Add normal human armature
         bpy.ops.object.armature_human_metarig_add()
