@@ -28,7 +28,7 @@ def create_checker_texture(material,
 
     bsdf_node = nodes.new(type='ShaderNodeBsdfPrincipled')
     bsdf_node.inputs['Roughness'].default_value = roughness
-    bsdf_node.inputs['Specular'].default_value = specular
+    # bsdf_node.inputs['Specular'].default_value = specular
     bsdf_node.inputs['Metallic'].default_value = metallic
 
     output_node = nodes.get('Material Output')

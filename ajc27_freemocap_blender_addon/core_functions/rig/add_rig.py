@@ -22,12 +22,14 @@ def add_rig(empty_names: List[str],
         # Deselect all objects
         for object in bpy.data.objects:
             object.select_set(False)
-        try:
-            addon_utils.enable("rigify")
-        except Exception as e:
-            print("Rigify addon not found, and could not be automatically enabled - Please install it and try again")
-            raise e
 
+        ensure_rigify()
+
+        try:
+            bpy.ops.object.armature_human_metarig_add()
+        except Exception as e:
+            raise e
+        
         # Add normal human armature
         bpy.ops.object.armature_human_metarig_add()
         # Rename metarig armature to rig_name
@@ -784,6 +786,19 @@ def add_rig(empty_names: List[str],
         print(e)
         raise e
     return rig
+
+def ensure_rigify():
+    # TODO - This doesn't seem to work? Still need to install `rigify` manually :-/
+    rigify_enabled, _ = addon_utils.check("rigify")
+
+    if not rigify_enabled:
+        try:
+            print("Rigify not found - enabling Rigify addon...")
+            addon_utils.disable("rigify")
+            addon_utils.enable("rigify")
+        except Exception as e:
+            print(f"Error enabling Rigify addon - \n\n{e}")
+            raise e
 
 def get_appended_number(rig_name):
     pattern = r"\.0[0-9]{2}$"

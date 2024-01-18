@@ -326,7 +326,7 @@ class MainController:
         self._video_parent_object.hide_set(True)
         self._center_of_mass_parent_object.hide_set(True)
 
-        create_scene_objects(scene=bpy.context.scene)
+        # create_scene_objects(scene=bpy.context.scene)
 
 
     def create_video(self):
@@ -368,7 +368,7 @@ class MainController:
         # self.create_center_of_mass_trails()
         self.add_videos()
         self.setup_scene()
-        self.create_video()
+        # self.create_video()
         self.save_blender_file()
-        # export_fbx(recording_path=recording_path, )
+        # export_fbx(recording_path=recording_path)
 
