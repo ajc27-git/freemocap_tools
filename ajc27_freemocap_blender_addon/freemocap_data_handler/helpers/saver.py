@@ -1,12 +1,9 @@
 import json
-import logging
 import pickle
 from pathlib import Path
 from typing import Union, TYPE_CHECKING
 
 import numpy as np
-
-import sys
 
 # this allows us to import the `FreemocapDataHandler` class for type hinting without causing a circular import
 if TYPE_CHECKING:

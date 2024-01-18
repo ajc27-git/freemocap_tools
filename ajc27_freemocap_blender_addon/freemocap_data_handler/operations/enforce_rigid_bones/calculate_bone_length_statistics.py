@@ -1,11 +1,8 @@
-import logging
 import math
 import statistics
 from typing import Dict, Any
 
 import numpy as np
-
-import sys
 
 
 def calculate_bone_length_statistics(trajectories: Dict[str, np.ndarray],

@@ -2,7 +2,6 @@ import os
 
 import addon_utils
 import bpy
-
 from ajc27_freemocap_blender_addon.data_models.parameter_models.video_config import export_profiles, render_background
 
 

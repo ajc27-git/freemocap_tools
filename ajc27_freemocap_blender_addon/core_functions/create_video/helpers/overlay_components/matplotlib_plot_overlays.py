@@ -1,12 +1,7 @@
-import numpy as np
-
-from freemocap_video_export.video_config import visual_components, color_palette
-
 import bpy
-from matplotlib import pyplot as plt
-import cv2
-
+import numpy as np
 from freemocap_video_export.create_video.visual_overlays.frame_information_dataclass import FrameInformation
+from freemocap_video_export.video_config import visual_components, color_palette
 
 
 class VisualComponentPlotComBos:
@@ -16,7 +11,8 @@ class VisualComponentPlotComBos:
     def add_component(self,
                       image: np.ndarray,
                       frame_info: FrameInformation):
-
+        from matplotlib import pyplot as plt
+        import cv2
         ### Data setup ###
 
         # Set the frame according to the frame number

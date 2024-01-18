@@ -1,8 +1,4 @@
-import logging
-
 import bpy
-
-import sys
 
 
 def set_start_end_frame(number_of_frames: int):

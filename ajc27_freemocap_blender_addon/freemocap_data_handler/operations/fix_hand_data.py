@@ -1,4 +1,3 @@
-import logging
 from typing import List, TYPE_CHECKING
 
 import numpy as np
@@ -6,8 +5,6 @@ from numpy import dot
 
 if TYPE_CHECKING:
     from ..handler import FreemocapDataHandler
-
-import sys
 
 
 def fix_hand_data(handler: 'FreemocapDataHandler'):

@@ -1,4 +1,3 @@
-import logging
 import os
 import zipfile
 from importlib.machinery import SourceFileLoader
@@ -6,8 +5,6 @@ from pathlib import Path
 
 import addon_utils
 import bpy
-
-import sys
 
 
 def get_io_scene_fbx_addon():

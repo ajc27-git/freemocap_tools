@@ -1,12 +1,9 @@
-import math
-from pathlib import Path
 import traceback
+from pathlib import Path
 from typing import Dict
 
 import bpy
-
 from ajc27_freemocap_blender_addon import PACKAGE_ROOT_PATH
-from pathlib import Path
 
 SKELLY_MESH_PATH = str(Path(PACKAGE_ROOT_PATH) / "assets" / "skelly_lowpoly_mesh.fbx")
 

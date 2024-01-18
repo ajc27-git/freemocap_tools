@@ -1,6 +1,5 @@
 from bpy.types import Operator
 
-from freemocap_video_export import video_config
 from freemocap_video_export.create_video.create_video import create_export_video
 
 

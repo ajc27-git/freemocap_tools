@@ -1,14 +1,10 @@
-import logging
 from typing import List, Union
 from typing import TYPE_CHECKING
 
 import numpy as np
-
 from ajc27_freemocap_blender_addon.data_models.freemocap_data.freemocap_data_model import (
     FREEMOCAP_DATA_COMPONENT_TYPES,
 )
-
-import sys
 
 # this allows us to import the `FreemocapDataHandler` class for type hinting without causing a circular import
 if TYPE_CHECKING:

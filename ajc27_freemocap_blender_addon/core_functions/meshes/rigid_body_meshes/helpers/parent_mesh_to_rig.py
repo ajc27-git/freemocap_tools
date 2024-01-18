@@ -1,6 +1,6 @@
-import logging
 import bpy
-import sys
+
+
 def parent_mesh_to_rig(meshes, rig):
     print("Parenting mesh to rig...")
     try:

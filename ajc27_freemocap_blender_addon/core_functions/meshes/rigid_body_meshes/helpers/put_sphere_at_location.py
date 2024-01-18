@@ -1,8 +1,7 @@
 from typing import Union, List
 
-from ajc27_freemocap_blender_addon.core_functions.materials.create_material import create_material
-
 import bpy
+from ajc27_freemocap_blender_addon.core_functions.materials.create_material import create_material
 
 
 def put_sphere_mesh_at_location(

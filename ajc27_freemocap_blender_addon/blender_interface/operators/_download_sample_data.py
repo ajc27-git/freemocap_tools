@@ -1,9 +1,5 @@
-import logging
-
 import bpy
 import bpy_extras
-
-import sys
 
 
 class FMC_ADAPTER_download_sample_data(bpy.types.Operator, bpy_extras.io_utils.ImportHelper):

@@ -2,9 +2,6 @@ import logging
 
 from bpy.types import Panel
 
-
-
-import sys
 logger = logging.getLogger(__name__)
 
 

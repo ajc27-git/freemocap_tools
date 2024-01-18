@@ -1,7 +1,4 @@
-import logging
 from pathlib import Path
-
-import sys
 
 
 def get_path_to_sample_data():

@@ -1,12 +1,7 @@
-import logging
-from pathlib import Path
 import traceback
+from pathlib import Path
 
 import bpy
-
-
-
-import sys
 
 
 class FMC_ADAPTER_run_all(bpy.types.Operator):

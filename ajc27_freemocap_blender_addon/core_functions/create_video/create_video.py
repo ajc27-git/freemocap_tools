@@ -1,10 +1,8 @@
 import time
 from pathlib import Path
 
-from ajc27_freemocap_blender_addon.core_functions.setup_scene.scene_objects.cameras.create_cameras import create_cameras
-from ajc27_freemocap_blender_addon.core_functions.setup_scene.scene_objects.lights.create_lights import create_lights
+import bpy
 
-import bpy 
 
 def create_video(scene: bpy.types.Scene,
                  recording_folder: str,

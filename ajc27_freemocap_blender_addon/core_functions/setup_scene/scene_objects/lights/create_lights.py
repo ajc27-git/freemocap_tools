@@ -2,6 +2,7 @@ import math
 
 import bpy
 
+
 def create_lights(
         scene: bpy.types.Scene,
         cameras_positions: list

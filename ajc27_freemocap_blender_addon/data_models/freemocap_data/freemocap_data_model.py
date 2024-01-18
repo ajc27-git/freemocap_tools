@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional, Union, Literal
 
 import numpy as np
-
 from ajc27_freemocap_blender_addon.core_functions.setup_scene.get_path_to_sample_data import get_path_to_sample_data
+
 from .helpers.freemocap_component_data import FreemocapComponentData
 from .helpers.freemocap_data_paths import FreemocapDataPaths
 from .helpers.freemocap_data_stats import FreemocapDataStats

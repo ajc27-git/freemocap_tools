@@ -1,5 +1,7 @@
-import cv2
-
+try:
+    import cv2
+except Exception as e:
+    pass
 export_profiles = {
     'debug': {
         'resolution_x': 1920,

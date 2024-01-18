@@ -1,10 +1,7 @@
-import logging
 from pathlib import Path
 
 import bpy
 import mathutils
-
-import sys
 
 
 def export_fbx(recording_path: str, ):

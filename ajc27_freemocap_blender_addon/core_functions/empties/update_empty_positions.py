@@ -1,10 +1,7 @@
-import logging
 import math as m
 from typing import Dict, Any
 
 import bpy
-
-import sys
 
 EMPTY_VELOCITIES = {}
 EMPTY_POSITIONS = {}

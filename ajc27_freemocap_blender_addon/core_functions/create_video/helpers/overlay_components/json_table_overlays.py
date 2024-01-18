@@ -1,10 +1,10 @@
 import json
 from typing import Optional, Dict, Any
 
-import numpy as np
 import cv2
-from freemocap_video_export.video_config import visual_components
+import numpy as np
 from freemocap_video_export.create_video.visual_overlays.frame_information_dataclass import FrameInformation
+from freemocap_video_export.video_config import visual_components
 
 
 class VisualComponentStaticJSONTable:

@@ -1,13 +1,9 @@
-import logging
 from pathlib import Path
 from typing import Union
 
 import addon_utils
 import bpy
 import numpy as np
-
-
-import sys
 
 
 def get_video_paths(path_to_video_folder: Path) -> list:

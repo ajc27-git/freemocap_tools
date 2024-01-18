@@ -1,11 +1,8 @@
-import logging
 from typing import Dict, TYPE_CHECKING
 
 import numpy as np
 
 from .estimate_good_frame import estimate_good_frame
-
-import sys
 
 if TYPE_CHECKING:
     from ..handler import FreemocapDataHandler

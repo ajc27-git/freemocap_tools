@@ -1,11 +1,10 @@
 import math as m
 import time
 
-from bpy.types import Operator
-
 from ajc27_freemocap_blender_addon.core_functions.empties.reorient_empties import reorient_empties
 from ajc27_freemocap_blender_addon.freemocap_data_handler.operations import \
     freemocap_empties_from_parent_object
+from bpy.types import Operator
 
 
 class FMC_ADAPTER_OT_reorient_empties(Operator):

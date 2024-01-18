@@ -1,11 +1,8 @@
-import logging
 from typing import List, Dict
 
 import numpy as np
-
-from ajc27_freemocap_blender_addon.data_models.mediapipe_names.virtual_trajectories import MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS
-
-import sys
+from ajc27_freemocap_blender_addon.data_models.mediapipe_names.virtual_trajectories import \
+    MEDIAPIPE_VIRTUAL_TRAJECTORY_DEFINITIONS
 
 
 def validate_marker_definitions(virtual_marker_definitions: dict):

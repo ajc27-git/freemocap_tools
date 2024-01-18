@@ -1,14 +1,8 @@
 import os
-from pathlib import Path
 
 from ajc27_freemocap_blender_addon.core_functions.create_video.helpers.overlay_components.frame_information_dataclass import \
     FrameInformation
 from ajc27_freemocap_blender_addon.data_models.parameter_models.video_config import export_profiles, render_parameters
-
-
-import bpy
-import cv2
-
 
 
 def write_video_file_to_disk(
@@ -17,6 +11,7 @@ def write_video_file_to_disk(
         export_profile: str = 'debug',
         scene: bpy.types.Scene = None,
 ) -> None:
+    import cv2
     # Get a reference to the render
     video = cv2.VideoCapture(render_path)
 
@@ -28,7 +23,7 @@ def write_video_file_to_disk(
         (export_profiles[export_profile]['resolution_x'],
          export_profiles[export_profile]['resolution_y']),
         export_profiles[export_profile]['bitrate'],
-    )
+        )
 
     # Create new frame_info object
     frame_info = FrameInformation(

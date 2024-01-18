@@ -1,10 +1,6 @@
 import numpy as np
-
-from freemocap_video_export.video_config import visual_components
-
-import cv2
-
 from freemocap_video_export.create_video.visual_overlays.frame_information_dataclass import FrameInformation
+from freemocap_video_export.video_config import visual_components
 
 
 class VisualComponentFrameNumber:
@@ -15,6 +11,7 @@ class VisualComponentFrameNumber:
     def add_component(self,
                       image: np.ndarray,
                       frame_info: FrameInformation):
+        import cv2
         # Add frame number / total frame to the frame
         annotated_image = cv2.putText(
             image,
@@ -25,6 +22,6 @@ class VisualComponentFrameNumber:
             visual_components['frame_number']['color'],
             visual_components['frame_number']['thickness'],
             visual_components['frame_number']['lineType'],
-        )
+            )
 
         return annotated_image
