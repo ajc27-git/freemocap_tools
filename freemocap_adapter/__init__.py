@@ -1,7 +1,7 @@
 bl_info = {
     'name'          : 'Freemocap Adapter Alt',
     'author'        : 'ajc27',
-    'version'       : (1, 2, 0),
+    'version'       : (1, 3, 0),
     'blender'       : (3, 0, 0),
     'location'      : '3D Viewport > Sidebar > Freemocap Adapter Alt',
     'description'   : 'Add-on to adapt the Freemocap Blender output',
@@ -19,6 +19,10 @@ import math as m
 import mathutils
 import time
 import statistics
+import numpy as np
+from scipy.signal import butter, filtfilt
+from .io_scene_fbx_functions_blender3 import *
+# from .io_scene_fbx_functions_blender4 import *
 
 #######################################################################
 ### Add-on to adapt the Freemocap Blender output. It can adjust the
@@ -190,7 +194,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'pelvis.L': {
         'head'              : 'hips_center',
         'tail'              : 'left_hip',
@@ -205,7 +212,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'spine': {
         'head'              : 'hips_center',
         'tail'              : 'trunk_center',
@@ -220,7 +230,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'spine.001': {
         'head'              : 'trunk_center',
         'tail'              : 'neck_center',
@@ -235,7 +248,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'neck': {
         'head'              : 'neck_center',
         'tail'              : 'head_center',
@@ -250,7 +266,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'head_nose': { # Auxiliary bone from head center to nose tip to align the face bones 
         'head'              : 'head_center',
         'tail'              : 'nose',
@@ -265,7 +284,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'shoulder.R': {
         'head'              : 'neck_center',
         'tail'              : 'right_shoulder',
@@ -280,7 +302,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'shoulder.L': {
         'head'              : 'neck_center',
         'tail'              : 'left_shoulder',
@@ -295,7 +320,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'upper_arm.R': {
         'head'              : 'right_shoulder',
         'tail'              : 'right_elbow',
@@ -310,7 +338,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'upper_arm.L': {
         'head'              : 'left_shoulder',
         'tail'              : 'left_elbow',
@@ -325,7 +356,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'forearm.R': {
         'head'              : 'right_elbow',
         'tail'              : 'right_wrist',
@@ -340,7 +374,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'forearm.L': {
         'head'              : 'left_elbow',
         'tail'              : 'left_wrist',
@@ -355,10 +392,13 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'hand.R': {
         'head'              : 'right_wrist',
-        'tail'              : 'right_index',
+        'tail'              : 'right_hand_middle',
         'lengths'           : [],
         'median'            : 0,
         'stdev'             : 0,
@@ -370,10 +410,13 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'hand.L': {
         'head'              : 'left_wrist',
-        'tail'              : 'left_index',
+        'tail'              : 'left_hand_middle',
         'lengths'           : [],
         'median'            : 0,
         'stdev'             : 0,
@@ -385,7 +428,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'thumb.carpal.R': { # Auxiliary bone to align the right_hand_thumb_cmc empty
         'head'              : 'right_hand_wrist',
         'tail'              : 'right_hand_thumb_cmc',
@@ -400,7 +446,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'thumb.carpal.L': { # Auxiliary bone to align the left_hand_thumb_cmc empty
         'head'              : 'left_hand_wrist',
         'tail'              : 'left_hand_thumb_cmc',
@@ -415,7 +464,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'thumb.01.R': {
         'head'              : 'right_hand_thumb_cmc',
         'tail'              : 'right_hand_thumb_mcp',
@@ -430,7 +482,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -50,
         'rot_limit_max_x'   : 50,
         'rot_limit_min_z'   : -60,
-        'rot_limit_max_z'   : 30},
+        'rot_limit_max_z'   : 30,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'thumb.01.L': {
         'head'              : 'left_hand_thumb_cmc',
         'tail'              : 'left_hand_thumb_mcp',
@@ -445,7 +500,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -50,
         'rot_limit_max_x'   : 50,
         'rot_limit_min_z'   : -60,
-        'rot_limit_max_z'   : 30},
+        'rot_limit_max_z'   : 30,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'thumb.02.R': {
         'head'              : 'right_hand_thumb_mcp',
         'tail'              : 'right_hand_thumb_ip',
@@ -460,7 +518,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 40,
         'rot_limit_min_z'   : -10,
-        'rot_limit_max_z'   : 10},
+        'rot_limit_max_z'   : 10,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'thumb.02.L': {
         'head'              : 'left_hand_thumb_mcp',
         'tail'              : 'left_hand_thumb_ip',
@@ -475,7 +536,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -40,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : -10,
-        'rot_limit_max_z'   : 10},
+        'rot_limit_max_z'   : 10,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'thumb.03.R': {
         'head'              : 'right_hand_thumb_ip',
         'tail'              : 'right_hand_thumb_tip',
@@ -490,7 +554,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -10,
         'rot_limit_max_x'   : 90,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'thumb.03.L': {
         'head'              : 'left_hand_thumb_ip',
         'tail'              : 'left_hand_thumb_tip',
@@ -505,7 +572,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -90,
         'rot_limit_max_x'   : 10,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'palm.01.R': {
         'head'              : 'right_hand_wrist',
         'tail'              : 'right_hand_index_finger_mcp',
@@ -520,7 +590,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -360,
         'rot_limit_max_x'   : 360,
         'rot_limit_min_z'   : 14,
-        'rot_limit_max_z'   : 16},
+        'rot_limit_max_z'   : 16,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'palm.01.L': {
         'head'              : 'left_hand_wrist',
         'tail'              : 'left_hand_index_finger_mcp',
@@ -535,7 +608,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -180,
         'rot_limit_max_x'   : 180,
         'rot_limit_min_z'   : 14,
-        'rot_limit_max_z'   : 16},
+        'rot_limit_max_z'   : 16,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_index.01.R': {
         'head'              : 'right_hand_index_finger_mcp',
         'tail'              : 'right_hand_index_finger_pip',
@@ -550,7 +626,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -30,
         'rot_limit_max_x'   : 60,
         'rot_limit_min_z'   : -30,
-        'rot_limit_max_z'   : 40},
+        'rot_limit_max_z'   : 40,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_index.01.L': {
         'head'              : 'left_hand_index_finger_mcp',
         'tail'              : 'left_hand_index_finger_pip',
@@ -565,7 +644,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -60,
         'rot_limit_max_x'   : 30,
         'rot_limit_min_z'   : -30,
-        'rot_limit_max_z'   : 40},
+        'rot_limit_max_z'   : 40,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_index.02.R': {
         'head'              : 'right_hand_index_finger_pip',
         'tail'              : 'right_hand_index_finger_dip',
@@ -580,7 +662,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 90,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : True,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_index.02.L': {
         'head'              : 'left_hand_index_finger_pip',
         'tail'              : 'left_hand_index_finger_dip',
@@ -595,7 +680,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -90,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_index.03.R': {
         'head'              : 'right_hand_index_finger_dip',
         'tail'              : 'right_hand_index_finger_tip',
@@ -610,7 +698,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 60,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : True,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_index.03.L': {
         'head'              : 'left_hand_index_finger_dip',
         'tail'              : 'left_hand_index_finger_tip',
@@ -625,7 +716,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -60,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'palm.02.R': {
         'head'              : 'right_hand_wrist',
         'tail'              : 'right_hand_middle_finger_mcp',
@@ -640,7 +734,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -180,
         'rot_limit_max_x'   : 180,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'palm.02.L': {
         'head'              : 'left_hand_wrist',
         'tail'              : 'left_hand_middle_finger_mcp',
@@ -655,7 +752,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -180,
         'rot_limit_max_x'   : 180,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_middle.01.R': {
         'head'              : 'right_hand_middle_finger_mcp',
         'tail'              : 'right_hand_middle_finger_pip',
@@ -670,7 +770,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -30,
         'rot_limit_max_x'   : 60,
         'rot_limit_min_z'   : -30,
-        'rot_limit_max_z'   : 30},
+        'rot_limit_max_z'   : 30,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_middle.01.L': {
         'head'              : 'left_hand_middle_finger_mcp',
         'tail'              : 'left_hand_middle_finger_pip',
@@ -685,7 +788,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -60,
         'rot_limit_max_x'   : 30,
         'rot_limit_min_z'   : -30,
-        'rot_limit_max_z'   : 30},
+        'rot_limit_max_z'   : 30,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_middle.02.R': {
         'head'              : 'right_hand_middle_finger_pip',
         'tail'              : 'right_hand_middle_finger_dip',
@@ -700,7 +806,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 90,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_middle.02.L': {
         'head'              : 'left_hand_middle_finger_pip',
         'tail'              : 'left_hand_middle_finger_dip',
@@ -715,7 +824,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -90,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_middle.03.R': {
         'head'              : 'right_hand_middle_finger_dip',
         'tail'              : 'right_hand_middle_finger_tip',
@@ -730,7 +842,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 60,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_middle.03.L': {
         'head'              : 'left_hand_middle_finger_dip',
         'tail'              : 'left_hand_middle_finger_tip',
@@ -745,7 +860,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -60,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'palm.03.R': {
         'head'              : 'right_hand_wrist',
         'tail'              : 'right_hand_ring_finger_mcp',
@@ -760,7 +878,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -180,
         'rot_limit_max_x'   : 180,
         'rot_limit_min_z'   : -16,
-        'rot_limit_max_z'   : -14},
+        'rot_limit_max_z'   : -14,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'palm.03.L': {
         'head'              : 'left_hand_wrist',
         'tail'              : 'left_hand_ring_finger_mcp',
@@ -775,7 +896,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -180,
         'rot_limit_max_x'   : 180,
         'rot_limit_min_z'   : -16,
-        'rot_limit_max_z'   : -14},
+        'rot_limit_max_z'   : -14,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_ring.01.R': {
         'head'              : 'right_hand_ring_finger_mcp',
         'tail'              : 'right_hand_ring_finger_pip',
@@ -790,7 +914,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -30,
         'rot_limit_max_x'   : 60,
         'rot_limit_min_z'   : -20,
-        'rot_limit_max_z'   : 30},
+        'rot_limit_max_z'   : 30,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_ring.01.L': {
         'head'              : 'left_hand_ring_finger_mcp',
         'tail'              : 'left_hand_ring_finger_pip',
@@ -805,7 +932,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -60,
         'rot_limit_max_x'   : 30,
         'rot_limit_min_z'   : -20,
-        'rot_limit_max_z'   : 30},
+        'rot_limit_max_z'   : 30,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_ring.02.R': {
         'head'              : 'right_hand_ring_finger_pip',
         'tail'              : 'right_hand_ring_finger_dip',
@@ -820,7 +950,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 90,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_ring.02.L': {
         'head'              : 'left_hand_ring_finger_pip',
         'tail'              : 'left_hand_ring_finger_dip',
@@ -835,7 +968,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -90,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_ring.03.R': {
         'head'              : 'right_hand_ring_finger_dip',
         'tail'              : 'right_hand_ring_finger_tip',
@@ -850,7 +986,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 60,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_ring.03.L': {
         'head'              : 'left_hand_ring_finger_dip',
         'tail'              : 'left_hand_ring_finger_tip',
@@ -865,7 +1004,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -60,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'palm.04.R': {
         'head'              : 'right_hand_wrist',
         'tail'              : 'right_hand_pinky_mcp',
@@ -880,7 +1022,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -180,
         'rot_limit_max_x'   : 180,
         'rot_limit_min_z'   : -31,
-        'rot_limit_max_z'   : -29},
+        'rot_limit_max_z'   : -29,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'palm.04.L': {
         'head'              : 'left_hand_wrist',
         'tail'              : 'left_hand_pinky_mcp',
@@ -895,7 +1040,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -180,
         'rot_limit_max_x'   : 180,
         'rot_limit_min_z'   : -31,
-        'rot_limit_max_z'   : -29},
+        'rot_limit_max_z'   : -29,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_pinky.01.R': {
         'head'              : 'right_hand_pinky_mcp',
         'tail'              : 'right_hand_pinky_pip',
@@ -910,7 +1058,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -30,
         'rot_limit_max_x'   : 60,
         'rot_limit_min_z'   : -30,
-        'rot_limit_max_z'   : 40},
+        'rot_limit_max_z'   : 40,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_pinky.01.L': {
         'head'              : 'left_hand_pinky_mcp',
         'tail'              : 'left_hand_pinky_pip',
@@ -925,7 +1076,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -60,
         'rot_limit_max_x'   : 30,
         'rot_limit_min_z'   : -30,
-        'rot_limit_max_z'   : 40},
+        'rot_limit_max_z'   : 40,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_pinky.02.R': {
         'head'              : 'right_hand_pinky_pip',
         'tail'              : 'right_hand_pinky_dip',
@@ -940,7 +1094,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 90,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_pinky.02.L': {
         'head'              : 'left_hand_pinky_pip',
         'tail'              : 'left_hand_pinky_dip',
@@ -955,7 +1112,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -90,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_pinky.03.R': {
         'head'              : 'right_hand_pinky_dip',
         'tail'              : 'right_hand_pinky_tip',
@@ -970,7 +1130,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 60,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'f_pinky.03.L': {
         'head'              : 'left_hand_pinky_dip',
         'tail'              : 'left_hand_pinky_tip',
@@ -985,7 +1148,10 @@ virtual_bones = {
         'rot_limit_min_x'   : -60,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'thigh.R': {
         'head'              : 'right_hip',
         'tail'              : 'right_knee',
@@ -1000,7 +1166,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'thigh.L': {
         'head'              : 'left_hip',
         'tail'              : 'left_knee',
@@ -1015,7 +1184,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'shin.R': {
         'head'              : 'right_knee',
         'tail'              : 'right_ankle',
@@ -1030,7 +1202,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'shin.L': {
         'head'              : 'left_knee',
         'tail'              : 'left_ankle',
@@ -1045,7 +1220,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'foot.R': {
         'head'              : 'right_ankle',
         'tail'              : 'right_foot_index',
@@ -1060,7 +1238,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'foot.L': {
         'head'              : 'left_ankle',
         'tail'              : 'left_foot_index',
@@ -1075,7 +1256,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'heel.02.R': {
         'head'              : 'right_ankle',
         'tail'              : 'right_heel',
@@ -1090,7 +1274,10 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
     'heel.02.L': {
         'head'              : 'left_ankle',
         'tail'              : 'left_heel',
@@ -1105,108 +1292,271 @@ virtual_bones = {
         'rot_limit_min_x'   : 0,
         'rot_limit_max_x'   : 0,
         'rot_limit_min_z'   : 0,
-        'rot_limit_max_z'   : 0},
+        'rot_limit_max_z'   : 0,
+        'has_skelly_part'   : False,
+        'default_origin'    : (0, 0, 0),
+        'default_length'    : 0,},
 }
 
 # Dictionary containing the empty children for each of the capture empties.
 # This will be used to correct the position of the empties (and its children) that are outside the bone length interval defined by x*stdev
 empties_dict = {
     'hips_center': {
-        'children'    : ['right_hip', 'left_hip', 'trunk_center']},
+        'children'      : ['right_hip', 'left_hip', 'trunk_center'],
+        'category'      : 'core',
+        'tail_of_bone'  : ''},
     'trunk_center': {
-        'children'    : ['neck_center']},
+        'children'      : ['neck_center'],
+        'category'      : 'core',
+        'tail_of_bone'  : 'spine'},
     'neck_center': {
-        'children'    : ['right_shoulder', 'left_shoulder', 'head_center']},
+        'children'      : ['right_shoulder', 'left_shoulder', 'head_center'],
+        'category'      : 'core',
+        'tail_of_bone'  : 'spine.001'},
     'head_center': {
-        'children'    : ['nose', 'mouth_right', 'mouth_left', 'right_eye', 'right_eye_inner', 'right_eye_outer', 'left_eye', 'left_eye_inner', 'left_eye_outer', 'right_ear', 'left_ear']},
+        'children'      : ['nose', 'mouth_right', 'mouth_left', 'right_eye', 'right_eye_inner', 'right_eye_outer', 'left_eye', 'left_eye_inner', 'left_eye_outer', 'right_ear', 'left_ear'],
+        'category'      : 'core',
+        'tail_of_bone'  : 'neck'},
     'right_shoulder': {
-        'children'    : ['right_elbow']},
+        'children'      : ['right_elbow'],
+        'category'      : 'arms',
+        'tail_of_bone'  : 'shoulder.R'},
     'left_shoulder': {
-        'children'    : ['left_elbow']},
+        'children'      : ['left_elbow'],
+        'category'      : 'arms',
+        'tail_of_bone'  : 'shoulder.L'},
     'right_elbow': {
-        'children'    : ['right_wrist']},
+        'children'      : ['right_wrist'],
+        'category'      : 'arms',
+        'tail_of_bone'  : 'upper_arm.R'},
     'left_elbow': {
-        'children'    : ['left_wrist']},
+        'children'      : ['left_wrist'],
+        'category'      : 'arms',
+        'tail_of_bone'  : 'upper_arm.L'},
     'right_wrist': {
-        'children'    : ['right_thumb', 'right_index', 'right_pinky', 'right_hand', 'right_hand_middle', 'right_hand_wrist']},
+        'children'      : ['right_thumb', 'right_index', 'right_pinky', 'right_hand', 'right_hand_middle', 'right_hand_wrist'],
+        'category'      : 'hands',
+        'tail_of_bone'  : 'forearm.R'},
     'left_wrist': {
-        'children'    : ['left_thumb', 'left_index', 'left_pinky', 'left_hand', 'left_hand_middle', 'left_hand_wrist']},
+        'children'      : ['left_thumb', 'left_index', 'left_pinky', 'left_hand', 'left_hand_middle', 'left_hand_wrist'],
+        'category'      : 'hands',
+        'tail_of_bone'  : 'forearm.L'},
+    'right_hand_middle': {
+        'children'      : [],
+        'category'      : 'hands',
+        'tail_of_bone'  : 'hand.R'},
+    'left_hand_middle': {
+        'children'      : [],
+        'category'      : 'hands',
+        'tail_of_bone'  : 'hand.L'},
     'right_hand_wrist': {
-        'children'    : ['right_hand_thumb_cmc', 'right_hand_index_finger_mcp', 'right_hand_middle_finger_mcp', 'right_hand_ring_finger_mcp', 'right_hand_pinky_mcp']},
+        'children'      : ['right_hand_thumb_cmc', 'right_hand_index_finger_mcp', 'right_hand_middle_finger_mcp', 'right_hand_ring_finger_mcp', 'right_hand_pinky_mcp'],
+        'category'      : 'hands',
+        'tail_of_bone'  : ''},
     'left_hand_wrist': {
-        'children'    : ['left_hand_thumb_cmc', 'left_hand_index_finger_mcp', 'left_hand_middle_finger_mcp', 'left_hand_ring_finger_mcp', 'left_hand_pinky_mcp']},
+        'children'      : ['left_hand_thumb_cmc', 'left_hand_index_finger_mcp', 'left_hand_middle_finger_mcp', 'left_hand_ring_finger_mcp', 'left_hand_pinky_mcp'],
+        'category'      : 'hands',
+        'tail_of_bone'  : ''},
     'right_hand_thumb_cmc': {
-        'children'    : ['right_hand_thumb_mcp']},
+        'children'      : ['right_hand_thumb_mcp'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'thumb.carpal.R'},
     'left_hand_thumb_cmc': {
-        'children'    : ['left_hand_thumb_mcp']},
+        'children'      : ['left_hand_thumb_mcp'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'thumb.carpal.L'},
     'right_hand_thumb_mcp': {
-        'children'    : ['right_hand_thumb_ip']},
+        'children'      : ['right_hand_thumb_ip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'thumb.01.R'},
     'left_hand_thumb_mcp': {
-        'children'    : ['left_hand_thumb_ip']},
+        'children'      : ['left_hand_thumb_ip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'thumb.01.L'},
     'right_hand_thumb_ip': {
-        'children'    : ['right_hand_thumb_tip']},
+        'children'      : ['right_hand_thumb_tip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'thumb.02.R'},
     'left_hand_thumb_ip': {
-        'children'    : ['left_hand_thumb_tip']},
+        'children'      : ['left_hand_thumb_tip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'thumb.02.L'},
+    'right_hand_thumb_tip': {
+        'children'      : [],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'thumb.03.R'},
+    'left_hand_thumb_tip': {
+        'children'      : [],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'thumb.03.L'},
     'right_hand_index_finger_mcp': {
-        'children'    : ['right_hand_index_finger_pip']},
+        'children'      : ['right_hand_index_finger_pip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'palm.01.R'},
     'left_hand_index_finger_mcp': {
-        'children'    : ['left_hand_index_finger_pip']},
+        'children'      : ['left_hand_index_finger_pip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'palm.01.L'},
     'right_hand_index_finger_pip': {
-        'children'    : ['right_hand_index_finger_dip']},
+        'children'      : ['right_hand_index_finger_dip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_index.01.R'},
     'left_hand_index_finger_pip': {
-        'children'    : ['left_hand_index_finger_dip']},
+        'children'      : ['left_hand_index_finger_dip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_index.01.L'},
     'right_hand_index_finger_dip': {
-        'children'    : ['right_hand_index_finger_tip']},
+        'children'      : ['right_hand_index_finger_tip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_index.02.R'},
     'left_hand_index_finger_dip': {
-        'children'    : ['left_hand_index_finger_tip']},
+        'children'      : ['left_hand_index_finger_tip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_index.02.L'},
+    'right_hand_index_finger_tip': {
+        'children'      : [],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_index.03.R'},
+    'left_hand_index_finger_tip': {
+        'children'      : [],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_index.03.L'},
     'right_hand_middle_finger_mcp': {
-        'children'    : ['right_hand_middle_finger_pip']},
+        'children'      : ['right_hand_middle_finger_pip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'palm.02.R'},
     'left_hand_middle_finger_mcp': {
-        'children'    : ['left_hand_middle_finger_pip']},
+        'children'      : ['left_hand_middle_finger_pip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'palm.02.L'},
     'right_hand_middle_finger_pip': {
-        'children'    : ['right_hand_middle_finger_dip']},
+        'children'      : ['right_hand_middle_finger_dip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_middle.01.R'},
     'left_hand_middle_finger_pip': {
-        'children'    : ['left_hand_middle_finger_dip']},
+        'children'      : ['left_hand_middle_finger_dip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_middle.01.L'},
     'right_hand_middle_finger_dip': {
-        'children'    : ['right_hand_middle_finger_tip']},
+        'children'      : ['right_hand_middle_finger_tip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_middle.02.R'},
     'left_hand_middle_finger_dip': {
-        'children'    : ['left_hand_middle_finger_tip']},
+        'children'      : ['left_hand_middle_finger_tip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_middle.02.L'},
+    'right_hand_middle_finger_tip': {
+        'children'      : [],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_middle.03.R'},
+    'left_hand_middle_finger_tip': {
+        'children'      : [],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_middle.03.L'},
     'right_hand_ring_finger_mcp': {
-        'children'    : ['right_hand_ring_finger_pip']},
+        'children'      : ['right_hand_ring_finger_pip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'palm.03.R'},
     'left_hand_ring_finger_mcp': {
-        'children'    : ['left_hand_ring_finger_pip']},
+        'children'      : ['left_hand_ring_finger_pip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'palm.03.L'},
     'right_hand_ring_finger_pip': {
-        'children'    : ['right_hand_ring_finger_dip']},
+        'children'      : ['right_hand_ring_finger_dip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_ring.01.R'},
     'left_hand_ring_finger_pip': {
-        'children'    : ['left_hand_ring_finger_dip']},
+        'children'      : ['left_hand_ring_finger_dip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_ring.01.L'},
     'right_hand_ring_finger_dip': {
-        'children'    : ['right_hand_ring_finger_tip']},
+        'children'      : ['right_hand_ring_finger_tip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_ring.02.R'},
     'left_hand_ring_finger_dip': {
-        'children'    : ['left_hand_ring_finger_tip']},
+        'children'      : ['left_hand_ring_finger_tip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_ring.02.L'},
+    'right_hand_ring_finger_tip': {
+        'children'      : [],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_ring.03.R'},
+    'left_hand_ring_finger_tip': {
+        'children'      : [],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_ring.03.L'},
     'right_hand_pinky_mcp': {
-        'children'    : ['right_hand_pinky_pip']},
+        'children'      : ['right_hand_pinky_pip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'palm.04.R'},
     'left_hand_pinky_mcp': {
-        'children'    : ['left_hand_pinky_pip']},
+        'children'      : ['left_hand_pinky_pip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'palm.04.L'},
     'right_hand_pinky_pip': {
-        'children'    : ['right_hand_pinky_dip']},
+        'children'      : ['right_hand_pinky_dip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_pinky.01.R'},
     'left_hand_pinky_pip': {
-        'children'    : ['left_hand_pinky_dip']},
+        'children'      : ['left_hand_pinky_dip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_pinky.01.L'},
     'right_hand_pinky_dip': {
-        'children'    : ['right_hand_pinky_tip']},
+        'children'      : ['right_hand_pinky_tip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_pinky.02.R'},
     'left_hand_pinky_dip': {
-        'children'    : ['left_hand_pinky_tip']},
+        'children'      : ['left_hand_pinky_tip'],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_pinky.02.L'},
+    'right_hand_pinky_tip': {
+        'children'      : [],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_pinky.03.R'},
+    'left_hand_pinky_tip': {
+        'children'      : [],
+        'category'      : 'fingers',
+        'tail_of_bone'  : 'f_pinky.03.L'},
     'right_hip': {
-        'children'    : ['right_knee']},
+        'children'      : ['right_knee'],
+        'category'      : 'legs',
+        'tail_of_bone'  : 'pelvis.R'},
     'left_hip': {
-        'children'    : ['left_knee']},
+        'children'      : ['left_knee'],
+        'category'      : 'legs',
+        'tail_of_bone'  : 'pelvis.L'},
     'right_knee': {
-        'children'    : ['right_ankle']},
+        'children'      : ['right_ankle'],
+        'category'      : 'legs',
+        'tail_of_bone'  : 'thigh.R'},
     'left_knee': {
-        'children'    : ['left_ankle']},
+        'children'      : ['left_ankle'],
+        'category'      : 'legs',
+        'tail_of_bone'  : 'thigh.L'},
     'right_ankle': {
-        'children'    : ['right_foot_index', 'right_heel']},
+        'children'      : ['right_foot_index', 'right_heel'],
+        'category'      : 'feet',
+        'tail_of_bone'  : 'shin.R'},
     'left_ankle': {
-        'children'    : ['left_foot_index', 'left_heel']}
+        'children'      : ['left_foot_index', 'left_heel'],
+        'category'      : 'feet',
+        'tail_of_bone'  : 'shin.L'},
+    'right_heel': {
+        'children'      : [],
+        'category'      : 'feet',
+        'tail_of_bone'  : 'heel.02.R'},
+    'left_heel': {
+        'children'      : [],
+        'category'      : 'feet',
+        'tail_of_bone'  : 'heel.02.L'},
+    'right_foot_index': {
+        'children'      : [],
+        'category'      : 'feet',
+        'tail_of_bone'  : 'foot.R'},
+    'left_foot_index': {
+        'children'      : [],
+        'category'      : 'feet',
+        'tail_of_bone'  : 'foot.L'},
 }
 
 # Dictionary of the bones ik constraints parameters
@@ -1237,33 +1587,564 @@ ik_constraint_parameters = {
         'ik_empty_marker_name': 'left_ankle'},
 }
 
+# Dictionary with all the Skelly mesh parts
+skelly_parts = {
+    'head': {
+        'bones'                 : ['face'],         # List of bones represented by the mesh
+        'bones_origin'          : (0, 0, 0),        # Origin of the bones
+        'bones_end'             : (0, 0, 0),        # End of the bones
+        'bones_length'          : 0,                # Total length of the bones
+        'mesh_length'           : 0.044658516812,   # Length of the mesh
+        # 'mesh_length'           : 0.014658516812,
+        'position_offset'       : (0, 0.03, 0.03),  # Position offset of the mesh as units of the bones length
+        # 'position_offset'       : (0, 0.03, 0.23),
+        'adjust_rotation'       : False,            # Adjust the rotation of the mesh after applying the position offset
+    },
+    'spine': {
+        'bones'                 : ['spine', 'spine.001', 'neck'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.70856,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'upper_arm.R': {
+        'bones'                 : ['upper_arm.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.325418,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'upper_arm.L': {
+        'bones'                 : ['upper_arm.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.325418,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'forearm.R': {
+        'bones'                 : ['forearm.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.255504,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'forearm.L': {
+        'bones'                 : ['forearm.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.255504,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'hand.R': {
+        'bones'                 : ['hand.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.0845,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'hand.L': {
+        'bones'                 : ['hand.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.0845,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'thumb.01.R': {
+        'bones'                 : ['thumb.01.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.03675,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'thumb.01.L': {
+        'bones'                 : ['thumb.01.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.03675,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'thumb.02.R': {
+        'bones'                 : ['thumb.02.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.032224,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'thumb.02.L': {
+        'bones'                 : ['thumb.02.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.032224,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'thumb.03.R': {
+        'bones'                 : ['thumb.03.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.023374,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'thumb.03.L': {
+        'bones'                 : ['thumb.03.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.023374,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'palm.01.R': {
+        'bones'                 : ['palm.01.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.085891,
+        'position_offset'       : (-0.02, -0.025, 0),
+        'adjust_rotation'       : True,
+    },
+    'palm.01.L': {
+        'bones'                 : ['palm.01.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.085891,
+        'position_offset'       : (0.02, -0.025, 0),
+        'adjust_rotation'       : True,
+    },
+    'palm.02.R': {
+        'bones'                 : ['palm.02.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.085828,
+        'position_offset'       : (-0.02, -0.005, 0),
+        'adjust_rotation'       : True,
+    },
+    'palm.02.L': {
+        'bones'                 : ['palm.02.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.085828,
+        'position_offset'       : (0.02, -0.005, 0),
+        'adjust_rotation'       : True,
+    },
+    'palm.03.R': {
+        'bones'                 : ['palm.03.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.082869,
+        'position_offset'       : (-0.02, 0.01, 0),
+        'adjust_rotation'       : True,
+    },
+    'palm.03.L': {
+        'bones'                 : ['palm.03.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.082869,
+        'position_offset'       : (0.02, 0.01, 0),
+        'adjust_rotation'       : True,
+    },
+    'palm.04.R': {
+        'bones'                 : ['palm.04.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.070385,
+        'position_offset'       : (-0.02, 0.025, 0),
+        'adjust_rotation'       : True,
+    },
+    'palm.04.L': {
+        'bones'                 : ['palm.04.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.070385,
+        'position_offset'       : (0.02, 0.025, 0),
+        'adjust_rotation'       : True,
+    },
+    'f_index.01.R': {
+        'bones'                 : ['f_index.01.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.053961,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_index.01.L': {
+        'bones'                 : ['f_index.01.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.053961,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_index.02.R': {
+        'bones'                 : ['f_index.02.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.033378,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_index.02.L': {
+        'bones'                 : ['f_index.02.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.033378,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_index.03.R': {
+        'bones'                 : ['f_index.03.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.024385,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_index.03.L': {
+        'bones'                 : ['f_index.03.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.024385,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_middle.01.R': {
+        'bones'                 : ['f_middle.01.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.053792,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_middle.01.L': {
+        'bones'                 : ['f_middle.01.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.053792,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_middle.02.R': {
+        'bones'                 : ['f_middle.02.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.03347,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_middle.02.L': {
+        'bones'                 : ['f_middle.02.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.03347,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_middle.03.R': {
+        'bones'                 : ['f_middle.03.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.028028,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_middle.03.L': {
+        'bones'                 : ['f_middle.03.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.028028,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_ring.01.R': {
+        'bones'                 : ['f_ring.01.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.046598,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_ring.01.L': {
+        'bones'                 : ['f_ring.01.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.046598,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_ring.02.R': {
+        'bones'                 : ['f_ring.02.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.036003,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_ring.02.L': {
+        'bones'                 : ['f_ring.02.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.036003,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_ring.03.R': {
+        'bones'                 : ['f_ring.03.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.024413,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_ring.03.L': {
+        'bones'                 : ['f_ring.03.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.024413,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_pinky.01.R': {
+        'bones'                 : ['f_pinky.01.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.039485,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_pinky.01.L': {
+        'bones'                 : ['f_pinky.01.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.039485,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_pinky.02.R': {
+        'bones'                 : ['f_pinky.02.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.027034,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_pinky.02.L': {
+        'bones'                 : ['f_pinky.02.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.027034,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_pinky.03.R': {
+        'bones'                 : ['f_pinky.03.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.020288,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'f_pinky.03.L': {
+        'bones'                 : ['f_pinky.03.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.020288,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'thigh.R': {
+        'bones'                 : ['thigh.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.42875,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'thigh.L': {
+        'bones'                 : ['thigh.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.42875,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'shin.R': {
+        'bones'                 : ['shin.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.412281,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'shin.L': {
+        'bones'                 : ['shin.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.412281,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'foot.R': {
+        'bones'                 : ['foot.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.226,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'foot.L': {
+        'bones'                 : ['foot.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.226,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'heel.02.R': {
+        'bones'                 : ['heel.02.R'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.150255,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+    'heel.02.L': {
+        'bones'                 : ['heel.02.L'],
+        'bones_origin'          : (0, 0, 0),
+        'bones_end'             : (0, 0, 0),
+        'bones_length'          : 0,
+        'mesh_length'           : 0.150255,
+        'position_offset'       : (0, 0, 0),
+        'adjust_rotation'       : False,
+    },
+}
+
 # Function to update all the empties positions in the dictionary
-def update_empty_positions():
+def update_empty_positions(target_empty: str=''):
 
     print('Updating Empty Positions Dictionary...')
 
     # Get the scene context
     scene = bpy.context.scene
 
-    # Change to Object Mode
-    bpy.ops.object.mode_set(mode="OBJECT")
+    # Change to Object Mode if there is one or more objects selected
+    if len(bpy.context.selected_objects) != 0:
+        bpy.ops.object.mode_set(mode="OBJECT")
 
-    # Reset the empty positions dictionary with empty arrays for each empty
-    for object in bpy.data.objects:
-        if object.type == 'EMPTY' and object.name != 'empties_parent' and '_origin' not in object.name and 'center_of_mass' not in object.name and object.name != 'rigid_body_meshes_parent':
-            empty_positions[object.name] = {'x': [], 'y': [], 'z': []}
+    # Check if the target_empty is defined to avoid iterating through all the empties
+    if target_empty != '':
+        # Check if the target_empty variable is a list instead of a single value (a list will mean a bone head and tail pair)
+        if isinstance(target_empty, list):
+            #  Reset the empty positions
+            empty_positions[target_empty[0]] = {'x': [], 'y': [], 'z': []}
+            empty_positions[target_empty[1]] = {'x': [], 'y': [], 'z': []}
 
-    # Iterate through each scene frame and save the coordinates of each empty in the dictionary.
-    for frame in range (scene.frame_start, scene.frame_end):
-        # Set scene frame
-        scene.frame_set(frame)
-        # Iterate through each object
-        for object in bpy.data.objects:
-            if object.type == 'EMPTY' and object.name != 'empties_parent' and '_origin' not in object.name and 'center_of_mass' not in object.name and object.name != 'rigid_body_meshes_parent':
+            # Iterate through each scene frame and save the coordinates of the empties in the dictionary.
+            for frame in range (scene.frame_start, scene.frame_end):
+                # Set scene frame
+                scene.frame_set(frame)
+                # Save the x, y, z position of the empties
+                empty_positions[target_empty[0]]['x'].append(bpy.data.objects[target_empty[0]].location[0])
+                empty_positions[target_empty[0]]['y'].append(bpy.data.objects[target_empty[0]].location[1])
+                empty_positions[target_empty[0]]['z'].append(bpy.data.objects[target_empty[0]].location[2])
+                empty_positions[target_empty[1]]['x'].append(bpy.data.objects[target_empty[1]].location[0])
+                empty_positions[target_empty[1]]['y'].append(bpy.data.objects[target_empty[1]].location[1])
+                empty_positions[target_empty[1]]['z'].append(bpy.data.objects[target_empty[1]].location[2])
+
+        else:
+            #  Reset the empty positions
+            empty_positions[target_empty] = {'x': [], 'y': [], 'z': []}
+
+            # Iterate through each scene frame and save the coordinates of the empty in the dictionary.
+            for frame in range (scene.frame_start, scene.frame_end):
+                # Set scene frame
+                scene.frame_set(frame)
                 # Save the x, y, z position of the empty
-                empty_positions[object.name]['x'].append(bpy.data.objects[object.name].location[0])
-                empty_positions[object.name]['y'].append(bpy.data.objects[object.name].location[1])
-                empty_positions[object.name]['z'].append(bpy.data.objects[object.name].location[2])
+                empty_positions[target_empty]['x'].append(bpy.data.objects[target_empty].location[0])
+                empty_positions[target_empty]['y'].append(bpy.data.objects[target_empty].location[1])
+                empty_positions[target_empty]['z'].append(bpy.data.objects[target_empty].location[2])
+
+    else:
+        # Create a list with only the names of the marker empties
+        marker_empties = [object.name for object in bpy.data.objects if object.type == 'EMPTY' and
+                                                                        '_origin' not in object.name and
+                                                                        object.name not in ('empties_parent', 'center_of_mass_data_parent', 'center_of_mass', 'rigid_body_meshes_parent', 'videos_parent')]
+
+        # Reset the empty positions dictionary with empty arrays for each empty
+        for empty in marker_empties:
+            #  Reset the empties position
+            empty_positions[empty] = {'x': [], 'y': [], 'z': []}
+
+        # Iterate through each scene frame and save the coordinates of each empty in the dictionary.
+        for frame in range (scene.frame_start, scene.frame_end):
+            # Set scene frame
+            scene.frame_set(frame)
+            # Iterate through each empty
+            for empty in marker_empties:
+                # Save the x, y, z position of the empty
+                empty_positions[empty]['x'].append(bpy.data.objects[empty].location[0])
+                empty_positions[empty]['y'].append(bpy.data.objects[empty].location[1])
+                empty_positions[empty]['z'].append(bpy.data.objects[empty].location[2])
 
     # Reset the scene frame to the start
     scene.frame_set(scene.frame_start)
@@ -1307,55 +2188,88 @@ def update_empty_speeds(recording_fps):
     print('Empty Speeds Dictionary update completed.')
     
 # Function to update all the information of the virtual bones dictionary (lengths, median and stdev)
-def update_virtual_bones_info():
+def update_virtual_bones_info(target_bone: str=''):
 
-    print('Updating Virtual Bones Information...')
+    # Check if the target bone is defined to only update and print what it is necessary
+    if target_bone != '':
+        print('Updating Virtual Bone: ' + target_bone)
+        # Reset the lengths list of the target virtual bone
+        virtual_bones[target_bone]['lengths'] = []
 
-    # Reset the lengths list for every virtual bone
-    for bone in virtual_bones:
-        virtual_bones[bone]['lengths'] = []
-
-    # Adjust tail empty of hand bones depending if hand_middle empties exist or not
-    try:
-        right_hand_middle_name = bpy.data.objects['right_hand_middle'].name
-        virtual_bones['hand.R']['tail'] = 'right_hand_middle'
-        virtual_bones['hand.L']['tail'] = 'left_hand_middle'
-    except:
-        virtual_bones['hand.R']['tail'] = 'right_index'
-        virtual_bones['hand.L']['tail'] = 'left_index'
-
-    # Iterate through the empty_positions dictionary and calculate the distance between the head and tail and append it to the lengths list
-    for frame in range (0, len(empty_positions['hips_center']['x'])):
-
-        # Iterate through each bone
-        for bone in virtual_bones:
+        # Iterate through the empty_positions dictionary and calculate the distance between the head and tail and append it to the lengths list
+        for frame in range (0, len(empty_positions[virtual_bones[target_bone]['tail']]['x'])):
             # Calculate the length of the bone for this frame
-            head        = virtual_bones[bone]['head']
-            tail        = virtual_bones[bone]['tail']
+            head        = virtual_bones[target_bone]['head']
+            tail        = virtual_bones[target_bone]['tail']
             head_pos    = (empty_positions[head]['x'][frame], empty_positions[head]['y'][frame], empty_positions[head]['z'][frame])
             tail_pos    = (empty_positions[tail]['x'][frame], empty_positions[tail]['y'][frame], empty_positions[tail]['z'][frame])
 
-            virtual_bones[bone]['lengths'].append(m.dist(head_pos, tail_pos))
+            virtual_bones[target_bone]['lengths'].append(m.dist(head_pos, tail_pos))
 
-    # Update the length median and stdev values for each bone
-    for bone in virtual_bones:
+        # Update the length median and stdev values of the target bone
         # Exclude posible length NaN (produced by an empty with NaN values as position) values from the median and standard deviation
         try:
-            virtual_bones[bone]['median'] = statistics.median([length for length in virtual_bones[bone]['lengths'] if not m.isnan(length)])
+            virtual_bones[target_bone]['median'] = statistics.median([length for length in virtual_bones[target_bone]['lengths'] if not m.isnan(length)])
         except:
-            virtual_bones[bone]['median'] = m.nan
+            virtual_bones[target_bone]['median'] = m.nan
 
         # If the median is nan (every length values was nan) then directly set the stdev as nan to avoid a calculus error
-        if m.isnan(virtual_bones[bone]['median']):
-            virtual_bones[bone]['stdev'] = m.nan
+        if m.isnan(virtual_bones[target_bone]['median']):
+            virtual_bones[target_bone]['stdev'] = m.nan
         else:
             try:
-                virtual_bones[bone]['stdev'] = statistics.stdev([length for length in virtual_bones[bone]['lengths'] if not m.isnan(length)])
+                virtual_bones[target_bone]['stdev'] = statistics.stdev([length for length in virtual_bones[target_bone]['lengths'] if not m.isnan(length)])
             except:
+                virtual_bones[target_bone]['stdev'] = m.nan
+
+    else:
+        print('Updating Virtual Bones Information...')
+
+        # Reset the lengths list for every virtual bone
+        for bone in virtual_bones:
+            virtual_bones[bone]['lengths'] = []
+
+        # Adjust tail empty of hand bones depending if hand_middle empties exist or not
+        try:
+            right_hand_middle_name = bpy.data.objects['right_hand_middle'].name
+            virtual_bones['hand.R']['tail'] = 'right_hand_middle'
+            virtual_bones['hand.L']['tail'] = 'left_hand_middle'
+        except:
+            virtual_bones['hand.R']['tail'] = 'right_index'
+            virtual_bones['hand.L']['tail'] = 'left_index'
+
+        # Iterate through the empty_positions dictionary and calculate the distance between the head and tail and append it to the lengths list
+        # for frame in range (0, len(empty_positions['hips_center']['x'])):
+        for frame in range (0, len(empty_positions[list(empty_positions.keys())[0]]['x'])):
+
+            # Iterate through each bone
+            for bone in virtual_bones:
+                # Calculate the length of the bone for this frame
+                head        = virtual_bones[bone]['head']
+                tail        = virtual_bones[bone]['tail']
+                head_pos    = (empty_positions[head]['x'][frame], empty_positions[head]['y'][frame], empty_positions[head]['z'][frame])
+                tail_pos    = (empty_positions[tail]['x'][frame], empty_positions[tail]['y'][frame], empty_positions[tail]['z'][frame])
+
+                virtual_bones[bone]['lengths'].append(m.dist(head_pos, tail_pos))
+
+        # Update the length median and stdev values for each bone
+        for bone in virtual_bones:
+            # Exclude posible length NaN (produced by an empty with NaN values as position) values from the median and standard deviation
+            try:
+                virtual_bones[bone]['median'] = statistics.median([length for length in virtual_bones[bone]['lengths'] if not m.isnan(length)])
+            except:
+                virtual_bones[bone]['median'] = m.nan
+
+            # If the median is nan (every length values was nan) then directly set the stdev as nan to avoid a calculus error
+            if m.isnan(virtual_bones[bone]['median']):
                 virtual_bones[bone]['stdev'] = m.nan
+            else:
+                try:
+                    virtual_bones[bone]['stdev'] = statistics.stdev([length for length in virtual_bones[bone]['lengths'] if not m.isnan(length)])
+                except:
+                    virtual_bones[bone]['stdev'] = m.nan
 
-
-    print('Virtual Bones Information update completed.')
+        print('Virtual Bones Information update completed.')
 
 def add_hands_middle_empties():
 
@@ -1744,32 +2658,51 @@ def adjust_empties(z_align_ref_empty: str='left_knee',
 #################### REDUCE BONE LENGTH DISPERSION ###################
 ######################################################################
 
-def reduce_bone_length_dispersion(interval_variable: str='capture_median', interval_factor: float=0.01, body_height: float=1.75):
+def reduce_bone_length_dispersion(interval_variable: str='capture_median', interval_factor: float=0.01, body_height: float=1.75, target_bone: str=''):
 
-    # Update the empty positions dictionary
-    update_empty_positions()
+    # Get the scene context
+    scene = bpy.context.scene
 
-    # Update the information of the virtual bones
-    update_virtual_bones_info()
+    # Check if the target bone is defined to only update and print what it is necessary
+    if target_bone != '':
+        # Set the recursivity mode to False to only adjust the target bone
+        recursivity = False
+        # Update only the target bone head and tail empties positions
+        update_empty_positions([virtual_bones[target_bone]['head'], virtual_bones[target_bone]['tail']])
+        # Update the information of the target bone
+        update_virtual_bones_info(target_bone=target_bone)
 
-    # Print the current bones length median, standard deviation and coefficient of variation
-    print('Current Virtual Bone Information:')
-    print('{:<15} {:>12} {:>12} {:>12}'.format('BONE', 'MEDIAN (cm)', 'STDEV (cm)', 'CV (%)'))
+    else:
+        # Set the recursivity mode to True to adjust the children bones
+        recursivity = True
+        # Update the empty positions dictionary
+        update_empty_positions()
+        # Update the information of the virtual bones
+        update_virtual_bones_info()
 
-    for bone in virtual_bones:
+        # Print the current bones length median, standard deviation and coefficient of variation
+        print('Current Virtual Bone Information:')
+        print('{:<15} {:>12} {:>12} {:>12}'.format('BONE', 'MEDIAN (cm)', 'STDEV (cm)', 'CV (%)'))
 
-        # Get the statistic values
-        current_median  = virtual_bones[bone]['median']
-        current_stdev   = virtual_bones[bone]['stdev']
-        current_cv      = virtual_bones[bone]['stdev']/virtual_bones[bone]['median']
+        for bone in virtual_bones:
 
-        print('{:<15} {:>12} {:>12} {:>12}'.format(bone, str(m.trunc(current_median*100*10000000)/10000000), str(m.trunc(current_stdev*100*10000000)/10000000), str(m.trunc(current_cv*100*10000)/10000)))
+            # Get the statistic values
+            current_median  = virtual_bones[bone]['median']
+            current_stdev   = virtual_bones[bone]['stdev']
+            current_cv      = virtual_bones[bone]['stdev']/virtual_bones[bone]['median']
+
+            print('{:<15} {:>12} {:>12} {:>12}'.format(bone, str(m.trunc(current_median*100*10000000)/10000000), str(m.trunc(current_stdev*100*10000000)/10000000), str(m.trunc(current_cv*100*10000)/10000)))
 
     # Iterate through the lengths array of each bone and check if the length is outside the interval defined by x*stdev with x as a factor
     # If the bone length is outside the interval, adjust the coordinates of the tail empty and its children so the new bone length is at the border of the interval
     empties_positions_corrected = 0
 
     for bone in virtual_bones:
+
+        # If the target bone is defined, only adjust the length of the target bone
+        if target_bone != '':
+            if bone != target_bone:
+                continue
         
         frame_index = 0
 
@@ -1820,34 +2753,40 @@ def reduce_bone_length_dispersion(interval_variable: str='capture_median', inter
                 # Get the tail position delta by multiplying the normalized bone vector by the substraction of new_length and length
                 position_delta  = bone_vector_norm * (new_length - length)
                 # Translate the tail empty and its children by the position delta.
-                translate_empty(empties_dict, tail, frame_index, position_delta)
+                translate_empty(empties_dict, tail, frame_index, position_delta, recursivity)
 
                 empties_positions_corrected += 1
             
             frame_index += 1
     
-    # Update the empty positions dictionary
-    update_empty_positions()
-    
-    # Update the information of the virtual bones
-    update_virtual_bones_info()
+    # Only update empty positions and virtual bones info and show statistics if the target bone is not defined
+    if target_bone == '':
+        # Update the empty positions dictionary
+        update_empty_positions()
+        # Update the information of the virtual bones
+        update_virtual_bones_info()
 
-    # Print the new bones length median, standard deviation and coefficient of variation
-    print('New Virtual Bone Information:')
-    print('{:<15} {:>12} {:>12} {:>12}'.format('BONE', 'MEDIAN (cm)', 'STDEV (cm)', 'CV (%)'))
-    for bone in virtual_bones:
+        # Print the new bones length median, standard deviation and coefficient of variation
+        print('New Virtual Bone Information:')
+        print('{:<15} {:>12} {:>12} {:>12}'.format('BONE', 'MEDIAN (cm)', 'STDEV (cm)', 'CV (%)'))
+        for bone in virtual_bones:
 
-        # Get the statistic values
-        new_median  = virtual_bones[bone]['median']
-        new_stdev   = virtual_bones[bone]['stdev']
-        new_cv      = virtual_bones[bone]['stdev']/virtual_bones[bone]['median']
+            # If the target bone is defined, only print the information of the target bone
+            if target_bone != '':
+                if bone != target_bone:
+                    continue
 
-        print('{:<15} {:>12} {:>12} {:>12}'.format(bone, str(m.trunc(new_median*100*10000000)/10000000), str(m.trunc(new_stdev*100*10000000)/10000000), str(m.trunc(new_cv*100*10000)/10000)))
+            # Get the statistic values
+            new_median  = virtual_bones[bone]['median']
+            new_stdev   = virtual_bones[bone]['stdev']
+            new_cv      = virtual_bones[bone]['stdev']/virtual_bones[bone]['median']
 
-    print('Total empties positions corrected: ' + str(empties_positions_corrected))
+            print('{:<15} {:>12} {:>12} {:>12}'.format(bone, str(m.trunc(new_median*100*10000000)/10000000), str(m.trunc(new_stdev*100*10000000)/10000000), str(m.trunc(new_cv*100*10000)/10000)))
+
+        print('Total empties positions corrected: ' + str(empties_positions_corrected))
     
 # Function to translate the empties recursively
-def translate_empty(empties_dict, empty, frame_index, delta):
+def translate_empty(empties_dict, empty, frame_index, delta, recursivity: bool=True):
 
     try:
         # Translate the empty in the animation location curve
@@ -1862,10 +2801,13 @@ def translate_empty(empties_dict, empty, frame_index, delta):
         #print('Empty ' + empty + ' does not have animation data on frame ' + str(frame_index))
         pass
 
-    # If empty has children then call this function for every child
-    if empty in empties_dict:
-        for child in empties_dict[empty]['children']:
-            translate_empty(empties_dict, child, frame_index, delta)
+    # If recursivity is set to True then call this function to the children of the empty
+    if recursivity:
+
+        # If empty has children then call this function for every child
+        if empty in empties_dict:
+            for child in empties_dict[empty]['children']:
+                translate_empty(empties_dict, child, frame_index, delta, recursivity)
 
 # Function to add fingers rotation limits constraints. Starting from the fingers mcp, each hand virtual bone rotation will be
 # analysed. If the rotation is outside the limits, the bone tail empty will be translated around the bone head empty.
@@ -2057,6 +2999,200 @@ def rotate_virtual_bone(empty, origin, rot_matrix: mathutils.Matrix):
         for child in empties_dict[empty]['children']:
             rotate_virtual_bone(child, origin, rot_matrix)
 
+# Function to apply different butterworth filters to the empty positions
+def apply_butterworth_filters(global_filter_categories: list=[],
+                              global_cutoff_frequencies: dict={},
+                              local_filter_categories: list=[],
+                              local_cutoff_frequencies: dict={},
+                              local_filter_origins: dict={},
+                              interval_variable: str='standard_length',
+                              interval_factor: float=0,
+                              body_height: float=1.75,):
+
+    # Get the scene context
+    scene = bpy.context.scene
+    
+    # Deselect all objects
+    for object in bpy.data.objects:
+        object.select_set(False)
+
+    # NOT IN USE IN THE CURRENT VERSION
+    # Check the position_correction_mode parameter to correct the position of each children after applying the filter to one empty.
+    # Or, first apply the filter to all the selected categories empties and after that execute reduce_bone_length_dispersion once.
+    if 'false' == 'each_children':
+
+        # Iterate through the empties_dict
+        for empty in empties_dict:
+
+            if empties_dict[empty]['category'] in local_filter_categories:
+
+                # Update the empty's position dictionary
+                update_empty_positions(target_empty=empty)
+
+                # Save the unfiltered empty positions
+                unfiltered_positions = empty_positions[empty]
+
+                # Select the empty
+                bpy.data.objects[empty].select_set(True)
+
+                # Save the current area
+                current_area = bpy.context.area.type
+
+                # Change the current area to the graph editor
+                bpy.context.area.type = "GRAPH_EDITOR"
+
+                # Apply the butterworth filter
+                bpy.ops.graph.butterworth_smooth(cutoff_frequency=local_cutoff_frequencies[empties_dict[empty]['category']],
+                                                filter_order=4,
+                                                samples_per_frame=1,
+                                                blend=1.0,
+                                                blend_in_out=1)
+
+                # Adjust the length dispersion of the bone whose tail is the empty. Only if the empty is the tail of a bone
+                if empties_dict[empty]['tail_of_bone'] != '':
+                    reduce_bone_length_dispersion(interval_variable=interval_variable,
+                                                  interval_factor=interval_factor,
+                                                  body_height=body_height,
+                                                  target_bone=empties_dict[empty]['tail_of_bone'])
+
+                # Update again the empty's position dictionary
+                update_empty_positions(target_empty=empty)
+
+                # Iterate through all the empty's position dictionary (i.e frames) and calculate the position delta due to the filtering and reduce bone lenght dispersion
+                # Then translate all the empty children recursively by that delta
+                for frame_index in range (0, len(empty_positions[empty]['x'])):
+
+                    # Check if at least one of the position components changed
+                    if (unfiltered_positions['x'][frame_index] != empty_positions[empty]['x'][frame_index] or
+                        unfiltered_positions['y'][frame_index] != empty_positions[empty]['y'][frame_index] or
+                        unfiltered_positions['z'][frame_index] != empty_positions[empty]['z'][frame_index]):
+                        # Get the unfiltered and filtered positions
+                        unfiltered_position = mathutils.Vector([unfiltered_positions['x'][frame_index], unfiltered_positions['y'][frame_index], unfiltered_positions['z'][frame_index]])
+                        filtered_position  = mathutils.Vector([empty_positions[empty]['x'][frame_index], empty_positions[empty]['y'][frame_index], empty_positions[empty]['z'][frame_index]])
+                        # Get the position delta vector
+                        delta_vector     = filtered_position - unfiltered_position
+
+                        #  Translate the empty's children recursively by the delta vector
+                        for child in empties_dict[empty]['children']:
+                            translate_empty(empties_dict, child, frame_index=frame_index, delta=delta_vector, recursivity=True)
+                        
+                # Restore the area
+                bpy.context.area.type = current_area
+
+                # Unselect the empty
+                bpy.data.objects[empty].select_set(False)
+
+    # Apply global filters
+    if len(global_filter_categories) > 0:
+        
+        # Check if all the categories have the same cutoff frequency
+        if all(value == list(global_cutoff_frequencies.values())[0] for value in global_cutoff_frequencies.values()):
+            # Select all the empties that are in the categories
+            for empty in empties_dict:
+                if empties_dict[empty]['category'] in global_filter_categories:
+                    # Select the empty
+                    bpy.data.objects[empty].select_set(True)
+
+            # Save the current area
+            current_area = bpy.context.area.type
+
+            # Change the current area to the graph editor
+            bpy.context.area.type = "GRAPH_EDITOR"
+
+            # Apply the butterworth filter
+            bpy.ops.graph.butterworth_smooth(cutoff_frequency=list(global_cutoff_frequencies.values())[0],
+                                            filter_order=4,
+                                            samples_per_frame=1,
+                                            blend=1.0,
+                                            blend_in_out=1)
+            
+            # Restore the area
+            bpy.context.area.type = current_area
+
+            # Deselect all objects
+            for object in bpy.data.objects:
+                object.select_set(False)
+
+        else:
+            #  Iterate through the categories dictionary
+            for category in global_filter_categories:
+                # Iterate through the empties_dict
+                for empty in empties_dict:
+                    # If the empty is in the category
+                    if empties_dict[empty]['category'] == category:
+                        # Select the empty
+                        bpy.data.objects[empty].select_set(True)
+
+                # Save the current area
+                current_area = bpy.context.area.type
+
+                # Change the current area to the graph editor
+                bpy.context.area.type = "GRAPH_EDITOR"
+
+                # Apply the butterworth filter
+                bpy.ops.graph.butterworth_smooth(cutoff_frequency=global_cutoff_frequencies[category],
+                                                filter_order=4,
+                                                samples_per_frame=1,
+                                                blend=1.0,
+                                                blend_in_out=1)
+                
+                # Restore the area
+                bpy.context.area.type = current_area
+
+                # Deselect all objects
+                for object in bpy.data.objects:
+                    object.select_set(False)
+
+    # Apply local filters
+    if len(local_filter_categories) > 0:
+
+        # Iterate through the local filter categories
+        for category in local_filter_categories:
+
+            # Update the empties position dictionary
+            update_empty_positions()
+
+            # Prepare the butterworth filter parameters
+            normalized_cutoff = local_cutoff_frequencies[category] / (0.5 * 60)
+
+            # Create Butterworth filter coefficients
+            b, a = butter(4, normalized_cutoff, btype='low', analog=False, output='ba')
+
+            # Iterate through the empties_dict
+            for empty in empties_dict:
+                # If the empty is in the category
+                if empties_dict[empty]['category'] == category:
+                    #  Get the origin of the filter. Replace the side prefix with the empty's side
+                    filter_origin = local_filter_origins[category]
+                    if 'side' in filter_origin:
+                        if 'right' in empty:
+                            filter_origin = filter_origin.replace('side', 'right')
+                        elif 'left' in empty:
+                            filter_origin = filter_origin.replace('side', 'left')
+
+                    # Get the local position lists as the difference between the empty and filter origin for each frame
+                    local_x = [empty_pos_x - filter_origin_pos_x for empty_pos_x, filter_origin_pos_x in zip(empty_positions[empty]['x'], empty_positions[filter_origin]['x'])]
+                    local_y = [empty_pos_y - filter_origin_pos_y for empty_pos_y, filter_origin_pos_y in zip(empty_positions[empty]['y'], empty_positions[filter_origin]['y'])]
+                    local_z = [empty_pos_z - filter_origin_pos_z for empty_pos_z, filter_origin_pos_z in zip(empty_positions[empty]['z'], empty_positions[filter_origin]['z'])]
+
+                    # Filter each position delta list
+                    filtered_local_x = filtfilt(b, a, local_x)
+                    filtered_local_y = filtfilt(b, a, local_y)
+                    filtered_local_z = filtfilt(b, a, local_z)
+
+                    # Translate the empty in the animation location curve
+                    for frame_index in range(scene.frame_start, len(filtered_local_x)):
+                        # Get the delta vector between the unfiltered and filtered local position
+                        delta_pos = [filtered_local_x[frame_index] - local_x[frame_index],
+                                     filtered_local_y[frame_index] - local_y[frame_index],
+                                     filtered_local_z[frame_index] - local_z[frame_index]]
+                        # Check if the filtered delta is not equal to the [0, 0, 0] vector
+                        if delta_pos != [0, 0, 0]:
+                            # Translate the empty
+                            translate_empty(empties_dict, empty, frame_index, delta_pos, recursivity=False)
+
+    # Reduce the bone length dispersion
+    reduce_bone_length_dispersion(interval_variable=interval_variable, interval_factor=interval_factor, body_height=body_height, target_bone='')
 
 # IN DEVELOPMENT
 # Function to reduce sudden movements of empties with an acceleration above a threshold
@@ -3318,6 +4454,117 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
         # Rename the skelly mesh to skelly_mesh
         skelly_mesh.name = 'skelly_mesh'
 
+    elif body_mesh_mode == "skelly_parts":
+
+        # Change to object mode
+        if bpy.context.selected_objects != []:
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Get reference to the rig
+        for capture_object in bpy.data.objects:
+            if capture_object.type == "ARMATURE" and ("_rig" in capture_object.name or capture_object.name == "root"):
+                rig = capture_object
+
+        # Deselect all objects
+        for object in bpy.data.objects:
+            object.select_set(False)
+
+        #  Set the rig as active object
+        rig.select_set(True)
+        bpy.context.view_layer.objects.active = rig
+
+        # Change to edit mode
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        #  Iterate through the skelly parts dictionary and update the default origin, length and normalized direction
+        for part in skelly_parts:
+            skelly_parts[part]['bones_origin']  = mathutils.Vector(rig.data.edit_bones[skelly_parts[part]['bones'][0]].head)
+            skelly_parts[part]['bones_end']     = mathutils.Vector(rig.data.edit_bones[skelly_parts[part]['bones'][-1]].tail)
+            skelly_parts[part]['bones_length']  = (skelly_parts[part]['bones_end'] - skelly_parts[part]['bones_origin']).length
+
+            if part == 'thumb.01.R':
+                print("\nPart: " + str(part) +
+                    "\nOrigin: " + str(skelly_parts[part]['bones_origin']) +
+                    "\nLength: " + str(skelly_parts[part]['bones_length']))
+
+        # Change to object mode
+        bpy.ops.object.mode_set(mode='OBJECT')        
+
+        # Get the script filepath
+        script_file = os.path.realpath(__file__)
+        # Get the script folder
+        directory = os.path.dirname(script_file)
+
+        # Define the list that will contain the different Skelly meshes
+        skelly_meshes = []
+
+        # Iterate through the skelly parts dictionary and add the corresppondent skelly part
+        for part in skelly_parts:
+            try:
+                # Import the skelly mesh
+                bpy.ops.import_scene.fbx(filepath=directory+'/assets/skelly_parts/Skelly_' + part + '.fbx')
+
+            except:
+                print("\nCould not find Skelly_" + part + " mesh file.")
+                continue
+
+            skelly_meshes.append(bpy.data.objects['Skelly_' + part])
+
+            # Get reference to the imported mesh
+            skelly_part = bpy.data.objects['Skelly_' + part]
+
+            # Move the Skelly part to the equivalent bone's head location
+            skelly_part.location = skelly_parts[part]['bones_origin'] + mathutils.Vector(skelly_parts[part]['position_offset'])
+
+            # Adjust rotation if necessary
+            if skelly_parts[part]['adjust_rotation']:
+                # Get the direction vector
+                bone_vector = skelly_parts[part]['bones_end'] - skelly_parts[part]['bones_origin']
+                # Get new bone vector after applying the position offset
+                new_bone_vector = skelly_parts[part]['bones_end'] - skelly_parts[part]['bones_origin'] + mathutils.Vector(skelly_parts[part]['position_offset'])
+                # Get the angle between the two vectors
+                rotation_quaternion = new_bone_vector.rotation_difference(bone_vector)
+                # Change the rotation mode
+                skelly_part.rotation_mode = 'QUATERNION'
+                # Rotate the Skelly part
+                skelly_part.rotation_quaternion = rotation_quaternion
+
+            # Get the bone length
+            if skelly_parts[part]['adjust_rotation']:
+                bone_length = (skelly_parts[part]['bones_end'] - (skelly_parts[part]['bones_origin'] + mathutils.Vector(skelly_parts[part]['position_offset']))).length
+            else:
+                bone_length = skelly_parts[part]['bones_length']
+
+            # Get the mesh length
+            mesh_length = skelly_parts[part]['mesh_length']
+
+            # Resize the Skelly part to match the bone length
+            skelly_part.scale = (bone_length / mesh_length, bone_length / mesh_length, bone_length / mesh_length)
+
+        # Rename the first mesh to skelly_mesh
+        skelly_meshes[0].name = "skelly_mesh"
+
+        # Deselect all
+        bpy.ops.object.select_all(action='DESELECT')
+
+        # Select all body meshes
+        for skelly_mesh in skelly_meshes:
+            skelly_mesh.select_set(True)
+
+        # Set skelly_mesh as active
+        bpy.context.view_layer.objects.active = skelly_meshes[0]
+        
+        # Join the body meshes
+        bpy.ops.object.join()
+
+        # Select the rig
+        rig.select_set(True)
+        # Set rig as active
+        bpy.context.view_layer.objects.active = rig
+        # Parent the mesh and the rig with automatic weights
+        bpy.ops.object.parent_set(type='ARMATURE_AUTO')
+
+
     elif body_mesh_mode == "can_man":
     
         # Change to object mode
@@ -3674,7 +4921,7 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
         bpy.ops.object.select_all(action='DESELECT')
     
     else:
-        print("Unknown add rig mode")
+        print("Unknown add mesh mode")
 
 ######################################################################
 ########################### EXPORT TO FBX ############################
@@ -3686,9 +4933,22 @@ def export_fbx(self: Operator,
     # Deselect all
     bpy.ops.object.select_all(action='DESELECT')
 
+    # Variable to check if the original rig name has been saved
+    rig_original_name_saved = False
+
     # Select only the rig and the body_mesh.
     for capture_object in bpy.data.objects:
-        if capture_object.type == "ARMATURE" and ("_rig" in capture_object.name or capture_object.name == "root"):
+        if capture_object.type == "ARMATURE":
+            # Save the original rig name
+            if not rig_original_name_saved:
+                rig_original_name       = capture_object.name
+                rig_original_name_saved = True
+
+            # Rename the rig if its name is different from root
+            if capture_object.name != "root":
+                capture_object.name = "root"
+
+            # Select the rig                
             capture_object.select_set(True)
 
     bpy.data.objects['skelly_mesh'].select_set(True)
@@ -3789,6 +5049,13 @@ def export_fbx(self: Operator,
         fbx_name_class
     )
 
+    if bpy.app.version_string[0] >= '4':
+        from io_scene_fbx.fbx_utils import (
+        FBX_KTIME,
+        elem_data_single_char,
+        ObjectWrapper
+    )
+
     convert_rad_to_deg_iter = units_convertor_iter("radian", "degree")
 
     from io_scene_fbx.export_fbx_bin import fbx_data_element_custom_properties
@@ -3799,11 +5066,417 @@ def export_fbx(self: Operator,
     backup_fbx_data_object_elements     = export_fbx_bin.fbx_data_object_elements
     backup_fbx_data_bindpose_element    = export_fbx_bin.fbx_data_bindpose_element
 
+
     # Modified the functions to adapt the fbx output to UE
 
     SCALE_FACTOR = 100
+    
 
-    def fbx_animations_do(scene_data, ref_id, f_start, f_end, start_zero, objects=None, force_keep=False):
+    # def fbx_animations_do(scene_data, ref_id, f_start, f_end, start_zero, objects=None, force_keep=False):
+    #     """
+    #     Generate animation data (a single AnimStack) from objects, for a given frame range.
+    #     """
+    #     bake_step = scene_data.settings.bake_anim_step
+    #     simplify_fac = scene_data.settings.bake_anim_simplify_factor
+    #     scene = scene_data.scene
+    #     depsgraph = scene_data.depsgraph
+    #     force_keying = scene_data.settings.bake_anim_use_all_bones
+    #     force_sek = scene_data.settings.bake_anim_force_startend_keying
+
+    #     if objects is not None:
+    #         # Add bones and duplis!
+    #         for ob_obj in tuple(objects):
+    #             if not ob_obj.is_object:
+    #                 continue
+    #             if ob_obj.type == 'ARMATURE':
+    #                 objects |= {bo_obj for bo_obj in ob_obj.bones if bo_obj in scene_data.objects}
+    #             for dp_obj in ob_obj.dupli_list_gen(depsgraph):
+    #                 if dp_obj in scene_data.objects:
+    #                     objects.add(dp_obj)
+    #     else:
+    #         objects = scene_data.objects
+
+    #     back_currframe = scene.frame_current
+    #     animdata_ob = {}
+    #     p_rots = {}
+
+    #     for ob_obj in objects:
+    #         if ob_obj.parented_to_armature:
+    #             continue
+    #         ACNW = AnimationCurveNodeWrapper
+    #         loc, rot, scale, _m, _mr = ob_obj.fbx_object_tx(scene_data)
+    #         rot_deg = tuple(convert_rad_to_deg_iter(rot))
+    #         force_key = (simplify_fac == 0.0) or (ob_obj.is_bone and force_keying)
+
+    #         animdata_ob[ob_obj] = (ACNW(ob_obj.key, 'LCL_TRANSLATION', force_key, force_sek, loc),
+    #                                ACNW(ob_obj.key, 'LCL_ROTATION', force_key, force_sek, rot_deg),
+    #                                ACNW(ob_obj.key, 'LCL_SCALING', force_key, force_sek, scale))
+    #         p_rots[ob_obj] = rot
+
+    #     force_key = (simplify_fac == 0.0)
+    #     animdata_shapes = {}
+
+    #     for me, (me_key, _shapes_key, shapes) in scene_data.data_deformers_shape.items():
+    #         # Ignore absolute shape keys for now!
+    #         if not me.shape_keys.use_relative:
+    #             continue
+    #         for shape, (channel_key, geom_key, _shape_verts_co, _shape_verts_idx) in shapes.items():
+    #             acnode = AnimationCurveNodeWrapper(channel_key, 'SHAPE_KEY', force_key, force_sek, (0.0,))
+    #             # Sooooo happy to have to twist again like a mad snake... Yes, we need to write those curves twice. :/
+    #             acnode.add_group(me_key, shape.name, shape.name, (shape.name,))
+    #             animdata_shapes[channel_key] = (acnode, me, shape)
+
+    #     animdata_cameras = {}
+    #     for cam_obj, cam_key in scene_data.data_cameras.items():
+    #         cam = cam_obj.bdata.data
+    #         acnode = AnimationCurveNodeWrapper(cam_key, 'CAMERA_FOCAL', force_key, force_sek, (cam.lens,))
+    #         animdata_cameras[cam_key] = (acnode, cam)
+
+    #     currframe = f_start
+    #     while currframe <= f_end:
+    #         real_currframe = currframe - f_start if start_zero else currframe
+    #         scene.frame_set(int(currframe), subframe=currframe - int(currframe))
+
+    #         for dp_obj in ob_obj.dupli_list_gen(depsgraph):
+    #             pass  # Merely updating dupli matrix of ObjectWrapper...
+
+    #         for ob_obj, (anim_loc, anim_rot, anim_scale) in animdata_ob.items():
+    #             location_multiple = 100
+    #             scale_factor = 1
+
+    #             # if this curve is the object root then keep its scale at 1
+    #             if len(str(ob_obj).split('|')) == 1:
+    #                 location_multiple = 1
+    #                 # Todo add to FBX addon
+    #                 scale_factor = SCALE_FACTOR
+
+    #             # We compute baked loc/rot/scale for all objects (rot being euler-compat with previous value!).
+    #             p_rot = p_rots.get(ob_obj, None)
+    #             loc, rot, scale, _m, _mr = ob_obj.fbx_object_tx(scene_data, rot_euler_compat=p_rot)
+
+    #             p_rots[ob_obj] = rot
+
+    #             # Check Blender version to adjust code for version >=4.0
+    #             if bpy.app.version_string[0] < '4':
+    #                 anim_loc.add_keyframe(real_currframe, loc * location_multiple)
+    #                 anim_rot.add_keyframe(real_currframe, tuple(convert_rad_to_deg_iter(rot)))
+    #                 anim_scale.add_keyframe(real_currframe, scale / scale_factor)
+    #             else:
+    #                 anim_loc.set_keyframes(real_currframe, loc * location_multiple)
+    #                 anim_rot.set_keyframes(real_currframe, tuple(convert_rad_to_deg_iter(rot)))
+    #                 anim_scale.set_keyframes(real_currframe, scale / scale_factor)
+
+    #             for anim_shape, me, shape in animdata_shapes.values():
+    #                 # Check Blender version to adjust code for version >=4.0
+    #                 if bpy.app.version_string[0] < '4':
+    #                     anim_shape.add_keyframe(real_currframe, (shape.value * scale_factor,))
+    #                 else:
+    #                     anim_shape.set_keyframes(real_currframe, (shape.value * scale_factor,))
+    #             for anim_camera, camera in animdata_cameras.values():
+    #                 # Check Blender version to adjust code for version >=4.0
+    #                 if bpy.app.version_string[0] < '4':
+    #                     anim_camera.add_keyframe(real_currframe, (camera.lens,))
+    #                 else:
+    #                     anim_camera.set_keyframes(real_currframe, (camera.lens,))
+                
+    #         currframe += bake_step
+
+    #     scene.frame_set(back_currframe, subframe=0.0)
+
+    #     animations = {}
+
+    #     # And now, produce final data (usable by FBX export code)
+    #     # Objects-like loc/rot/scale...
+    #     for ob_obj, anims in animdata_ob.items():
+    #         for anim in anims:
+    #             anim.simplify(simplify_fac, bake_step, force_keep)
+    #             if not anim:
+    #                 continue
+    #             for obj_key, group_key, group, fbx_group, fbx_gname in anim.get_final_data(scene, ref_id, force_keep):
+    #                 anim_data = animations.setdefault(obj_key, ("dummy_unused_key", {}))
+    #                 anim_data[1][fbx_group] = (group_key, group, fbx_gname)
+
+    #     # And meshes' shape keys.
+    #     for channel_key, (anim_shape, me, shape) in animdata_shapes.items():
+    #         final_keys = {}
+    #         anim_shape.simplify(simplify_fac, bake_step, force_keep)
+    #         if not anim_shape:
+    #             continue
+    #         for elem_key, group_key, group, fbx_group, fbx_gname in anim_shape.get_final_data(scene, ref_id,
+    #                                                                                           force_keep):
+    #             anim_data = animations.setdefault(elem_key, ("dummy_unused_key", {}))
+    #             anim_data[1][fbx_group] = (group_key, group, fbx_gname)
+
+    #     # And cameras' lens keys.
+    #     for cam_key, (anim_camera, camera) in animdata_cameras.items():
+    #         final_keys = {}
+    #         anim_camera.simplify(simplify_fac, bake_step, force_keep)
+    #         if not anim_camera:
+    #             continue
+    #         for elem_key, group_key, group, fbx_group, fbx_gname in anim_camera.get_final_data(scene, ref_id,
+    #                                                                                            force_keep):
+    #             anim_data = animations.setdefault(elem_key, ("dummy_unused_key", {}))
+    #             anim_data[1][fbx_group] = (group_key, group, fbx_gname)
+
+    #     astack_key = get_blender_anim_stack_key(scene, ref_id)
+    #     alayer_key = get_blender_anim_layer_key(scene, ref_id)
+    #     name = (get_blenderID_name(ref_id) if ref_id else scene.name).encode()
+
+    #     if start_zero:
+    #         f_end -= f_start
+    #         f_start = 0.0
+
+    #     return (astack_key, animations, alayer_key, name, f_start, f_end) if animations else None
+
+    # def fbx_data_armature_elements(root, arm_obj, scene_data):
+    #     """
+    #     Write:
+    #         * Bones "data" (NodeAttribute::LimbNode, contains pretty much nothing!).
+    #         * Deformers (i.e. Skin), bind between an armature and a mesh.
+    #         ** SubDeformers (i.e. Cluster), one per bone/vgroup pair.
+    #         * BindPose.
+    #     Note armature itself has no data, it is a mere "Null" Model...
+    #     """
+    #     mat_world_arm = arm_obj.fbx_object_matrix(scene_data, global_space=True)
+    #     bones = tuple(bo_obj for bo_obj in arm_obj.bones if bo_obj in scene_data.objects)
+
+    #     bone_radius_scale = 33.0
+
+    #     # Bones "data".
+    #     for bo_obj in bones:
+    #         bo = bo_obj.bdata
+    #         bo_data_key = scene_data.data_bones[bo_obj]
+    #         fbx_bo = elem_data_single_int64(root, b"NodeAttribute", get_fbx_uuid_from_key(bo_data_key))
+    #         fbx_bo.add_string(fbx_name_class(bo.name.encode(), b"NodeAttribute"))
+    #         fbx_bo.add_string(b"LimbNode")
+    #         elem_data_single_string(fbx_bo, b"TypeFlags", b"Skeleton")
+
+    #         tmpl = elem_props_template_init(scene_data.templates, b"Bone")
+    #         props = elem_properties(fbx_bo)
+    #         elem_props_template_set(tmpl, props, "p_double", b"Size", bo.head_radius * bone_radius_scale * SCALE_FACTOR)
+    #         elem_props_template_finalize(tmpl, props)
+
+    #         # Custom properties.
+    #         if scene_data.settings.use_custom_props:
+    #             fbx_data_element_custom_properties(props, bo)
+
+    #         # Store Blender bone length - XXX Not much useful actually :/
+    #         # (LimbLength can't be used because it is a scale factor 0-1 for the parent-child distance:
+    #         # http://docs.autodesk.com/FBX/2014/ENU/FBX-SDK-Documentation/cpp_ref/class_fbx_skeleton.html#a9bbe2a70f4ed82cd162620259e649f0f )
+    #         # elem_props_set(props, "p_double", "BlenderBoneLength".encode(), (bo.tail_local - bo.head_local).length, custom=True)
+
+    #     # Skin deformers and BindPoses.
+    #     # Note: we might also use Deformers for our "parent to vertex" stuff???
+    #     deformer = scene_data.data_deformers_skin.get(arm_obj, None)
+    #     if deformer is not None:
+    #         for me, (skin_key, ob_obj, clusters) in deformer.items():
+    #             # BindPose.
+    #             mat_world_obj, mat_world_bones = fbx_data_bindpose_element(root, ob_obj, me, scene_data,
+    #                                                                        arm_obj, mat_world_arm, bones)
+
+    #             # Deformer.
+    #             fbx_skin = elem_data_single_int64(root, b"Deformer", get_fbx_uuid_from_key(skin_key))
+    #             fbx_skin.add_string(fbx_name_class(arm_obj.name.encode(), b"Deformer"))
+    #             fbx_skin.add_string(b"Skin")
+
+    #             elem_data_single_int32(fbx_skin, b"Version", FBX_DEFORMER_SKIN_VERSION)
+    #             elem_data_single_float64(fbx_skin, b"Link_DeformAcuracy", 50.0)  # Only vague idea what it is...
+
+    #             # Pre-process vertex weights (also to check vertices assigned ot more than four bones).
+    #             ob = ob_obj.bdata
+    #             bo_vg_idx = {bo_obj.bdata.name: ob.vertex_groups[bo_obj.bdata.name].index
+    #                          for bo_obj in clusters.keys() if bo_obj.bdata.name in ob.vertex_groups}
+    #             valid_idxs = set(bo_vg_idx.values())
+    #             vgroups = {vg.index: {} for vg in ob.vertex_groups}
+    #             verts_vgroups = (
+    #             sorted(((vg.group, vg.weight) for vg in v.groups if vg.weight and vg.group in valid_idxs),
+    #                    key=lambda e: e[1], reverse=True)
+    #             for v in me.vertices)
+    #             for idx, vgs in enumerate(verts_vgroups):
+    #                 for vg_idx, w in vgs:
+    #                     vgroups[vg_idx][idx] = w
+
+    #             for bo_obj, clstr_key in clusters.items():
+    #                 bo = bo_obj.bdata
+    #                 # Find which vertices are affected by this bone/vgroup pair, and matching weights.
+    #                 # Note we still write a cluster for bones not affecting the mesh, to get 'rest pose' data
+    #                 # (the TransformBlah matrices).
+    #                 vg_idx = bo_vg_idx.get(bo.name, None)
+    #                 indices, weights = ((), ()) if vg_idx is None or not vgroups[vg_idx] else zip(
+    #                     *vgroups[vg_idx].items())
+
+    #                 # Create the cluster.
+    #                 fbx_clstr = elem_data_single_int64(root, b"Deformer", get_fbx_uuid_from_key(clstr_key))
+    #                 fbx_clstr.add_string(fbx_name_class(bo.name.encode(), b"SubDeformer"))
+    #                 fbx_clstr.add_string(b"Cluster")
+
+    #                 elem_data_single_int32(fbx_clstr, b"Version", FBX_DEFORMER_CLUSTER_VERSION)
+    #                 # No idea what that user data might be...
+    #                 fbx_userdata = elem_data_single_string(fbx_clstr, b"UserData", b"")
+    #                 fbx_userdata.add_string(b"")
+    #                 if indices:
+    #                     elem_data_single_int32_array(fbx_clstr, b"Indexes", indices)
+    #                     elem_data_single_float64_array(fbx_clstr, b"Weights", weights)
+    #                 # Transform, TransformLink and TransformAssociateModel matrices...
+    #                 # They seem to be doublons of BindPose ones??? Have armature (associatemodel) in addition, though.
+    #                 # WARNING! Even though official FBX API presents Transform in global space,
+    #                 #          **it is stored in bone space in FBX data!** See:
+    #                 #          http://area.autodesk.com/forum/autodesk-fbx/fbx-sdk/why-the-values-return-
+    #                 #                 by-fbxcluster-gettransformmatrix-x-not-same-with-the-value-in-ascii-fbx-file/
+    #                 # test_data[bo_obj.name] = matrix4_to_array(mat_world_bones[bo_obj].inverted_safe() @ mat_world_obj)
+
+    #                 # Todo add to FBX addon
+    #                 transform_matrix = mat_world_bones[bo_obj].inverted_safe() @ mat_world_obj
+    #                 transform_link_matrix = mat_world_bones[bo_obj]
+    #                 transform_associate_model_matrix = mat_world_arm
+
+    #                 transform_matrix = transform_matrix.LocRotScale(
+    #                     [i * SCALE_FACTOR for i in transform_matrix.to_translation()],
+    #                     transform_matrix.to_quaternion(),
+    #                     [i * SCALE_FACTOR for i in transform_matrix.to_scale()],
+    #                 )
+
+    #                 elem_data_single_float64_array(fbx_clstr, b"Transform", matrix4_to_array(transform_matrix))
+    #                 elem_data_single_float64_array(fbx_clstr, b"TransformLink", matrix4_to_array(transform_link_matrix))
+    #                 elem_data_single_float64_array(fbx_clstr, b"TransformAssociateModel",
+    #                                                matrix4_to_array(transform_associate_model_matrix))
+
+    # def fbx_data_object_elements(root, ob_obj, scene_data):
+    #     """
+    #     Write the Object (Model) data blocks.
+    #     Note this "Model" can also be bone or dupli!
+    #     """
+    #     obj_type = b"Null"  # default, sort of empty...
+    #     if ob_obj.is_bone:
+    #         obj_type = b"LimbNode"
+    #     elif (ob_obj.type == 'ARMATURE'):
+    #         if scene_data.settings.armature_nodetype == 'ROOT':
+    #             obj_type = b"Root"
+    #         elif scene_data.settings.armature_nodetype == 'LIMBNODE':
+    #             obj_type = b"LimbNode"
+    #         else:  # Default, preferred option...
+    #             obj_type = b"Null"
+    #     elif (ob_obj.type in BLENDER_OBJECT_TYPES_MESHLIKE):
+    #         obj_type = b"Mesh"
+    #     elif (ob_obj.type == 'LIGHT'):
+    #         obj_type = b"Light"
+    #     elif (ob_obj.type == 'CAMERA'):
+    #         obj_type = b"Camera"
+
+    #     model = elem_data_single_int64(root, b"Model", ob_obj.fbx_uuid)
+    #     model.add_string(fbx_name_class(ob_obj.name.encode(), b"Model"))
+    #     model.add_string(obj_type)
+
+    #     elem_data_single_int32(model, b"Version", FBX_MODELS_VERSION)
+
+    #     # Object transform info.
+    #     loc, rot, scale, matrix, matrix_rot = ob_obj.fbx_object_tx(scene_data)
+    #     rot = tuple(convert_rad_to_deg_iter(rot))
+
+    #     tmpl = elem_props_template_init(scene_data.templates, b"Model")
+    #     # For now add only loc/rot/scale...
+    #     props = elem_properties(model)
+    #     elem_props_template_set(tmpl, props, "p_lcl_translation", b"Lcl Translation", loc,
+    #                             animatable=True, animated=((ob_obj.key, "Lcl Translation") in scene_data.animated))
+    #     elem_props_template_set(tmpl, props, "p_lcl_rotation", b"Lcl Rotation", rot,
+    #                             animatable=True, animated=((ob_obj.key, "Lcl Rotation") in scene_data.animated))
+    #     elem_props_template_set(tmpl, props, "p_lcl_scaling", b"Lcl Scaling", scale,
+    #                             animatable=True, animated=((ob_obj.key, "Lcl Scaling") in scene_data.animated))
+    #     elem_props_template_set(tmpl, props, "p_visibility", b"Visibility", float(not ob_obj.hide))
+
+    #     # Absolutely no idea what this is, but seems mandatory for validity of the file, and defaults to
+    #     # invalid -1 value...
+    #     elem_props_template_set(tmpl, props, "p_integer", b"DefaultAttributeIndex", 0)
+
+    #     elem_props_template_set(tmpl, props, "p_enum", b"InheritType", 1)  # RSrs
+
+    #     # Custom properties.
+    #     if scene_data.settings.use_custom_props:
+    #         # Here we want customprops from the 'pose' bone, not the 'edit' bone...
+    #         bdata = ob_obj.bdata_pose_bone if ob_obj.is_bone else ob_obj.bdata
+    #         fbx_data_element_custom_properties(props, bdata)
+
+    #     # Those settings would obviously need to be edited in a complete version of the exporter, may depends on
+    #     # object type, etc.
+    #     elem_data_single_int32(model, b"MultiLayer", 0)
+    #     elem_data_single_int32(model, b"MultiTake", 0)
+    #     elem_data_single_bool(model, b"Shading", True)
+    #     elem_data_single_string(model, b"Culling", b"CullingOff")
+
+    #     if obj_type == b"Camera":
+    #         # Why, oh why are FBX cameras such a mess???
+    #         # And WHY add camera data HERE??? Not even sure this is needed...
+    #         render = scene_data.scene.render
+    #         width = render.resolution_x * 1.0
+    #         height = render.resolution_y * 1.0
+    #         elem_props_template_set(tmpl, props, "p_enum", b"ResolutionMode", 0)  # Don't know what it means
+    #         elem_props_template_set(tmpl, props, "p_double", b"AspectW", width)
+    #         elem_props_template_set(tmpl, props, "p_double", b"AspectH", height)
+    #         elem_props_template_set(tmpl, props, "p_bool", b"ViewFrustum", True)
+    #         elem_props_template_set(tmpl, props, "p_enum", b"BackgroundMode", 0)  # Don't know what it means
+    #         elem_props_template_set(tmpl, props, "p_bool", b"ForegroundTransparent", True)
+
+    #     elem_props_template_finalize(tmpl, props)
+
+    # def fbx_data_bindpose_element(root, me_obj, me, scene_data, arm_obj=None, mat_world_arm=None, bones=[]):
+    #     """
+    #     Helper, since bindpose are used by both meshes shape keys and armature bones...
+    #     """
+    #     if arm_obj is None:
+    #         arm_obj = me_obj
+    #     # We assume bind pose for our bones are their "Editmode" pose...
+    #     # All matrices are expected in global (world) space.
+    #     bindpose_key = get_blender_bindpose_key(arm_obj.bdata, me)
+    #     fbx_pose = elem_data_single_int64(root, b"Pose", get_fbx_uuid_from_key(bindpose_key))
+    #     fbx_pose.add_string(fbx_name_class(me.name.encode(), b"Pose"))
+    #     fbx_pose.add_string(b"BindPose")
+
+    #     elem_data_single_string(fbx_pose, b"Type", b"BindPose")
+    #     elem_data_single_int32(fbx_pose, b"Version", FBX_POSE_BIND_VERSION)
+    #     elem_data_single_int32(fbx_pose, b"NbPoseNodes", 1 + (1 if (arm_obj != me_obj) else 0) + len(bones))
+
+    #     # First node is mesh/object.
+    #     mat_world_obj = me_obj.fbx_object_matrix(scene_data, global_space=True)
+    #     fbx_posenode = elem_empty(fbx_pose, b"PoseNode")
+    #     elem_data_single_int64(fbx_posenode, b"Node", me_obj.fbx_uuid)
+    #     elem_data_single_float64_array(fbx_posenode, b"Matrix", matrix4_to_array(mat_world_obj))
+
+    #     # Second node is armature object itself.
+    #     if arm_obj != me_obj:
+    #         fbx_posenode = elem_empty(fbx_pose, b"PoseNode")
+    #         elem_data_single_int64(fbx_posenode, b"Node", arm_obj.fbx_uuid)
+
+    #         # Todo merge into blenders FBX addon
+    #         mat_world_arm = mat_world_arm.LocRotScale(
+    #             mat_world_arm.to_translation(),
+    #             mat_world_arm.to_quaternion(),
+    #             [i / SCALE_FACTOR for i in mat_world_arm.to_scale()],
+    #         )
+
+    #         elem_data_single_float64_array(fbx_posenode, b"Matrix", matrix4_to_array(mat_world_arm))
+
+    #     # And all bones of armature!
+    #     mat_world_bones = {}
+    #     for bo_obj in bones:
+    #         bomat = bo_obj.fbx_object_matrix(scene_data, rest=True, global_space=True)
+    #         mat_world_bones[bo_obj] = bomat
+    #         fbx_posenode = elem_empty(fbx_pose, b"PoseNode")
+    #         elem_data_single_int64(fbx_posenode, b"Node", bo_obj.fbx_uuid)
+
+    #         # Todo merge into blenders FBX addon
+    #         bomat = bomat.LocRotScale(
+    #             bomat.to_translation(),
+    #             bomat.to_quaternion(),
+    #             [i / SCALE_FACTOR for i in bomat.to_scale()]
+    #         )
+
+    #         elem_data_single_float64_array(fbx_posenode, b"Matrix", matrix4_to_array(bomat))
+
+    #     return mat_world_obj, mat_world_bones
+
+    SCALE_FACTOR_Blender4 = 100
+
+    def fbx_animations_do_blender4(scene_data, ref_id, f_start, f_end, start_zero, objects=None, force_keep=False):
         """
         Generate animation data (a single AnimStack) from objects, for a given frame range.
         """
@@ -3813,6 +5486,7 @@ def export_fbx(self: Operator,
         depsgraph = scene_data.depsgraph
         force_keying = scene_data.settings.bake_anim_use_all_bones
         force_sek = scene_data.settings.bake_anim_force_startend_keying
+        gscale = scene_data.settings.global_scale
 
         if objects is not None:
             # Add bones and duplis!
@@ -3838,10 +5512,9 @@ def export_fbx(self: Operator,
             loc, rot, scale, _m, _mr = ob_obj.fbx_object_tx(scene_data)
             rot_deg = tuple(convert_rad_to_deg_iter(rot))
             force_key = (simplify_fac == 0.0) or (ob_obj.is_bone and force_keying)
-
             animdata_ob[ob_obj] = (ACNW(ob_obj.key, 'LCL_TRANSLATION', force_key, force_sek, loc),
-                                   ACNW(ob_obj.key, 'LCL_ROTATION', force_key, force_sek, rot_deg),
-                                   ACNW(ob_obj.key, 'LCL_SCALING', force_key, force_sek, scale))
+                                ACNW(ob_obj.key, 'LCL_ROTATION', force_key, force_sek, rot_deg),
+                                ACNW(ob_obj.key, 'LCL_SCALING', force_key, force_sek, scale))
             p_rots[ob_obj] = rot
 
         force_key = (simplify_fac == 0.0)
@@ -3860,93 +5533,136 @@ def export_fbx(self: Operator,
         animdata_cameras = {}
         for cam_obj, cam_key in scene_data.data_cameras.items():
             cam = cam_obj.bdata.data
-            acnode = AnimationCurveNodeWrapper(cam_key, 'CAMERA_FOCAL', force_key, force_sek, (cam.lens,))
-            animdata_cameras[cam_key] = (acnode, cam)
+            acnode_lens = AnimationCurveNodeWrapper(cam_key, 'CAMERA_FOCAL', force_key, force_sek, (cam.lens,))
+            acnode_focus_distance = AnimationCurveNodeWrapper(cam_key, 'CAMERA_FOCUS_DISTANCE', force_key,
+                                                            force_sek, (cam.dof.focus_distance,))
+            animdata_cameras[cam_key] = (acnode_lens, acnode_focus_distance, cam)
 
-        currframe = f_start
-        while currframe <= f_end:
-            real_currframe = currframe - f_start if start_zero else currframe
-            scene.frame_set(int(currframe), subframe=currframe - int(currframe))
+        # Get all parent bdata of animated dupli instances, so that we can quickly identify which instances in
+        # `depsgraph.object_instances` are animated and need their ObjectWrappers' matrices updated each frame.
+        dupli_parent_bdata = {dup.get_parent().bdata for dup in animdata_ob if dup.is_dupli}
+        has_animated_duplis = bool(dupli_parent_bdata)
 
-            for dp_obj in ob_obj.dupli_list_gen(depsgraph):
-                pass  # Merely updating dupli matrix of ObjectWrapper...
+        # Initialize keyframe times array. Each AnimationCurveNodeWrapper will share the same instance.
+        # `np.arange` excludes the `stop` argument like when using `range`, so we use np.nextafter to get the next
+        # representable value after f_end and use that as the `stop` argument instead.
+        currframes = np.arange(f_start, np.nextafter(f_end, np.inf), step=bake_step)
 
-            for ob_obj, (anim_loc, anim_rot, anim_scale) in animdata_ob.items():
-                location_multiple = 100
-                scale_factor = 1
+        # Convert from Blender time to FBX time.
+        fps = scene.render.fps / scene.render.fps_base
+        real_currframes = currframes - f_start if start_zero else currframes
+        real_currframes = (real_currframes / fps * FBX_KTIME).astype(np.int64)
 
-                # if this curve is the object root then keep its scale at 1
-                if len(str(ob_obj).split('|')) == 1:
-                    location_multiple = 1
-                    # Todo add to FBX addon
-                    scale_factor = SCALE_FACTOR
+        # Generator that yields the animated values of each frame in order.
+        def frame_values_gen():
+            # Precalculate integer frames and subframes.
+            int_currframes = currframes.astype(int)
+            subframes = currframes - int_currframes
 
-                # We compute baked loc/rot/scale for all objects (rot being euler-compat with previous value!).
-                p_rot = p_rots.get(ob_obj, None)
-                loc, rot, scale, _m, _mr = ob_obj.fbx_object_tx(scene_data, rot_euler_compat=p_rot)
+            # Create simpler iterables that return only the values we care about.
+            animdata_shapes_only = [shape for _anim_shape, _me, shape in animdata_shapes.values()]
+            animdata_cameras_only = [camera for _anim_camera_lens, _anim_camera_focus_distance, camera
+                                    in animdata_cameras.values()]
+            # Previous frame's rotation for each object in animdata_ob, this will be updated each frame.
+            animdata_ob_p_rots = p_rots.values()
 
-                p_rots[ob_obj] = rot
+            # Iterate through each frame and yield the values for that frame.
+            # Iterating .data, the memoryview of an array, is faster than iterating the array directly.
+            for int_currframe, subframe in zip(int_currframes.data, subframes.data):
+                scene.frame_set(int_currframe, subframe=subframe)
 
-                # Check Blender version to adjust code for version >=4.0
-                if bpy.app.version_string[0] < '4':
-                    anim_loc.add_keyframe(real_currframe, loc * location_multiple)
-                    anim_rot.add_keyframe(real_currframe, tuple(convert_rad_to_deg_iter(rot)))
-                    anim_scale.add_keyframe(real_currframe, scale / scale_factor)
-                else:
-                    anim_loc.set_keyframes(real_currframe, loc * location_multiple)
-                    anim_rot.set_keyframes(real_currframe, tuple(convert_rad_to_deg_iter(rot)))
-                    anim_scale.set_keyframes(real_currframe, scale / scale_factor)
+                if has_animated_duplis:
+                    # Changing the scene's frame invalidates existing dupli instances. To get the updated matrices of duplis
+                    # for this frame, we must get the duplis from the depsgraph again.
+                    for dup in depsgraph.object_instances:
+                        if (parent := dup.parent) and parent.original in dupli_parent_bdata:
+                            # ObjectWrapper caches its instances. Attempting to create a new instance updates the existing
+                            # ObjectWrapper instance with the current frame's matrix and then returns the existing instance.
+                            ObjectWrapper(dup)
+                next_p_rots = []
+                for ob_obj, p_rot in zip(animdata_ob, animdata_ob_p_rots):
+                    # We compute baked loc/rot/scale for all objects (rot being euler-compat with previous value!).
+                    loc, rot, scale, _m, _mr = ob_obj.fbx_object_tx(scene_data, rot_euler_compat=p_rot)
+                    next_p_rots.append(rot)
+                    yield from loc
+                    yield from rot
+                    yield from scale
+                animdata_ob_p_rots = next_p_rots
+                for shape in animdata_shapes_only:
+                    yield shape.value
+                for camera in animdata_cameras_only:
+                    yield camera.lens
+                    yield camera.dof.focus_distance
 
-                for anim_shape, me, shape in animdata_shapes.values():
-                    # Check Blender version to adjust code for version >=4.0
-                    if bpy.app.version_string[0] < '4':
-                        anim_shape.add_keyframe(real_currframe, (shape.value * scale_factor,))
-                    else:
-                        anim_shape.set_keyframes(real_currframe, (shape.value * scale_factor,))
-                for anim_camera, camera in animdata_cameras.values():
-                    # Check Blender version to adjust code for version >=4.0
-                    if bpy.app.version_string[0] < '4':
-                        anim_camera.add_keyframe(real_currframe, (camera.lens,))
-                    else:
-                        anim_camera.set_keyframes(real_currframe, (camera.lens,))
-                
-            currframe += bake_step
+        # Providing `count` to np.fromiter pre-allocates the array, avoiding extra memory allocations while iterating.
+        num_ob_values = len(animdata_ob) * 9  # Location, rotation and scale, each of which have x, y, and z components
+        num_shape_values = len(animdata_shapes)  # Only 1 value per shape key
+        num_camera_values = len(animdata_cameras) * 2  # Focal length (`.lens`) and focus distance
+        num_values_per_frame = num_ob_values + num_shape_values + num_camera_values
+        num_frames = len(real_currframes)
+        all_values_flat = np.fromiter(frame_values_gen(), dtype=float, count=num_frames * num_values_per_frame)
 
+        # Restore the scene's current frame.
         scene.frame_set(back_currframe, subframe=0.0)
+
+        # View such that each column is all values for a single frame and each row is all values for a single curve.
+        all_values = all_values_flat.reshape(num_frames, num_values_per_frame).T
+        # Split into views of the arrays for each curve type.
+        split_at = [num_ob_values, num_shape_values, num_camera_values]
+        # For unequal sized splits, np.split takes indices to split at, which can be acquired through a cumulative sum
+        # across the list.
+        # The last value isn't needed, because the last split is assumed to go to the end of the array.
+        split_at = np.cumsum(split_at[:-1])
+        all_ob_values, all_shape_key_values, all_camera_values = np.split(all_values, split_at)
+
+        all_anims = []
+
+        # Set location/rotation/scale curves.
+        # Split into equal sized views of the arrays for each object.
+        split_into = len(animdata_ob)
+        per_ob_values = np.split(all_ob_values, split_into) if split_into > 0 else ()
+        for anims, ob_values in zip(animdata_ob.values(), per_ob_values):
+            # Split again into equal sized views of the location, rotation and scaling arrays.
+            loc_xyz, rot_xyz, sca_xyz = np.split(ob_values, 3)
+            # In-place convert from Blender rotation to FBX rotation.
+            np.rad2deg(rot_xyz, out=rot_xyz)
+            anim_loc, anim_rot, anim_scale = anims
+            anim_loc.set_keyframes(real_currframes, loc_xyz)
+            anim_rot.set_keyframes(real_currframes, rot_xyz)
+            anim_scale.set_keyframes(real_currframes, sca_xyz)
+            all_anims.extend(anims)
+
+        # Set shape key curves.
+        # There's only one array per shape key, so there's no need to split `all_shape_key_values`.
+        for (anim_shape, _me, _shape), shape_key_values in zip(animdata_shapes.values(), all_shape_key_values):
+            # In-place convert from Blender Shape Key Value to FBX Deform Percent.
+            shape_key_values *= 100.0
+            anim_shape.set_keyframes(real_currframes, shape_key_values)
+            # anim_shape.set_keyframes(real_currframes, _shape.value * SCALE_FACTOR_Blender4)
+            all_anims.append(anim_shape)
+
+        # Set camera curves.
+        # Split into equal sized views of the arrays for each camera.
+        split_into = len(animdata_cameras)
+        per_camera_values = np.split(all_camera_values, split_into) if split_into > 0 else ()
+        zipped = zip(animdata_cameras.values(), per_camera_values)
+        for (anim_camera_lens, anim_camera_focus_distance, _camera), (lens_values, focus_distance_values) in zipped:
+            # In-place convert from Blender focus distance to FBX.
+            focus_distance_values *= (1000 * gscale)
+            anim_camera_lens.set_keyframes(real_currframes, lens_values)
+            anim_camera_focus_distance.set_keyframes(real_currframes, focus_distance_values)
+            all_anims.append(anim_camera_lens)
+            all_anims.append(anim_camera_focus_distance)
 
         animations = {}
 
         # And now, produce final data (usable by FBX export code)
-        # Objects-like loc/rot/scale...
-        for ob_obj, anims in animdata_ob.items():
-            for anim in anims:
-                anim.simplify(simplify_fac, bake_step, force_keep)
-                if not anim:
-                    continue
-                for obj_key, group_key, group, fbx_group, fbx_gname in anim.get_final_data(scene, ref_id, force_keep):
-                    anim_data = animations.setdefault(obj_key, ("dummy_unused_key", {}))
-                    anim_data[1][fbx_group] = (group_key, group, fbx_gname)
-
-        # And meshes' shape keys.
-        for channel_key, (anim_shape, me, shape) in animdata_shapes.items():
-            final_keys = {}
-            anim_shape.simplify(simplify_fac, bake_step, force_keep)
-            if not anim_shape:
+        for anim in all_anims:
+            anim.simplify(simplify_fac, bake_step, force_keep)
+            if not anim:
                 continue
-            for elem_key, group_key, group, fbx_group, fbx_gname in anim_shape.get_final_data(scene, ref_id,
-                                                                                              force_keep):
-                anim_data = animations.setdefault(elem_key, ("dummy_unused_key", {}))
-                anim_data[1][fbx_group] = (group_key, group, fbx_gname)
-
-        # And cameras' lens keys.
-        for cam_key, (anim_camera, camera) in animdata_cameras.items():
-            final_keys = {}
-            anim_camera.simplify(simplify_fac, bake_step, force_keep)
-            if not anim_camera:
-                continue
-            for elem_key, group_key, group, fbx_group, fbx_gname in anim_camera.get_final_data(scene, ref_id,
-                                                                                               force_keep):
-                anim_data = animations.setdefault(elem_key, ("dummy_unused_key", {}))
+            for obj_key, group_key, group, fbx_group, fbx_gname in anim.get_final_data(scene, ref_id, force_keep):
+                anim_data = animations.setdefault(obj_key, ("dummy_unused_key", {}))
                 anim_data[1][fbx_group] = (group_key, group, fbx_gname)
 
         astack_key = get_blender_anim_stack_key(scene, ref_id)
@@ -3959,7 +5675,7 @@ def export_fbx(self: Operator,
 
         return (astack_key, animations, alayer_key, name, f_start, f_end) if animations else None
 
-    def fbx_data_armature_elements(root, arm_obj, scene_data):
+    def fbx_data_armature_elements_blender4(root, arm_obj, scene_data):
         """
         Write:
             * Bones "data" (NodeAttribute::LimbNode, contains pretty much nothing!).
@@ -3980,11 +5696,12 @@ def export_fbx(self: Operator,
             fbx_bo = elem_data_single_int64(root, b"NodeAttribute", get_fbx_uuid_from_key(bo_data_key))
             fbx_bo.add_string(fbx_name_class(bo.name.encode(), b"NodeAttribute"))
             fbx_bo.add_string(b"LimbNode")
-            elem_data_single_string(fbx_bo, b"TypeFlags", b"Skeleton")
+            elem_data_single_string(fbx_bo, b"TypeFlags", b"Skeleton") 
 
             tmpl = elem_props_template_init(scene_data.templates, b"Bone")
             props = elem_properties(fbx_bo)
-            elem_props_template_set(tmpl, props, "p_double", b"Size", bo.head_radius * bone_radius_scale * SCALE_FACTOR)
+            elem_props_template_set(tmpl, props, "p_double", b"Size", bo.head_radius * bone_radius_scale * SCALE_FACTOR_Blender4)
+
             elem_props_template_finalize(tmpl, props)
 
             # Custom properties.
@@ -4003,7 +5720,7 @@ def export_fbx(self: Operator,
             for me, (skin_key, ob_obj, clusters) in deformer.items():
                 # BindPose.
                 mat_world_obj, mat_world_bones = fbx_data_bindpose_element(root, ob_obj, me, scene_data,
-                                                                           arm_obj, mat_world_arm, bones)
+                                                                        arm_obj, mat_world_arm, bones)
 
                 # Deformer.
                 fbx_skin = elem_data_single_int64(root, b"Deformer", get_fbx_uuid_from_key(skin_key))
@@ -4013,19 +5730,16 @@ def export_fbx(self: Operator,
                 elem_data_single_int32(fbx_skin, b"Version", FBX_DEFORMER_SKIN_VERSION)
                 elem_data_single_float64(fbx_skin, b"Link_DeformAcuracy", 50.0)  # Only vague idea what it is...
 
-                # Pre-process vertex weights (also to check vertices assigned ot more than four bones).
+                # Pre-process vertex weights so that the vertices only need to be iterated once.
                 ob = ob_obj.bdata
                 bo_vg_idx = {bo_obj.bdata.name: ob.vertex_groups[bo_obj.bdata.name].index
-                             for bo_obj in clusters.keys() if bo_obj.bdata.name in ob.vertex_groups}
+                            for bo_obj in clusters.keys() if bo_obj.bdata.name in ob.vertex_groups}
                 valid_idxs = set(bo_vg_idx.values())
                 vgroups = {vg.index: {} for vg in ob.vertex_groups}
-                verts_vgroups = (
-                sorted(((vg.group, vg.weight) for vg in v.groups if vg.weight and vg.group in valid_idxs),
-                       key=lambda e: e[1], reverse=True)
-                for v in me.vertices)
-                for idx, vgs in enumerate(verts_vgroups):
-                    for vg_idx, w in vgs:
-                        vgroups[vg_idx][idx] = w
+                for idx, v in enumerate(me.vertices):
+                    for vg in v.groups:
+                        if (w := vg.weight) and (vg_idx := vg.group) in valid_idxs:
+                            vgroups[vg_idx][idx] = w
 
                 for bo_obj, clstr_key in clusters.items():
                     bo = bo_obj.bdata
@@ -4033,8 +5747,7 @@ def export_fbx(self: Operator,
                     # Note we still write a cluster for bones not affecting the mesh, to get 'rest pose' data
                     # (the TransformBlah matrices).
                     vg_idx = bo_vg_idx.get(bo.name, None)
-                    indices, weights = ((), ()) if vg_idx is None or not vgroups[vg_idx] else zip(
-                        *vgroups[vg_idx].items())
+                    indices, weights = ((), ()) if vg_idx is None or not vgroups[vg_idx] else zip(*vgroups[vg_idx].items())
 
                     # Create the cluster.
                     fbx_clstr = elem_data_single_int64(root, b"Deformer", get_fbx_uuid_from_key(clstr_key))
@@ -4054,25 +5767,20 @@ def export_fbx(self: Operator,
                     #          **it is stored in bone space in FBX data!** See:
                     #          http://area.autodesk.com/forum/autodesk-fbx/fbx-sdk/why-the-values-return-
                     #                 by-fbxcluster-gettransformmatrix-x-not-same-with-the-value-in-ascii-fbx-file/
-                    # test_data[bo_obj.name] = matrix4_to_array(mat_world_bones[bo_obj].inverted_safe() @ mat_world_obj)
-
-                    # Todo add to FBX addon
+                    
                     transform_matrix = mat_world_bones[bo_obj].inverted_safe() @ mat_world_obj
-                    transform_link_matrix = mat_world_bones[bo_obj]
-                    transform_associate_model_matrix = mat_world_arm
 
                     transform_matrix = transform_matrix.LocRotScale(
-                        [i * SCALE_FACTOR for i in transform_matrix.to_translation()],
-                        transform_matrix.to_quaternion(),
-                        [i * SCALE_FACTOR for i in transform_matrix.to_scale()],
+                    [i * SCALE_FACTOR_Blender4 for i in transform_matrix.to_translation()],
+                    transform_matrix.to_quaternion(),
+                    [i * SCALE_FACTOR_Blender4 for i in transform_matrix.to_scale()],
                     )
+                    
+                    elem_data_single_float64_array(fbx_clstr, b"Transform",matrix4_to_array(transform_matrix))
+                    elem_data_single_float64_array(fbx_clstr, b"TransformLink", matrix4_to_array(mat_world_bones[bo_obj]))
+                    elem_data_single_float64_array(fbx_clstr, b"TransformAssociateModel", matrix4_to_array(mat_world_arm))
 
-                    elem_data_single_float64_array(fbx_clstr, b"Transform", matrix4_to_array(transform_matrix))
-                    elem_data_single_float64_array(fbx_clstr, b"TransformLink", matrix4_to_array(transform_link_matrix))
-                    elem_data_single_float64_array(fbx_clstr, b"TransformAssociateModel",
-                                                   matrix4_to_array(transform_associate_model_matrix))
-
-    def fbx_data_object_elements(root, ob_obj, scene_data):
+    def fbx_data_object_elements_blender4(root, ob_obj, scene_data):
         """
         Write the Object (Model) data blocks.
         Note this "Model" can also be bone or dupli!
@@ -4093,7 +5801,6 @@ def export_fbx(self: Operator,
             obj_type = b"Light"
         elif (ob_obj.type == 'CAMERA'):
             obj_type = b"Camera"
-
         model = elem_data_single_int64(root, b"Model", ob_obj.fbx_uuid)
         model.add_string(fbx_name_class(ob_obj.name.encode(), b"Model"))
         model.add_string(obj_type)
@@ -4131,7 +5838,12 @@ def export_fbx(self: Operator,
         # object type, etc.
         elem_data_single_int32(model, b"MultiLayer", 0)
         elem_data_single_int32(model, b"MultiTake", 0)
-        elem_data_single_bool(model, b"Shading", True)
+        # This is probably the FbxNode.EShadingMode enum. Not directly used by the FBX SDK, but the SDK guarantees that the
+        # value will be passed through from an imported file to an exported one. Common values are 'Y' and 'T'. 'U' and 'W'
+        # have also been seen in older FBX files. It's not clear which enum member each of these values corresponds to or if
+        # these values are actually application specific. Blender had been exporting this as a `True` bool for a long time
+        # seemingly without issue. The '\x01' char is the same value as `True` in raw bytes.
+        elem_data_single_char(model, b"Shading", b"\x01")
         elem_data_single_string(model, b"Culling", b"CullingOff")
 
         if obj_type == b"Camera":
@@ -4149,7 +5861,7 @@ def export_fbx(self: Operator,
 
         elem_props_template_finalize(tmpl, props)
 
-    def fbx_data_bindpose_element(root, me_obj, me, scene_data, arm_obj=None, mat_world_arm=None, bones=[]):
+    def fbx_data_bindpose_element_blender4(root, me_obj, me, scene_data, arm_obj=None, mat_world_arm=None, bones=[]):
         """
         Helper, since bindpose are used by both meshes shape keys and armature bones...
         """
@@ -4171,21 +5883,21 @@ def export_fbx(self: Operator,
         fbx_posenode = elem_empty(fbx_pose, b"PoseNode")
         elem_data_single_int64(fbx_posenode, b"Node", me_obj.fbx_uuid)
         elem_data_single_float64_array(fbx_posenode, b"Matrix", matrix4_to_array(mat_world_obj))
-
+        
         # Second node is armature object itself.
         if arm_obj != me_obj:
             fbx_posenode = elem_empty(fbx_pose, b"PoseNode")
             elem_data_single_int64(fbx_posenode, b"Node", arm_obj.fbx_uuid)
-
-            # Todo merge into blenders FBX addon
+            
+            # UE modification
             mat_world_arm = mat_world_arm.LocRotScale(
                 mat_world_arm.to_translation(),
                 mat_world_arm.to_quaternion(),
-                [i / SCALE_FACTOR for i in mat_world_arm.to_scale()],
+                [i / SCALE_FACTOR_Blender4 for i in mat_world_arm.to_scale()],
             )
-
+            
             elem_data_single_float64_array(fbx_posenode, b"Matrix", matrix4_to_array(mat_world_arm))
-
+        
         # And all bones of armature!
         mat_world_bones = {}
         for bo_obj in bones:
@@ -4194,16 +5906,17 @@ def export_fbx(self: Operator,
             fbx_posenode = elem_empty(fbx_pose, b"PoseNode")
             elem_data_single_int64(fbx_posenode, b"Node", bo_obj.fbx_uuid)
 
-            # Todo merge into blenders FBX addon
             bomat = bomat.LocRotScale(
                 bomat.to_translation(),
                 bomat.to_quaternion(),
-                [i / SCALE_FACTOR for i in bomat.to_scale()]
+                [i / SCALE_FACTOR_Blender4 for i in bomat.to_scale()]
             )
 
             elem_data_single_float64_array(fbx_posenode, b"Matrix", matrix4_to_array(bomat))
 
         return mat_world_obj, mat_world_bones
+
+
 
     export_parameters["global_matrix"] = (
         axis_conversion(
@@ -4214,10 +5927,24 @@ def export_fbx(self: Operator,
 
     # Replace the modified functions temporarily in the FBX type is unreal engine
     if fbx_type == 'unreal_engine':
-        export_fbx_bin.fbx_animations_do            = fbx_animations_do
-        export_fbx_bin.fbx_data_armature_elements   = fbx_data_armature_elements
-        export_fbx_bin.fbx_data_object_elements     = fbx_data_object_elements
-        export_fbx_bin.fbx_data_bindpose_element    = fbx_data_bindpose_element
+        # export_fbx_bin.fbx_animations_do            = fbx_animations_do
+        # export_fbx_bin.fbx_data_armature_elements   = fbx_data_armature_elements
+        # export_fbx_bin.fbx_data_object_elements     = fbx_data_object_elements
+        # export_fbx_bin.fbx_data_bindpose_element    = fbx_data_bindpose_element
+
+        if bpy.app.version_string[0] < '4':
+            print('Exporting with Blender older than 4.0')
+            export_fbx_bin.fbx_animations_do            = fbx_animations_do_blender3
+            export_fbx_bin.fbx_data_armature_elements   = fbx_data_armature_elements_blender3
+            export_fbx_bin.fbx_data_object_elements     = fbx_data_object_elements_blender3
+            export_fbx_bin.fbx_data_bindpose_element    = fbx_data_bindpose_element_blender3
+
+        if bpy.app.version_string[0] >= '4':
+            print('Exporting with Blender 4.0+')
+            export_fbx_bin.fbx_animations_do            = fbx_animations_do_blender4
+            export_fbx_bin.fbx_data_armature_elements   = fbx_data_armature_elements_blender4
+            # export_fbx_bin.fbx_data_object_elements     = fbx_data_object_elements_blender4
+            export_fbx_bin.fbx_data_bindpose_element    = fbx_data_bindpose_element_blender4
     
     # Simulate the FBX Export Operator Class
     self = type(
@@ -4236,9 +5963,19 @@ def export_fbx(self: Operator,
         export_fbx_bin.fbx_data_object_elements     = backup_fbx_data_object_elements
         export_fbx_bin.fbx_data_bindpose_element    = backup_fbx_data_bindpose_element
 
+    # Restore the name of the rig object
+    for capture_object in bpy.data.objects:
+        if capture_object.type == "ARMATURE":
+            # Restore the original rig name
+            capture_object.name = rig_original_name
+
 # Class with the different properties of the methods
 class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
     # Adjust Empties Options
+    show_adjust_empties: bpy.props.BoolProperty(
+        name        = '',
+        default     = False,
+    )
     vertical_align_reference: bpy.props.EnumProperty(
         name        = '',
         description = 'Empty that serves as reference to align the z axis',
@@ -4277,11 +6014,15 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
     )
     
     # Reduce Bone Length Dispersion Options
+    show_reduce_bone_length_dispersion: bpy.props.BoolProperty(
+        name        = '',
+        default     = False,
+    )
     interval_variable: bpy.props.EnumProperty(
         name        = '',
         description = 'Variable used to define the new length dispersion interval',
-        items       = [ ('standard_length', 'Standard length', 'Use the standard lengths based on the total body (rig) height. Defines the new dispersion interval as [length*(1-interval_factor),length*(1+interval_factor)]'),
-                        ('capture_median', 'Capture Median', 'Use the bones median length from the capture. Defines the new dispersion interval as [median*(1-interval_factor),median*(1+interval_factor)]'),
+        items       = [ ('capture_median', 'Capture Median', 'Use the bones median length from the capture. Defines the new dispersion interval as [median*(1-interval_factor),median*(1+interval_factor)]'),
+                        ('standard_length', 'Standard length', 'Use the standard lengths based on the total body (rig) height. Defines the new dispersion interval as [length*(1-interval_factor),length*(1+interval_factor)]'),
                         ('capture_stdev', 'Capture Std Dev', 'Use the bones length standard deviation from the capture. Defines the new dispersion interval as [median-interval_factor*stdev,median+interval_factor*stdev]')]
     )
     interval_factor: bpy.props.FloatProperty(
@@ -4311,6 +6052,10 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
     )
 
     # Add Rig Options
+    show_add_rig: bpy.props.BoolProperty(
+        name        = '',
+        default     = False,
+    )
     bone_length_method: bpy.props.EnumProperty(
         name        = '',
         description = 'Method use to calculate length of major bones',
@@ -4345,23 +6090,229 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
     )
     
     # Add Body Mesh Options
+    show_add_body_mesh: bpy.props.BoolProperty(
+        name        = '',
+        default     = False,
+    )
     body_mesh_mode: bpy.props.EnumProperty(
         name        = '',
-        default     = 'can_man',
+        default     = 'skelly_parts',
         description = 'Mode (source) for adding the mesh to the rig',
-        items       = [('can_man', 'Custom', ''),
+        items       = [('skelly_parts', 'Skelly Parts', ''),
                        ('skelly', 'Skelly', ''),
-                       #('file', 'File', '')
+                       ('can_man', 'Custom', ''),
                        ]
     )
 
     # Export FBX Options
+    show_export_fbx: bpy.props.BoolProperty(
+        name        = '',
+        default     = False,
+    )
     fbx_type: bpy.props.EnumProperty(
         name        = '',
         description = 'Type of the FBX file',
         items       = [('standard', 'Standard', ''),
                        ('unreal_engine', 'Unreal Engine', '')
                        ]
+    )
+
+    # Add Finger Rotation Limits Options
+    show_add_finger_rotation_limits: bpy.props.BoolProperty(
+        name        = '',
+        default     = False,
+    )
+
+    # Apply Butterworth Filters Options
+    show_apply_butterworth_filters: bpy.props.BoolProperty(
+        name        = '',
+        default     = False,
+    )
+    position_correction_mode: bpy.props.EnumProperty(
+        name        = '',
+        description = 'Position correction mode',
+        items       = [('overall', 'Overall (Faster)', ''),
+                       ('each_children', 'Each Children (Slower)', '')],
+    )
+    apply_global_filter_core: bpy.props.BoolProperty(
+        name        = '',
+        default     = False,
+        description = 'Apply global Butterworth filter to core empties (hips_center, trunk_center and neck_center)'
+    )
+    global_filter_core_frequency: bpy.props.FloatProperty(
+        name        = '',
+        default     = 7,
+        min         = 0,
+        precision   = 2,
+        description = 'Core empties global Butterworth filter cutoff frequency (Hz)'
+    )
+    apply_local_filter_core: bpy.props.BoolProperty(
+        name        = '',
+        default     = False,
+        description = 'Apply local Butterworth filter to core empties'
+    )
+    local_filter_origin_core: bpy.props.EnumProperty(
+        name        = '',
+        description = 'Local filter origin',
+        items       = [('hips_center', 'Hips', ''),
+                       ],
+    )
+    local_filter_core_frequency: bpy.props.FloatProperty(
+        name        = '',
+        default     = 7,
+        min         = 0,
+        precision   = 2,
+        description = 'Core empties local Butterworth filter cutoff frequency (Hz)'
+    )
+    apply_global_filter_arms: bpy.props.BoolProperty(
+        name        = 'Arms',
+        default     = False,
+        description = 'Apply global Butterworth filter to arms empties (shoulde and elbow)'
+    )
+    global_filter_arms_frequency: bpy.props.FloatProperty(
+        name        = '',
+        default     = 7,
+        min         = 0,
+        precision   = 2,
+        description = 'Arms empties global Butterworth filter cutoff frequency (Hz)'
+    )
+    apply_local_filter_arms: bpy.props.BoolProperty(
+        name        = '',
+        default     = False,
+        description = 'Apply local Butterworth filter to arms empties'
+    )
+    local_filter_origin_arms: bpy.props.EnumProperty(
+        name        = '',
+        description = 'Local filter origin',
+        items       = [('neck_center', 'Neck', ''),
+                       ],
+    )
+    local_filter_arms_frequency: bpy.props.FloatProperty(
+        name        = '',
+        default     = 7,
+        min         = 0,
+        precision   = 2,
+        description = 'Arms empties local Butterworth filter cutoff frequency (Hz)'
+    )
+    apply_global_filter_hands: bpy.props.BoolProperty(
+        name        = 'Hands',
+        default     = False,
+        description = 'Apply global Butterworth filter to hands empties (wrist and hand)'
+    )
+    global_filter_hands_frequency: bpy.props.FloatProperty(
+        name        = '',
+        default     = 7,
+        min         = 0,
+        precision   = 2,
+        description = 'Hands empties global Butterworth filter cutoff frequency (Hz)'
+    )
+    apply_local_filter_hands: bpy.props.BoolProperty(
+        name        = '',
+        default     = False,
+        description = 'Apply local Butterworth filter to hands empties'
+    )
+    local_filter_origin_hands: bpy.props.EnumProperty(
+        name        = '',
+        description = 'Local filter origin',
+        items       = [('side_elbow', 'Elbow', ''),
+                       ],
+    )
+    local_filter_hands_frequency: bpy.props.FloatProperty(
+        name        = '',
+        default     = 7,
+        min         = 0,
+        precision   = 2,
+        description = 'Hands empties local Butterworth filter cutoff frequency (Hz)'
+    )
+    apply_global_filter_fingers: bpy.props.BoolProperty(
+        name        = 'Fingers',
+        default     = False,
+        description = 'Apply global Butterworth filter to fingers empties (_ip, _pip, _dip and _tip)'
+    )
+    global_filter_fingers_frequency: bpy.props.FloatProperty(
+        name        = '',
+        default     = 7,
+        min         = 0,
+        precision   = 2,
+        description = 'Fingers empties global Butterworth filter cutoff frequency (Hz)'
+    )
+    apply_local_filter_fingers: bpy.props.BoolProperty(
+        name        = '',
+        default     = False,
+        description = 'Apply local Butterworth filter to fingers empties'
+    )
+    local_filter_origin_fingers: bpy.props.EnumProperty(
+        name        = '',
+        description = 'Local filter origin',
+        items       = [('side_wrist', 'Wrist', ''),
+                       ],
+    )
+    local_filter_fingers_frequency: bpy.props.FloatProperty(
+        name        = '',
+        default     = 7,
+        min         = 0,
+        precision   = 2,
+        description = 'Fingers empties local Butterworth filter cutoff frequency (Hz)'
+    )
+    apply_global_filter_legs: bpy.props.BoolProperty(
+        name        = 'Legs',
+        default     = False,
+        description = 'Apply global Butterworth filter to legs empties (hips and knees)'
+    )
+    global_filter_legs_frequency: bpy.props.FloatProperty(
+        name        = '',
+        default     = 7,
+        min         = 0,
+        precision   = 2,
+        description = 'Legs empties global Butterworth filter cutoff frequency (Hz)'
+    )
+    apply_local_filter_legs: bpy.props.BoolProperty(
+        name        = '',
+        default     = False,
+        description = 'Apply local Butterworth filter to legs empties'
+    )
+    local_filter_origin_legs: bpy.props.EnumProperty(
+        name        = '',
+        description = 'Local filter origin',
+        items       = [('hips_center', 'Hips', ''),
+                       ],
+    )
+    local_filter_legs_frequency: bpy.props.FloatProperty(
+        name        = '',
+        default     = 7,
+        min         = 0,
+        precision   = 2,
+        description = 'Legs empties local Butterworth filter cutoff frequency (Hz)'
+    )
+    apply_global_filter_feet: bpy.props.BoolProperty(
+        name        = 'Feet',
+        default     = False,
+        description = 'Apply global Butterworth filter to feet empties (ankle, heel and foot_index)'
+    )
+    global_filter_feet_frequency: bpy.props.FloatProperty(
+        name        = '',
+        default     = 7,
+        min         = 0,
+        precision   = 2,
+        description = 'Feet empties global Butterworth filter cutoff frequency (Hz)'
+    )
+    apply_local_filter_feet: bpy.props.BoolProperty(
+        name        = '',
+        default     = False,
+        description = 'Apply local Butterworth filter to feet empties'
+    )
+    local_filter_origin_feet: bpy.props.EnumProperty(
+        name        = '',
+        description = 'Local filter origin',
+        items       = [('side_knee', 'Knee', ''),
+                       ],
+    )
+    local_filter_feet_frequency: bpy.props.FloatProperty(
+        name        = '',
+        default     = 7,
+        min         = 0,
+        precision   = 2,
+        description = 'Feet empties local Butterworth filter cutoff frequency (Hz)'
     )
     
 # UI Panel Class
@@ -4376,110 +6327,232 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         scene               = context.scene
         fmc_adapter_tool    = scene.fmc_adapter_tool
         
-        # Adjust Empties Options
-        box = layout.box()
-        #box.label(text='Adjust Empties Options')
+        # Create a button to toggle Adjust Empties Options visibility
+        row = layout.row(align=True)
+        row.prop(fmc_adapter_tool, "show_adjust_empties", text="", icon='TRIA_DOWN' if fmc_adapter_tool.show_adjust_empties else 'TRIA_RIGHT', emboss=False)
+        row.label(text="Adjust Empties")
+
+        if fmc_adapter_tool.show_adjust_empties:
+
+            # Adjust Empties Options
+            box = layout.box()
+            #box.label(text='Adjust Empties Options')
+            
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Align Reference')
+            split.split().column().prop(fmc_adapter_tool, 'vertical_align_reference')
+            
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Vertical Angle Offset')
+            split.split().column().prop(fmc_adapter_tool, 'vertical_align_angle_offset')
+            
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Ground Reference')
+            split.split().column().prop(fmc_adapter_tool, 'ground_align_reference')
+            
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Vertical Position Offset')
+            split.split().column().prop(fmc_adapter_tool, 'vertical_align_position_offset')
+            
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Correct Fingers Empties')
+            split.split().column().prop(fmc_adapter_tool, 'correct_fingers_empties')
+
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Add hand middle empty')
+            split.split().column().prop(fmc_adapter_tool, 'add_hand_middle_empty')
+
+            box.operator('fmc_adapter.adjust_empties', text='1. Adjust Empties')
+
+        # Create a button to toggle Reduce Bone Length Dispersion Options visibility
+        row = layout.row(align=True)
+        row.prop(fmc_adapter_tool, "show_reduce_bone_length_dispersion", text="", icon='TRIA_DOWN' if fmc_adapter_tool.show_reduce_bone_length_dispersion else 'TRIA_RIGHT', emboss=False)
+        row.label(text="Reduce Bone Length Dispersion")
+
+        if fmc_adapter_tool.show_reduce_bone_length_dispersion:
+
+            # Reduce Bone Length Dispersion Options
+            box = layout.box()
+            #box.label(text='Reduce Bone Length Dispersion Options')
+            
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Dispersion Interval Variable')
+            split.split().column().prop(fmc_adapter_tool, 'interval_variable')
+
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Dispersion Interval Factor')
+            split.split().column().prop(fmc_adapter_tool, 'interval_factor')
+
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Body (Rig) Height [m]')
+            split.split().column().prop(fmc_adapter_tool, 'body_height')
+
+            box.operator('fmc_adapter.reduce_bone_length_dispersion', text='2. Reduce Bone Length Dispersion')
+
+        # Create a button to toggle Apply Butterwort Filters Options visibility
+        row = layout.row(align=True)
+        row.prop(fmc_adapter_tool, "show_apply_butterworth_filters", text="", icon='TRIA_DOWN' if fmc_adapter_tool.show_apply_butterworth_filters else 'TRIA_RIGHT', emboss=False)
+        row.label(text="Apply Butterworth Filters (Blender 4.0+)")
+
+        if fmc_adapter_tool.show_apply_butterworth_filters:
+
+            # Apply Butterwort Filters
+            box = layout.box()
+
+            split = box.column().row().split(factor=0.15)
+            split.column().label(text='Section')
+            split_titles = split.column().split(factor=0.3)
+            split_titles.split().column().label(text='Global (Freq)')
+            split_titles.split().column().label(text='Local (Freq, Origin)')
+
+            split = box.column().row().split(factor=0.15)
+            split.column().label(text='Core')
+            split_params = split.column().split(factor=0.3)
+            split1 = split_params.column().split(factor=0.15)
+            split1.column().prop(fmc_adapter_tool, 'apply_global_filter_core')
+            split1.column().prop(fmc_adapter_tool, 'global_filter_core_frequency')
+            split2 = split_params.column().split(factor=0.07)
+            split2.column().prop(fmc_adapter_tool, 'apply_local_filter_core')
+            split3 = split2.column().split(factor=0.5)
+            split3.column().prop(fmc_adapter_tool, 'local_filter_core_frequency')
+            split3.column().prop(fmc_adapter_tool, 'local_filter_origin_core')
+            
+            split = box.column().row().split(factor=0.15)
+            split.column().label(text='Arms')
+            split_params = split.column().split(factor=0.3)
+            split1 = split_params.column().split(factor=0.15)
+            split1.column().prop(fmc_adapter_tool, 'apply_global_filter_arms')
+            split1.column().prop(fmc_adapter_tool, 'global_filter_arms_frequency')
+            split2 = split_params.column().split(factor=0.07)
+            split2.column().prop(fmc_adapter_tool, 'apply_local_filter_arms')
+            split3 = split2.column().split(factor=0.5)
+            split3.column().prop(fmc_adapter_tool, 'local_filter_arms_frequency')
+            split3.column().prop(fmc_adapter_tool, 'local_filter_origin_arms')
+            
+            split = box.column().row().split(factor=0.15)
+            split.column().label(text='Hands')
+            split_params = split.column().split(factor=0.3)
+            split1 = split_params.column().split(factor=0.15)
+            split1.column().prop(fmc_adapter_tool, 'apply_global_filter_hands')
+            split1.column().prop(fmc_adapter_tool, 'global_filter_hands_frequency')
+            split2 = split_params.column().split(factor=0.07)
+            split2.column().prop(fmc_adapter_tool, 'apply_local_filter_hands')
+            split3 = split2.column().split(factor=0.5)
+            split3.column().prop(fmc_adapter_tool, 'local_filter_hands_frequency')
+            split3.column().prop(fmc_adapter_tool, 'local_filter_origin_hands')
+
+            split = box.column().row().split(factor=0.15)
+            split.column().label(text='Fingers')
+            split_params = split.column().split(factor=0.3)
+            split1 = split_params.column().split(factor=0.15)
+            split1.column().prop(fmc_adapter_tool, 'apply_global_filter_fingers')
+            split1.column().prop(fmc_adapter_tool, 'global_filter_fingers_frequency')
+            split2 = split_params.column().split(factor=0.07)
+            split2.column().prop(fmc_adapter_tool, 'apply_local_filter_fingers')
+            split3 = split2.column().split(factor=0.5)
+            split3.column().prop(fmc_adapter_tool, 'local_filter_fingers_frequency')
+            split3.column().prop(fmc_adapter_tool, 'local_filter_origin_fingers')
+
+            split = box.column().row().split(factor=0.15)
+            split.column().label(text='Legs')
+            split_params = split.column().split(factor=0.3)
+            split1 = split_params.column().split(factor=0.15)
+            split1.column().prop(fmc_adapter_tool, 'apply_global_filter_legs')
+            split1.column().prop(fmc_adapter_tool, 'global_filter_legs_frequency')
+            split2 = split_params.column().split(factor=0.07)
+            split2.column().prop(fmc_adapter_tool, 'apply_local_filter_legs')
+            split3 = split2.column().split(factor=0.5)
+            split3.column().prop(fmc_adapter_tool, 'local_filter_legs_frequency')
+            split3.column().prop(fmc_adapter_tool, 'local_filter_origin_legs')
+
+            split = box.column().row().split(factor=0.15)
+            split.column().label(text='Feet')
+            split_params = split.column().split(factor=0.3)
+            split1 = split_params.column().split(factor=0.15)
+            split1.column().prop(fmc_adapter_tool, 'apply_global_filter_feet')
+            split1.column().prop(fmc_adapter_tool, 'global_filter_feet_frequency')
+            split2 = split_params.column().split(factor=0.07)
+            split2.column().prop(fmc_adapter_tool, 'apply_local_filter_feet')
+            split3 = split2.column().split(factor=0.5)
+            split3.column().prop(fmc_adapter_tool, 'local_filter_feet_frequency')
+            split3.column().prop(fmc_adapter_tool, 'local_filter_origin_feet')
+            
+            box.operator('fmc_adapter.apply_butterworth_filters', text='3. Apply Butterworth Filters')
+
+        # Create a button to toggle Add Finger Rotation Limits Options visibility
+        row = layout.row(align=True)
+        row.prop(fmc_adapter_tool, "show_add_finger_rotation_limits", text="", icon='TRIA_DOWN' if fmc_adapter_tool.show_add_finger_rotation_limits else 'TRIA_RIGHT', emboss=False)
+        row.label(text="Add Finger Rotation Limits")
+
+        if fmc_adapter_tool.show_add_finger_rotation_limits:
+
+            # Add Finger Rotation Limits
+            box = layout.box()
+            box.operator('fmc_adapter.add_finger_rotation_limits', text='4. Add Finger Rotation Limits')
+
+        # Create a button to toggle Rig Options visibility
+        row = layout.row(align=True)
+        row.prop(fmc_adapter_tool, "show_add_rig", text="", icon='TRIA_DOWN' if fmc_adapter_tool.show_add_rig else 'TRIA_RIGHT', emboss=False)
+        row.label(text="Add Rig")
+
+        if fmc_adapter_tool.show_add_rig:
+
+            # Add Rig Options
+            box = layout.box()
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Keep right/left symmetry')
+            split.split().column().prop(fmc_adapter_tool, 'keep_symmetry')
+
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Add finger constraints')
+            split.split().column().prop(fmc_adapter_tool, 'add_fingers_constraints')
+
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Add IK constraints')
+            split.split().column().prop(fmc_adapter_tool, 'add_ik_constraints')
+
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Add rotation limits')
+            split.split().column().prop(fmc_adapter_tool, 'use_limit_rotation')
+
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Clear constraints')
+            split.split().column().prop(fmc_adapter_tool, 'clear_constraints')
+            
+            box.operator('fmc_adapter.add_rig', text='5. Add Rig')
+
+        # Create a button to toggle Add Body Mesh Options visibility
+        row = layout.row(align=True)
+        row.prop(fmc_adapter_tool, "show_add_body_mesh", text="", icon='TRIA_DOWN' if fmc_adapter_tool.show_add_body_mesh else 'TRIA_RIGHT', emboss=False)
+        row.label(text="Add Body Mesh")
+
+        if fmc_adapter_tool.show_add_body_mesh:
         
-        split = box.column().row().split(factor=0.6)
-        split.column().label(text='Align Reference')
-        split.split().column().prop(fmc_adapter_tool, 'vertical_align_reference')
-        
-        split = box.column().row().split(factor=0.6)
-        split.column().label(text='Vertical Angle Offset')
-        split.split().column().prop(fmc_adapter_tool, 'vertical_align_angle_offset')
-        
-        split = box.column().row().split(factor=0.6)
-        split.column().label(text='Ground Reference')
-        split.split().column().prop(fmc_adapter_tool, 'ground_align_reference')
-        
-        split = box.column().row().split(factor=0.6)
-        split.column().label(text='Vertical Position Offset')
-        split.split().column().prop(fmc_adapter_tool, 'vertical_align_position_offset')
-        
-        split = box.column().row().split(factor=0.6)
-        split.column().label(text='Correct Fingers Empties')
-        split.split().column().prop(fmc_adapter_tool, 'correct_fingers_empties')
+            # Add Body Mesh Options
+            box = layout.box()
+            #box.label(text='Add Body Mesh Options')
+            
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Body Mesh Mode')
+            split.split().column().prop(fmc_adapter_tool, 'body_mesh_mode')
+            
+            box.operator('fmc_adapter.add_body_mesh', text='6. Add Body Mesh')
 
-        split = box.column().row().split(factor=0.6)
-        split.column().label(text='Add hand middle empty')
-        split.split().column().prop(fmc_adapter_tool, 'add_hand_middle_empty')
+        # Create a button to toggle FBX Export Options visibility
+        row = layout.row(align=True)
+        row.prop(fmc_adapter_tool, "show_export_fbx", text="", icon='TRIA_DOWN' if fmc_adapter_tool.show_export_fbx else 'TRIA_RIGHT', emboss=False)
+        row.label(text="FBX Export")
 
-        box.operator('fmc_adapter.adjust_empties', text='1. Adjust Empties')
+        if fmc_adapter_tool.show_export_fbx:
 
-        # Reduce Bone Length Dispersion Options
-        box = layout.box()
-        #box.label(text='Reduce Bone Length Dispersion Options')
-        
-        split = box.column().row().split(factor=0.6)
-        split.column().label(text='Dispersion Interval Variable')
-        split.split().column().prop(fmc_adapter_tool, 'interval_variable')
+            # FBX Export
+            box = layout.box()
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='FBX Export Type')
+            split.split().column().prop(fmc_adapter_tool, 'fbx_type')
 
-        split = box.column().row().split(factor=0.6)
-        split.column().label(text='Dispersion Interval Factor')
-        split.split().column().prop(fmc_adapter_tool, 'interval_factor')
+            box.operator('fmc_adapter.export_fbx', text='7. Export FBX')
 
-        split = box.column().row().split(factor=0.6)
-        split.column().label(text='Body (Rig) Height [m]')
-        split.split().column().prop(fmc_adapter_tool, 'body_height')
-
-        box.operator('fmc_adapter.reduce_bone_length_dispersion', text='2. Reduce Bone Length Dispersion')
-
-        # Reduce Shakiness Options
-        # box = layout.box()
-        # #box.label(text='Reduce Shakiness Options')
-        
-        # split = box.column().row().split(factor=0.6)
-        # split.column().label(text='Recording FPS')
-        # split.split().column().prop(fmc_adapter_tool, 'recording_fps')
-
-        # box.operator('fmc_adapter.reduce_shakiness', text='Reduce Shakiness')
-
-        # Add Finger Rotation Limits
-        box = layout.box()
-        box.operator('fmc_adapter.add_finger_rotation_limits', text='3. Add Finger Rotation Limits')
-
-        # Add Rig Options
-        box = layout.box()
-        #box.label(text='Add Rig Options')
-        split = box.column().row().split(factor=0.6)
-        split.column().label(text='Keep right/left symmetry')
-        split.split().column().prop(fmc_adapter_tool, 'keep_symmetry')
-
-        split = box.column().row().split(factor=0.6)
-        split.column().label(text='Add finger constraints')
-        split.split().column().prop(fmc_adapter_tool, 'add_fingers_constraints')
-
-        split = box.column().row().split(factor=0.6)
-        split.column().label(text='Add IK constraints')
-        split.split().column().prop(fmc_adapter_tool, 'add_ik_constraints')
-
-        split = box.column().row().split(factor=0.6)
-        split.column().label(text='Add rotation limits')
-        split.split().column().prop(fmc_adapter_tool, 'use_limit_rotation')
-
-        split = box.column().row().split(factor=0.6)
-        split.column().label(text='Clear constraints')
-        split.split().column().prop(fmc_adapter_tool, 'clear_constraints')
-        
-        box.operator('fmc_adapter.add_rig', text='4. Add Rig')
-        
-        # Add Body Mesh Options
-        box = layout.box()
-        #box.label(text='Add Body Mesh Options')
-        
-        split = box.column().row().split(factor=0.6)
-        split.column().label(text='Body Mesh Mode')
-        split.split().column().prop(fmc_adapter_tool, 'body_mesh_mode')
-        
-        box.operator('fmc_adapter.add_body_mesh', text='5. Add Body Mesh')
-
-        # FBX Export
-        box = layout.box()
-        split = box.column().row().split(factor=0.6)
-        split.column().label(text='FBX Export Type')
-        split.split().column().prop(fmc_adapter_tool, 'fbx_type')
-
-        box.operator('fmc_adapter.export_fbx', text='6. Export FBX')
 
 # Operator classes that executes the methods
 class FMC_ADAPTER_OT_adjust_empties(Operator):
@@ -4692,6 +6765,115 @@ class FMC_ADAPTER_OT_add_finger_rotation_limits(Operator):
         print('Finished. Execution time (s): ' + str(m.trunc((end - start)*1000)/1000))
 
         return {'FINISHED'}
+    
+class FMC_ADAPTER_OT_apply_butterworth_filters(Operator):
+    bl_idname       = 'fmc_adapter.apply_butterworth_filters'
+    bl_label        = 'Freemocap Adapter - Apply Butterworth Filters'
+    bl_description  = 'Apply Butterworth filters to the marker empties'
+    bl_options      = {'REGISTER', 'UNDO_GROUPED'}
+
+    def execute(self, context):
+
+        scene               = context.scene
+        fmc_adapter_tool    = scene.fmc_adapter_tool
+
+        # Get start time
+        start = time.time()
+
+        print('Executing Apply Butterworth Filters...')
+
+        # Create the global and local filter categories lists
+        global_filter_categories=[]
+        if fmc_adapter_tool.apply_global_filter_core:
+            global_filter_categories.append('core')
+        if fmc_adapter_tool.apply_global_filter_arms:
+            global_filter_categories.append('arms')
+        if fmc_adapter_tool.apply_global_filter_hands:
+            global_filter_categories.append('hands')
+        if fmc_adapter_tool.apply_global_filter_fingers:
+            global_filter_categories.append('fingers')
+        if fmc_adapter_tool.apply_global_filter_legs:
+            global_filter_categories.append('legs')
+        if fmc_adapter_tool.apply_global_filter_feet:
+            global_filter_categories.append('feet')
+
+        local_filter_categories=[]
+        if fmc_adapter_tool.apply_local_filter_core:
+            local_filter_categories.append('core')
+        if fmc_adapter_tool.apply_local_filter_arms:
+            local_filter_categories.append('arms')
+        if fmc_adapter_tool.apply_local_filter_hands:
+            local_filter_categories.append('hands')
+        if fmc_adapter_tool.apply_local_filter_fingers:
+            local_filter_categories.append('fingers')
+        if fmc_adapter_tool.apply_local_filter_legs:
+            local_filter_categories.append('legs')
+        if fmc_adapter_tool.apply_local_filter_feet:
+            local_filter_categories.append('feet')
+
+
+        if global_filter_categories == [] and local_filter_categories == []:
+            print('No category selected')
+            return {'FINISHED'}
+        
+        # Create the cutoff frequencies dictionary
+        global_cutoff_frequencies={}
+        if fmc_adapter_tool.apply_global_filter_core:
+            global_cutoff_frequencies['core'] = fmc_adapter_tool.global_filter_core_frequency
+        if fmc_adapter_tool.apply_global_filter_arms:
+            global_cutoff_frequencies['arms'] = fmc_adapter_tool.global_filter_arms_frequency
+        if fmc_adapter_tool.apply_global_filter_hands:
+            global_cutoff_frequencies['hands'] = fmc_adapter_tool.global_filter_hands_frequency
+        if fmc_adapter_tool.apply_global_filter_fingers:
+            global_cutoff_frequencies['fingers'] = fmc_adapter_tool.global_filter_fingers_frequency
+        if fmc_adapter_tool.apply_global_filter_legs:
+            global_cutoff_frequencies['legs'] = fmc_adapter_tool.global_filter_legs_frequency
+        if fmc_adapter_tool.apply_global_filter_feet:
+            global_cutoff_frequencies['feet'] = fmc_adapter_tool.global_filter_feet_frequency
+
+        local_cutoff_frequencies={}
+        if fmc_adapter_tool.apply_local_filter_core:
+            local_cutoff_frequencies['core'] = fmc_adapter_tool.local_filter_core_frequency
+        if fmc_adapter_tool.apply_local_filter_arms:
+            local_cutoff_frequencies['arms'] = fmc_adapter_tool.local_filter_arms_frequency
+        if fmc_adapter_tool.apply_local_filter_hands:
+            local_cutoff_frequencies['hands'] = fmc_adapter_tool.local_filter_hands_frequency
+        if fmc_adapter_tool.apply_local_filter_fingers:
+            local_cutoff_frequencies['fingers'] = fmc_adapter_tool.local_filter_fingers_frequency
+        if fmc_adapter_tool.apply_local_filter_legs:
+            local_cutoff_frequencies['legs'] = fmc_adapter_tool.local_filter_legs_frequency
+        if fmc_adapter_tool.apply_local_filter_feet:
+            local_cutoff_frequencies['feet'] = fmc_adapter_tool.local_filter_feet_frequency
+
+        local_filter_origins={}
+        if fmc_adapter_tool.apply_local_filter_core:
+            local_filter_origins['core'] = fmc_adapter_tool.local_filter_origin_core
+        if fmc_adapter_tool.apply_local_filter_arms:
+            local_filter_origins['arms'] = fmc_adapter_tool.local_filter_origin_arms
+        if fmc_adapter_tool.apply_local_filter_hands:
+            local_filter_origins['hands'] = fmc_adapter_tool.local_filter_origin_hands
+        if fmc_adapter_tool.apply_local_filter_fingers:
+            local_filter_origins['fingers'] = fmc_adapter_tool.local_filter_origin_fingers
+        if fmc_adapter_tool.apply_local_filter_legs:
+            local_filter_origins['legs'] = fmc_adapter_tool.local_filter_origin_legs
+        if fmc_adapter_tool.apply_local_filter_feet:
+            local_filter_origins['feet'] = fmc_adapter_tool.local_filter_origin_feet
+
+        # Execute export fbx function
+        apply_butterworth_filters(global_filter_categories=global_filter_categories,
+                                  global_cutoff_frequencies=global_cutoff_frequencies,
+                                  local_filter_categories=local_filter_categories,
+                                  local_cutoff_frequencies=local_cutoff_frequencies,
+                                  local_filter_origins=local_filter_origins,
+                                  interval_variable=fmc_adapter_tool.interval_variable,
+                                  interval_factor=fmc_adapter_tool.interval_factor,
+                                  body_height=fmc_adapter_tool.body_height)
+
+        # Get end time and print execution time
+        end = time.time()
+        print('Finished. Execution time (s): ' + str(m.trunc((end - start)*1000)/1000))
+
+        return {'FINISHED'}
 
 classes = [FMC_ADAPTER_PROPERTIES,
            VIEW3D_PT_freemocap_adapter,
@@ -4701,7 +6883,8 @@ classes = [FMC_ADAPTER_PROPERTIES,
            FMC_ADAPTER_OT_add_rig,
            FMC_ADAPTER_OT_add_body_mesh,
            FMC_ADAPTER_OT_export_fbx,
-           FMC_ADAPTER_OT_add_finger_rotation_limits
+           FMC_ADAPTER_OT_add_finger_rotation_limits,
+           FMC_ADAPTER_OT_apply_butterworth_filters,
 ]
 
 def register():
