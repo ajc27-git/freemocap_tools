@@ -1,7 +1,7 @@
 bl_info = {
     'name'          : 'Freemocap Adapter Alt',
     'author'        : 'ajc27',
-    'version'       : (1, 3, 0),
+    'version'       : (1, 3, 1),
     'blender'       : (3, 0, 0),
     'location'      : '3D Viewport > Sidebar > Freemocap Adapter Alt',
     'description'   : 'Add-on to adapt the Freemocap Blender output',
@@ -20,7 +20,14 @@ import mathutils
 import time
 import statistics
 import numpy as np
-from scipy.signal import butter, filtfilt
+
+scipy_available = True
+try:
+    from scipy.signal import butter, filtfilt
+except ImportError:
+    scipy_available = False
+    print("scipy is not installed. Please install scipy to use this addon.")
+
 from .io_scene_fbx_functions_blender3 import *
 # from .io_scene_fbx_functions_blender4 import *
 
@@ -6411,11 +6418,14 @@ class VIEW3D_PT_freemocap_adapter(Panel):
             split1 = split_params.column().split(factor=0.15)
             split1.column().prop(fmc_adapter_tool, 'apply_global_filter_core')
             split1.column().prop(fmc_adapter_tool, 'global_filter_core_frequency')
-            split2 = split_params.column().split(factor=0.07)
-            split2.column().prop(fmc_adapter_tool, 'apply_local_filter_core')
-            split3 = split2.column().split(factor=0.5)
-            split3.column().prop(fmc_adapter_tool, 'local_filter_core_frequency')
-            split3.column().prop(fmc_adapter_tool, 'local_filter_origin_core')
+            if not scipy_available:
+                split_params.column().label(text='Install scipy module')
+            else:
+                split2 = split_params.column().split(factor=0.07)
+                split2.column().prop(fmc_adapter_tool, 'apply_local_filter_core')
+                split3 = split2.column().split(factor=0.5)
+                split3.column().prop(fmc_adapter_tool, 'local_filter_core_frequency')
+                split3.column().prop(fmc_adapter_tool, 'local_filter_origin_core')
             
             split = box.column().row().split(factor=0.15)
             split.column().label(text='Arms')
@@ -6423,11 +6433,14 @@ class VIEW3D_PT_freemocap_adapter(Panel):
             split1 = split_params.column().split(factor=0.15)
             split1.column().prop(fmc_adapter_tool, 'apply_global_filter_arms')
             split1.column().prop(fmc_adapter_tool, 'global_filter_arms_frequency')
-            split2 = split_params.column().split(factor=0.07)
-            split2.column().prop(fmc_adapter_tool, 'apply_local_filter_arms')
-            split3 = split2.column().split(factor=0.5)
-            split3.column().prop(fmc_adapter_tool, 'local_filter_arms_frequency')
-            split3.column().prop(fmc_adapter_tool, 'local_filter_origin_arms')
+            if not scipy_available:
+                split_params.column().label(text='Install scipy module')
+            else:
+                split2 = split_params.column().split(factor=0.07)
+                split2.column().prop(fmc_adapter_tool, 'apply_local_filter_arms')
+                split3 = split2.column().split(factor=0.5)
+                split3.column().prop(fmc_adapter_tool, 'local_filter_arms_frequency')
+                split3.column().prop(fmc_adapter_tool, 'local_filter_origin_arms')
             
             split = box.column().row().split(factor=0.15)
             split.column().label(text='Hands')
@@ -6435,11 +6448,14 @@ class VIEW3D_PT_freemocap_adapter(Panel):
             split1 = split_params.column().split(factor=0.15)
             split1.column().prop(fmc_adapter_tool, 'apply_global_filter_hands')
             split1.column().prop(fmc_adapter_tool, 'global_filter_hands_frequency')
-            split2 = split_params.column().split(factor=0.07)
-            split2.column().prop(fmc_adapter_tool, 'apply_local_filter_hands')
-            split3 = split2.column().split(factor=0.5)
-            split3.column().prop(fmc_adapter_tool, 'local_filter_hands_frequency')
-            split3.column().prop(fmc_adapter_tool, 'local_filter_origin_hands')
+            if not scipy_available:
+                split_params.column().label(text='Install scipy module')
+            else:
+                split2 = split_params.column().split(factor=0.07)
+                split2.column().prop(fmc_adapter_tool, 'apply_local_filter_hands')
+                split3 = split2.column().split(factor=0.5)
+                split3.column().prop(fmc_adapter_tool, 'local_filter_hands_frequency')
+                split3.column().prop(fmc_adapter_tool, 'local_filter_origin_hands')
 
             split = box.column().row().split(factor=0.15)
             split.column().label(text='Fingers')
@@ -6447,11 +6463,14 @@ class VIEW3D_PT_freemocap_adapter(Panel):
             split1 = split_params.column().split(factor=0.15)
             split1.column().prop(fmc_adapter_tool, 'apply_global_filter_fingers')
             split1.column().prop(fmc_adapter_tool, 'global_filter_fingers_frequency')
-            split2 = split_params.column().split(factor=0.07)
-            split2.column().prop(fmc_adapter_tool, 'apply_local_filter_fingers')
-            split3 = split2.column().split(factor=0.5)
-            split3.column().prop(fmc_adapter_tool, 'local_filter_fingers_frequency')
-            split3.column().prop(fmc_adapter_tool, 'local_filter_origin_fingers')
+            if not scipy_available:
+                split_params.column().label(text='Install scipy module')
+            else:
+                split2 = split_params.column().split(factor=0.07)
+                split2.column().prop(fmc_adapter_tool, 'apply_local_filter_fingers')
+                split3 = split2.column().split(factor=0.5)
+                split3.column().prop(fmc_adapter_tool, 'local_filter_fingers_frequency')
+                split3.column().prop(fmc_adapter_tool, 'local_filter_origin_fingers')
 
             split = box.column().row().split(factor=0.15)
             split.column().label(text='Legs')
@@ -6459,11 +6478,14 @@ class VIEW3D_PT_freemocap_adapter(Panel):
             split1 = split_params.column().split(factor=0.15)
             split1.column().prop(fmc_adapter_tool, 'apply_global_filter_legs')
             split1.column().prop(fmc_adapter_tool, 'global_filter_legs_frequency')
-            split2 = split_params.column().split(factor=0.07)
-            split2.column().prop(fmc_adapter_tool, 'apply_local_filter_legs')
-            split3 = split2.column().split(factor=0.5)
-            split3.column().prop(fmc_adapter_tool, 'local_filter_legs_frequency')
-            split3.column().prop(fmc_adapter_tool, 'local_filter_origin_legs')
+            if not scipy_available:
+                split_params.column().label(text='Install scipy module')
+            else:
+                split2 = split_params.column().split(factor=0.07)
+                split2.column().prop(fmc_adapter_tool, 'apply_local_filter_legs')
+                split3 = split2.column().split(factor=0.5)
+                split3.column().prop(fmc_adapter_tool, 'local_filter_legs_frequency')
+                split3.column().prop(fmc_adapter_tool, 'local_filter_origin_legs')
 
             split = box.column().row().split(factor=0.15)
             split.column().label(text='Feet')
@@ -6471,11 +6493,14 @@ class VIEW3D_PT_freemocap_adapter(Panel):
             split1 = split_params.column().split(factor=0.15)
             split1.column().prop(fmc_adapter_tool, 'apply_global_filter_feet')
             split1.column().prop(fmc_adapter_tool, 'global_filter_feet_frequency')
-            split2 = split_params.column().split(factor=0.07)
-            split2.column().prop(fmc_adapter_tool, 'apply_local_filter_feet')
-            split3 = split2.column().split(factor=0.5)
-            split3.column().prop(fmc_adapter_tool, 'local_filter_feet_frequency')
-            split3.column().prop(fmc_adapter_tool, 'local_filter_origin_feet')
+            if not scipy_available:
+                split_params.column().label(text='Install scipy module')
+            else:
+                split2 = split_params.column().split(factor=0.07)
+                split2.column().prop(fmc_adapter_tool, 'apply_local_filter_feet')
+                split3 = split2.column().split(factor=0.5)
+                split3.column().prop(fmc_adapter_tool, 'local_filter_feet_frequency')
+                split3.column().prop(fmc_adapter_tool, 'local_filter_origin_feet')
             
             box.operator('fmc_adapter.apply_butterworth_filters', text='3. Apply Butterworth Filters')
 
@@ -6798,19 +6823,19 @@ class FMC_ADAPTER_OT_apply_butterworth_filters(Operator):
             global_filter_categories.append('feet')
 
         local_filter_categories=[]
-        if fmc_adapter_tool.apply_local_filter_core:
-            local_filter_categories.append('core')
-        if fmc_adapter_tool.apply_local_filter_arms:
-            local_filter_categories.append('arms')
-        if fmc_adapter_tool.apply_local_filter_hands:
-            local_filter_categories.append('hands')
-        if fmc_adapter_tool.apply_local_filter_fingers:
-            local_filter_categories.append('fingers')
-        if fmc_adapter_tool.apply_local_filter_legs:
-            local_filter_categories.append('legs')
-        if fmc_adapter_tool.apply_local_filter_feet:
-            local_filter_categories.append('feet')
-
+        if scipy_available:
+            if fmc_adapter_tool.apply_local_filter_core:
+                local_filter_categories.append('core')
+            if fmc_adapter_tool.apply_local_filter_arms:
+                local_filter_categories.append('arms')
+            if fmc_adapter_tool.apply_local_filter_hands:
+                local_filter_categories.append('hands')
+            if fmc_adapter_tool.apply_local_filter_fingers:
+                local_filter_categories.append('fingers')
+            if fmc_adapter_tool.apply_local_filter_legs:
+                local_filter_categories.append('legs')
+            if fmc_adapter_tool.apply_local_filter_feet:
+                local_filter_categories.append('feet')
 
         if global_filter_categories == [] and local_filter_categories == []:
             print('No category selected')
@@ -6832,32 +6857,34 @@ class FMC_ADAPTER_OT_apply_butterworth_filters(Operator):
             global_cutoff_frequencies['feet'] = fmc_adapter_tool.global_filter_feet_frequency
 
         local_cutoff_frequencies={}
-        if fmc_adapter_tool.apply_local_filter_core:
-            local_cutoff_frequencies['core'] = fmc_adapter_tool.local_filter_core_frequency
-        if fmc_adapter_tool.apply_local_filter_arms:
-            local_cutoff_frequencies['arms'] = fmc_adapter_tool.local_filter_arms_frequency
-        if fmc_adapter_tool.apply_local_filter_hands:
-            local_cutoff_frequencies['hands'] = fmc_adapter_tool.local_filter_hands_frequency
-        if fmc_adapter_tool.apply_local_filter_fingers:
-            local_cutoff_frequencies['fingers'] = fmc_adapter_tool.local_filter_fingers_frequency
-        if fmc_adapter_tool.apply_local_filter_legs:
-            local_cutoff_frequencies['legs'] = fmc_adapter_tool.local_filter_legs_frequency
-        if fmc_adapter_tool.apply_local_filter_feet:
-            local_cutoff_frequencies['feet'] = fmc_adapter_tool.local_filter_feet_frequency
+        if scipy_available:
+            if fmc_adapter_tool.apply_local_filter_core:
+                local_cutoff_frequencies['core'] = fmc_adapter_tool.local_filter_core_frequency
+            if fmc_adapter_tool.apply_local_filter_arms:
+                local_cutoff_frequencies['arms'] = fmc_adapter_tool.local_filter_arms_frequency
+            if fmc_adapter_tool.apply_local_filter_hands:
+                local_cutoff_frequencies['hands'] = fmc_adapter_tool.local_filter_hands_frequency
+            if fmc_adapter_tool.apply_local_filter_fingers:
+                local_cutoff_frequencies['fingers'] = fmc_adapter_tool.local_filter_fingers_frequency
+            if fmc_adapter_tool.apply_local_filter_legs:
+                local_cutoff_frequencies['legs'] = fmc_adapter_tool.local_filter_legs_frequency
+            if fmc_adapter_tool.apply_local_filter_feet:
+                local_cutoff_frequencies['feet'] = fmc_adapter_tool.local_filter_feet_frequency
 
         local_filter_origins={}
-        if fmc_adapter_tool.apply_local_filter_core:
-            local_filter_origins['core'] = fmc_adapter_tool.local_filter_origin_core
-        if fmc_adapter_tool.apply_local_filter_arms:
-            local_filter_origins['arms'] = fmc_adapter_tool.local_filter_origin_arms
-        if fmc_adapter_tool.apply_local_filter_hands:
-            local_filter_origins['hands'] = fmc_adapter_tool.local_filter_origin_hands
-        if fmc_adapter_tool.apply_local_filter_fingers:
-            local_filter_origins['fingers'] = fmc_adapter_tool.local_filter_origin_fingers
-        if fmc_adapter_tool.apply_local_filter_legs:
-            local_filter_origins['legs'] = fmc_adapter_tool.local_filter_origin_legs
-        if fmc_adapter_tool.apply_local_filter_feet:
-            local_filter_origins['feet'] = fmc_adapter_tool.local_filter_origin_feet
+        if scipy_available:
+            if fmc_adapter_tool.apply_local_filter_core:
+                local_filter_origins['core'] = fmc_adapter_tool.local_filter_origin_core
+            if fmc_adapter_tool.apply_local_filter_arms:
+                local_filter_origins['arms'] = fmc_adapter_tool.local_filter_origin_arms
+            if fmc_adapter_tool.apply_local_filter_hands:
+                local_filter_origins['hands'] = fmc_adapter_tool.local_filter_origin_hands
+            if fmc_adapter_tool.apply_local_filter_fingers:
+                local_filter_origins['fingers'] = fmc_adapter_tool.local_filter_origin_fingers
+            if fmc_adapter_tool.apply_local_filter_legs:
+                local_filter_origins['legs'] = fmc_adapter_tool.local_filter_origin_legs
+            if fmc_adapter_tool.apply_local_filter_feet:
+                local_filter_origins['feet'] = fmc_adapter_tool.local_filter_origin_feet
 
         # Execute export fbx function
         apply_butterworth_filters(global_filter_categories=global_filter_categories,

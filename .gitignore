@@ -6,3 +6,5 @@ freemocap_video_export/__pycache__/__init__.cpython-310.pyc
 freemocap_adapter/__pycache__/__init__.cpython-310.pyc
 .vscode/launch.json
 freemocap_tools.code-workspace
+freemocap_adapter/__pycache__/io_scene_fbx_functions_blender3.cpython-310.pyc
+freemocap_adapter/__pycache__/io_scene_fbx_functions_blender4.cpython-310.pyc
