@@ -3,6 +3,12 @@ Add-on to adapt the Freemocap Blender output. It can adjust the empties position
 
 # Requirements
 1. Activate the Rigify add-on in Blender preferences.
+2. Make sure the scipy python package is installed in your Blender's python folder. If it's not installed you will get a "ModuleNotFoundError: No module named scipy"
+   when installing the addon. To install the scipy package run the command `python -m pip install scipy` inside your Blender python folder.
+
+   For example:
+   `C:\Program Files\Blender Foundation\Blender 3.6\3.6\python\bin> .\python.exe -m pip install scipy`.
+   
 
 # Installation
 Install as a regular *.zip add-on in Edit->Preferences-Add-ons.
