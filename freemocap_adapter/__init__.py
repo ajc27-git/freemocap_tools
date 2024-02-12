@@ -1,7 +1,7 @@
 bl_info = {
     'name'          : 'Freemocap Adapter Alt',
     'author'        : 'ajc27',
-    'version'       : (1, 3, 1),
+    'version'       : (1, 3, 2),
     'blender'       : (3, 0, 0),
     'location'      : '3D Viewport > Sidebar > Freemocap Adapter Alt',
     'description'   : 'Add-on to adapt the Freemocap Blender output',
@@ -1594,6 +1594,30 @@ ik_constraint_parameters = {
         'ik_empty_marker_name': 'left_ankle'},
 }
 
+# Dictionary of the pole bones parameters
+ik_pole_bones = {
+    'arm_pole_target.R': {
+        'base_marker':      'right_shoulder',
+        'pole_marker':      'right_elbow',
+        'target_marker':    'right_wrist',
+        'aux_markers': ['right_wrist', 'right_hand_thumb_cmc']},
+    'arm_pole_target.L': {
+        'base_marker':      'left_shoulder',
+        'pole_marker':      'left_elbow',
+        'target_marker':    'left_wrist',
+        'aux_markers': ['left_wrist', 'left_hand_thumb_cmc']},
+    'leg_pole_target.R': {
+        'base_marker':      'right_hip',
+        'pole_marker':      'right_knee',
+        'target_marker':    'right_ankle',
+        'aux_markers': ['right_ankle', 'right_heel']},
+    'leg_pole_target.L': {
+        'base_marker':          'left_hip',
+        'pole_marker':          'left_knee',
+        'target_marker':        'left_ankle',
+        'aux_markers': ['left_ankle', 'left_heel']},
+}
+
 # Dictionary with all the Skelly mesh parts
 skelly_parts = {
     'head': {
@@ -1602,9 +1626,9 @@ skelly_parts = {
         'bones_end'             : (0, 0, 0),        # End of the bones
         'bones_length'          : 0,                # Total length of the bones
         'mesh_length'           : 0.044658516812,   # Length of the mesh
-        # 'mesh_length'           : 0.014658516812,
+        # 'mesh_length'           : 0.014658516812, # Big Head Skelly
         'position_offset'       : (0, 0.03, 0.03),  # Position offset of the mesh as units of the bones length
-        # 'position_offset'       : (0, 0.03, 0.23),
+        # 'position_offset'       : (0, 0.03, 0.23), # Big Head Skelly
         'adjust_rotation'       : False,            # Adjust the rotation of the mesh after applying the position offset
     },
     'spine': {
@@ -2018,7 +2042,7 @@ skelly_parts = {
         'bones_end'             : (0, 0, 0),
         'bones_length'          : 0,
         'mesh_length'           : 0.42875,
-        'position_offset'       : (0, 0, 0),
+        'position_offset'       : (0, -0.04, 0),
         'adjust_rotation'       : False,
     },
     'thigh.L': {
@@ -2027,7 +2051,7 @@ skelly_parts = {
         'bones_end'             : (0, 0, 0),
         'bones_length'          : 0,
         'mesh_length'           : 0.42875,
-        'position_offset'       : (0, 0, 0),
+        'position_offset'       : (0, -0.04, 0),
         'adjust_rotation'       : False,
     },
     'shin.R': {
@@ -2367,12 +2391,13 @@ def draw_vector(origin, angle, name):
     bpy.ops.object.empty_add(type='SINGLE_ARROW', align='WORLD', location=origin, rotation=mathutils.Vector([0,0,1]).rotation_difference(angle).to_euler(), scale=(0.002, 0.002, 0.002))
     bpy.data.objects["Empty"].name = name
     
-    bpy.ops.object.empty_add(type='SPHERE', align='WORLD', location=(origin+angle*5), scale=(0.001, 0.001, 0.001))
-    bpy.data.objects["Empty"].scale = (0.01, 0.01, 0.01)
-    bpy.data.objects["Empty"].name = 'Sphere_' + name
+    # bpy.ops.object.empty_add(type='SPHERE', align='WORLD', location=(origin+angle*5), scale=(0.001, 0.001, 0.001))
+    # bpy.data.objects["Empty"].scale = (0.01, 0.01, 0.01)
+    # bpy.data.objects["Empty"].name = 'Sphere_' + name
 
     return
 
+### NOT IN USE ###
 # Function to calculate the pole angle necessary to make the ik base bone point to the pole target empty marker
 def calculate_ik_pole_angle(rig_name: str='root',
                             base_bone_name: str='upper_arm.L',
@@ -2381,17 +2406,8 @@ def calculate_ik_pole_angle(rig_name: str='root',
                             pole_target_empty_marker_name: str='left_elbow',
                             ik_empty_marker_name: str='left_wrist') -> float:
     
-    # Deselect all
-    #bpy.ops.object.select_all(action='DESELECT')
-
     # Get reference to the armature
     rig = bpy.data.objects[rig_name]
-
-    # Set the rig as active
-    #bpy.context.view_layer.objects.active = rig
-    
-    # Change to pose mode
-    #bpy.ops.object.mode_set(mode='POSE')
 
     # Get references to the base, ik and pole_target bones
     base_bone           = rig.pose.bones[base_bone_name]
@@ -2479,9 +2495,92 @@ def calculate_ik_pole_angle(rig_name: str='root',
     if cross_product_ik_vector_dot_product < 0:
         pole_angle_radians *= -1
 
-    #bpy.ops.object.mode_set(mode='OBJECT')
-
     return pole_angle_radians
+
+#  Function to define a quadratic function for the ik pole bone position calculus transition
+def ik_pole_quadratic_function(t1, t2, t3, y1, y2, y3):
+    A = np.array([
+        [t1**2, t1, 1],
+        [t2**2, t2, 1],
+        [t3**2, t3, 1]
+    ])
+    b = np.array([y1, y2, y3])
+    
+    # Solve for the coefficients
+    a, b, c = np.linalg.solve(A, b)
+    
+    # Define the quadratic function
+    def quadratic_function(t):
+        return a*t**2 + b*t + c
+    
+    return quadratic_function
+
+# Function to calculate the position of a an ik pole bone based on the position of the limb markers
+def calculate_ik_pole_position(base_marker_name: str,
+                               pole_marker_name: str,
+                               target_marker_name: str,
+                               aux_markers: list,
+                               dot_product_threshold: float,
+                               transition_function,):
+
+    # Get the marker objects
+    base_marker    = bpy.data.objects[base_marker_name]
+    pole_marker    = bpy.data.objects[pole_marker_name]
+    target_marker  = bpy.data.objects[target_marker_name]
+
+    # Get the base vector (vector from base marker to pole marker)
+    base_vector     = pole_marker.matrix_world.translation - base_marker.matrix_world.translation
+
+    # Get the target vector (vector from target marker to pole marker)
+    target_vector   = pole_marker.matrix_world.translation - target_marker.matrix_world.translation
+
+    # Normalize the vectors
+    base_vector_normalized = base_vector.normalized()
+    target_vector_normalized = target_vector.normalized()
+
+    #  Calculate the pole projection vector as the sum of the base vector and the target vector
+    pole_projection = (base_vector_normalized + target_vector_normalized).normalized()
+
+    # Get the dot product of the base vector and the target vector
+    dot_product = base_vector_normalized.dot(target_vector_normalized)
+
+    # If the vectors are almost parallel (dot product near minus one), use the auxiliary markers to determine approximate direction
+    if dot_product < (dot_product_threshold * -1):
+        # Get auxiliary markers
+        aux_0 = bpy.data.objects[aux_markers[0]]
+        aux_1 = bpy.data.objects[aux_markers[1]]
+        
+        # Get the auxiliary vector
+        aux_vector = (aux_0.matrix_world.translation - aux_1.matrix_world.translation).normalized()
+        
+        # Get the perpendicular projection of the aux_vector onto the base vector
+        perpendicular_aux = (aux_vector - base_vector_normalized * (base_vector_normalized.dot(aux_vector) / base_vector_normalized.length_squared)).normalized()
+
+        # Get the pondered coefficient from the transition function
+        pondered_coefficient = transition_function(abs(dot_product))
+
+        # Get the final pole projection vector as pondered sum of the base vector and the perpendicular aux vector
+        final_pole_projection = mathutils.Vector((1 - pondered_coefficient) * pole_projection + pondered_coefficient * perpendicular_aux).normalized()
+    
+    else:
+        final_pole_projection = pole_projection
+
+    # Debug
+    # bpy.ops.object.mode_set(mode='OBJECT')
+    # draw_vector(pole_marker.matrix_world.translation, base_vector_normalized, 'base_vector')
+    # draw_vector(pole_marker.matrix_world.translation, target_vector_normalized, 'target_vector')    
+    # draw_vector(pole_marker.matrix_world.translation, pole_projection, 'pole_projection_' + str(dot_product))
+    # if perpendicular_aux is not None:
+    #     draw_vector(pole_marker.matrix_world.translation, perpendicular_aux, 'perpendicular_aux_' + str(dot_product))
+    # draw_vector(pole_marker.matrix_world.translation, final_pole_projection, 'final_pole_projection_' + str(dot_product))
+    # bpy.context.view_layer.objects.active = bpy.data.objects['root']
+    # bpy.ops.object.mode_set(mode='POSE')
+
+    # Get the pole bone position as the projection vector multiplied by the sum of the length of the base vector and the length of the target vector
+    pole_bone_position = mathutils.Vector(pole_marker.matrix_world.translation + final_pole_projection * (base_vector.length + target_vector.length))
+
+    return pole_bone_position
+
 
 ######################################################################
 ######################### ADJUST EMPTIES #############################
@@ -3201,66 +3300,6 @@ def apply_butterworth_filters(global_filter_categories: list=[],
     # Reduce the bone length dispersion
     reduce_bone_length_dispersion(interval_variable=interval_variable, interval_factor=interval_factor, body_height=body_height, target_bone='')
 
-# IN DEVELOPMENT
-# Function to reduce sudden movements of empties with an acceleration above a threshold
-def reduce_shakiness(recording_fps: float=30):
-    print('fps: ' + str(recording_fps))
-    # Update the empty positions dictionary
-    update_empty_positions()
-
-    # Update the empty speeds dictionary
-    update_empty_speeds(recording_fps)
-
-    # Get the time of each frame in seconds
-    seconds_per_frame   = 1 / recording_fps
-
-    # for f in range(150, 157):
-    #     empty_speed         = empty_speeds['left_wrist']['speed'][f-1]
-    #     acceleration        = (empty_speed - empty_speeds['left_wrist']['speed'][f-2]) / seconds_per_frame
-    #     print('left_wrist frame ' + str(f) + ' speed: ' + str(empty_speed) + ' acceleration: ' + str(acceleration))
-
-    # for f in range(1160, 1180):
-    #     empty_speed         = empty_speeds['right_wrist']['speed'][f-1]
-    #     acceleration        = (empty_speed - empty_speeds['right_wrist']['speed'][f-2]) / seconds_per_frame
-    #     print('right_wrist frame ' + str(f) + ' speed: ' + str(empty_speed) + ' acceleration: ' + str(acceleration))
-
-    for empty in empty_positions:
-        for frame_index in range(1, len(empty_speeds[empty]['speed']) - 2):
-            empty_speed         = empty_speeds[empty]['speed'][frame_index]
-            acceleration        = (empty_speed - empty_speeds[empty]['speed'][frame_index-1]) / seconds_per_frame
-
-            if acceleration > 10:
-
-                # Get the empty position
-                empty_position      = mathutils.Vector([empty_positions[empty]['x'][frame_index], empty_positions[empty]['y'][frame_index], empty_positions[empty]['z'][frame_index]])
-                # Get the empty position in the previous frame
-                empty_position_prev = mathutils.Vector([empty_positions[empty]['x'][frame_index - 1], empty_positions[empty]['y'][frame_index - 1], empty_positions[empty]['z'][frame_index - 1]])
-                # Get the empty position in the next frame
-                empty_position_next = mathutils.Vector([empty_positions[empty]['x'][frame_index + 1], empty_positions[empty]['y'][frame_index + 1], empty_positions[empty]['z'][frame_index + 1]])
-
-                # Get the direction vector of the empty in the current frame
-                empty_direction         = empty_position - empty_position_prev
-
-                # Get the direction vector of the empty in the next current
-                empty_direction_next    = empty_position_next - empty_position
-
-                # Get the addition of the direction vectors
-                direction_addition      = empty_direction + empty_direction_next
-
-                # Get the the direction addition length
-                direction_addition_length = m.dist((0,0,0), direction_addition)
-
-                # If the distance is less than the threshold then the current position of the empty is considered a shake
-                if direction_addition_length < 0.02:
-                    print(empty + ":" + str(frame_index + 1) + ": shake")
-
-                # print(empty_position)
-                # print(empty_position_prev)
-                # print(empty_direction)
-                # print(empty_direction_next)
-                # print(direction_addition)
-                # print(m.dist((0,0,0), direction_addition))
-                # print('right_wrist frame ' + str(frame_index + 1) + ' speed: ' + str(empty_speed) + ' acceleration: ' + str(acceleration))
 
 ######################################################################
 ############################# ADD RIG ################################
@@ -3269,6 +3308,7 @@ def reduce_shakiness(recording_fps: float=30):
 def add_rig(keep_symmetry: bool=False,
             add_fingers_constraints: bool=False,
             add_ik_constraints: bool=False,
+            ik_transition_threshold: float=0.5,
             use_limit_rotation: bool=False,
             clear_constraints: bool=False):
 
@@ -3873,14 +3913,14 @@ def add_rig(keep_symmetry: bool=False,
         leg_pole_target_L = rig.data.edit_bones.new('leg_pole_target.L')
 
         # Place the pole target bones at z = 0 level, separated from the rig by 0.25 on the y axis
-        arm_pole_target_R.head = mathutils.Vector([-0.05, 0.25, 0])
-        arm_pole_target_R.tail = mathutils.Vector([-0.05, 0.50, 0])
-        arm_pole_target_L.head = mathutils.Vector([0.05, 0.25, 0])
-        arm_pole_target_L.tail = mathutils.Vector([0.05, 0.50, 0])
-        leg_pole_target_R.head = mathutils.Vector([-0.05, -0.25, 0])
-        leg_pole_target_R.tail = mathutils.Vector([-0.05, -0.50, 0])
-        leg_pole_target_L.head = mathutils.Vector([0.05, -0.25, 0])
-        leg_pole_target_L.tail = mathutils.Vector([0.05, -0.50, 0])
+        arm_pole_target_R.head = mathutils.Vector([0, 0, 0])
+        arm_pole_target_R.tail = mathutils.Vector([0, 0.25, 0])
+        arm_pole_target_L.head = mathutils.Vector([0, 0, 0])
+        arm_pole_target_L.tail = mathutils.Vector([0, 0.25, 0])
+        leg_pole_target_R.head = mathutils.Vector([0, 0, 0])
+        leg_pole_target_R.tail = mathutils.Vector([0, 0.25, 0])
+        leg_pole_target_L.head = mathutils.Vector([0, 0, 0])
+        leg_pole_target_L.tail = mathutils.Vector([0, 0.25, 0])
 
     # Add the thumb carpals
     thumb_carpal_R = rig.data.edit_bones.new('thumb.carpal.R')
@@ -4069,7 +4109,8 @@ def add_rig(keep_symmetry: bool=False,
             {'type':'LIMIT_ROTATION','use_limit_x':True,'min_x':-135,'max_x':90,'use_limit_y':True,'min_y':-180,'max_y':98,'use_limit_z':True,'min_z':-91,'max_z':97,'owner_space':'LOCAL'}],
         "forearm.R": [
             {'type':'IK','target':'root','subtarget':'hand.IK.R','pole_target':'root','pole_subtarget':'arm_pole_target.R',
-                'pole_angle':-1.570795,'chain_count':2,'use_ik_limit_x':False,'use_ik_limit_y':False,'use_ik_limit_z':False,
+                'pole_angle':-1.570795,'chain_count':2,'lock_ik_x':False,'lock_ik_y':True,'lock_ik_z':True,
+                'use_ik_limit_x':False,'use_ik_limit_y':False,'use_ik_limit_z':False,
                 'ik_min_x': -0.174533,'ik_max_x': 2.61799,'ik_min_y': -1.5708,'ik_max_y': 1.74533,'ik_min_z': -0.174533,'ik_max_z': 0.174533},
             {'type':'COPY_ROTATION','target':'root','subtarget':'hand.IK.R','use_x':False,'use_y':True,'use_z':False,'target_space':'LOCAL','owner_space':'LOCAL','influence':0.3},
             {'type':'DAMPED_TRACK','target':'right_wrist','track_axis':'TRACK_Y'},
@@ -4077,7 +4118,8 @@ def add_rig(keep_symmetry: bool=False,
             {'type':'LIMIT_ROTATION','use_limit_x':True,'min_x':-90,'max_x':79,'use_limit_y':True,'min_y':0,'max_y':146,'use_limit_z':True,'min_z':0,'max_z':0,'owner_space':'LOCAL'}],
         "forearm.L": [
             {'type':'IK','target':'root','subtarget':'hand.IK.L','pole_target':'root','pole_subtarget':'arm_pole_target.L',
-                'pole_angle':-1.570795,'chain_count':2,'use_ik_limit_x':False,'use_ik_limit_y':False,'use_ik_limit_z':False,
+                'pole_angle':-1.570795,'chain_count':2,'lock_ik_x':False,'lock_ik_y':True,'lock_ik_z':True,
+                'use_ik_limit_x':False,'use_ik_limit_y':False,'use_ik_limit_z':False,
                 'ik_min_x': -0.174533,'ik_max_x': 2.61799,'ik_min_y': -1.5708,'ik_max_y': 1.74533,'ik_min_z': -0.174533,'ik_max_z': 0.174533},
             {'type':'COPY_ROTATION','target':'root','subtarget':'hand.IK.L','use_x':False,'use_y':True,'use_z':False,'target_space':'LOCAL','owner_space':'LOCAL','influence':0.3},
             {'type':'DAMPED_TRACK','target':'left_wrist','track_axis':'TRACK_Y'},
@@ -4091,10 +4133,10 @@ def add_rig(keep_symmetry: bool=False,
             {'type':'COPY_LOCATION','target':'left_wrist','use_offset':False},
             {'type':'DAMPED_TRACK','target':'left_' + hand_damped_track_target,'track_axis':'TRACK_Y'},
             {'type':'LOCKED_TRACK','target':'left_hand_index_finger_mcp','track_axis':'TRACK_X','lock_axis':'LOCK_Y','influence':1.0}],
-        "arm_pole_target.R": [
-            {'type':'COPY_LOCATION','target':'right_elbow','use_offset':True}],
-        "arm_pole_target.L": [
-            {'type':'COPY_LOCATION','target':'left_elbow','use_offset':True}],
+        # "arm_pole_target.R": [
+        #     {'type':'COPY_LOCATION','target':'right_elbow','use_offset':True}],
+        # "arm_pole_target.L": [
+        #     {'type':'COPY_LOCATION','target':'left_elbow','use_offset':True}],
         "hand.R": [
             {'type':'DAMPED_TRACK','target':'right_' + hand_damped_track_target,'track_axis':'TRACK_Y'},
             {'type':'LOCKED_TRACK','target':'right_' + hand_locked_track_target,'track_axis':'TRACK_Z','lock_axis':'LOCK_Y','influence':1.0},
@@ -4113,13 +4155,15 @@ def add_rig(keep_symmetry: bool=False,
             {'type':'LIMIT_ROTATION','use_limit_x':True,'min_x':-155,'max_x':45,'use_limit_y':True,'min_y':-85,'max_y':105,'use_limit_z':True,'min_z':-17,'max_z':88,'owner_space':'LOCAL'}],
         "shin.R": [
             {'type':'IK','target':'root','subtarget':'foot.IK.R','pole_target':'root','pole_subtarget':'leg_pole_target.R',
-                'pole_angle':-1.570795,'chain_count':2,'use_ik_limit_x':False,'use_ik_limit_y':False,'use_ik_limit_z':False,
+                'pole_angle':-1.570795,'chain_count':2,'lock_ik_x':False,'lock_ik_y':True,'lock_ik_z':True,
+                'use_ik_limit_x':False,'use_ik_limit_y':False,'use_ik_limit_z':False,
                 'ik_min_x': -0.174533,'ik_max_x': 2.61799,'ik_min_y': -0.174533,'ik_max_y': 1.74533,'ik_min_z': -0.174533,'ik_max_z': 0.174533},
             {'type':'DAMPED_TRACK','target':'right_ankle','track_axis':'TRACK_Y'},
             {'type':'LIMIT_ROTATION','use_limit_x':True,'min_x':0,'max_x':150,'use_limit_y':True,'min_y':0,'max_y':0,'use_limit_z':True,'min_z':0,'max_z':0,'owner_space':'LOCAL'}],
         "shin.L": [
             {'type':'IK','target':'root','subtarget':'foot.IK.L','pole_target':'root','pole_subtarget':'leg_pole_target.L',
-                'pole_angle':-1.570795,'chain_count':2,'use_ik_limit_x':False,'use_ik_limit_y':False,'use_ik_limit_z':False,
+                'pole_angle':-1.570795,'chain_count':2,'lock_ik_x':False,'lock_ik_y':True,'lock_ik_z':True,
+                'use_ik_limit_x':False,'use_ik_limit_y':False,'use_ik_limit_z':False,
                 'ik_min_x': -0.174533,'ik_max_x': 2.61799,'ik_min_y': -0.174533,'ik_max_y': 1.74533,'ik_min_z': -0.174533,'ik_max_z': 0.174533},
             {'type':'DAMPED_TRACK','target':'left_ankle','track_axis':'TRACK_Y'},
             {'type':'LIMIT_ROTATION','use_limit_x':True,'min_x':0,'max_x':150,'use_limit_y':True,'min_y':0,'max_y':0,'use_limit_z':True,'min_z':0,'max_z':0,'owner_space':'LOCAL'}],
@@ -4129,10 +4173,10 @@ def add_rig(keep_symmetry: bool=False,
         "foot.IK.L": [
             {'type':'COPY_LOCATION','target':'left_ankle','use_offset':False},
             {'type':'LOCKED_TRACK','target':'left_foot_index','track_axis':'TRACK_X','lock_axis':'LOCK_Z','influence':1.0}],
-        "leg_pole_target.R": [
-            {'type':'COPY_LOCATION','target':'right_knee','use_offset':True}],
-        "leg_pole_target.L": [
-            {'type':'COPY_LOCATION','target':'left_knee','use_offset':True}],
+        # "leg_pole_target.R": [
+        #     {'type':'COPY_LOCATION','target':'right_knee','use_offset':True}],
+        # "leg_pole_target.L": [
+        #     {'type':'COPY_LOCATION','target':'left_knee','use_offset':True}],
         "foot.R": [
             {'type':'DAMPED_TRACK','target':'right_foot_index','track_axis':'TRACK_Y'},
             {'type':'LIMIT_ROTATION','use_limit_x':True,'min_x':-31,'max_x':63,'use_limit_y':True,'min_y':-26,'max_y':26,'use_limit_z':True,'min_z':-15,'max_z':74,'owner_space':'LOCAL'}],
@@ -4278,6 +4322,9 @@ def add_rig(keep_symmetry: bool=False,
                 bone_cons.pole_subtarget            = rig.pose.bones[cons['pole_subtarget']].name
                 bone_cons.chain_count               = cons['chain_count']
                 bone_cons.pole_angle                = cons['pole_angle']
+                rig.pose.bones[bone].lock_ik_x      = cons['lock_ik_x']
+                rig.pose.bones[bone].lock_ik_y      = cons['lock_ik_y']
+                rig.pose.bones[bone].lock_ik_z      = cons['lock_ik_z']
                 rig.pose.bones[bone].use_ik_limit_x = cons['use_ik_limit_x']
                 rig.pose.bones[bone].use_ik_limit_y = cons['use_ik_limit_y']
                 rig.pose.bones[bone].use_ik_limit_z = cons['use_ik_limit_z']
@@ -4298,25 +4345,30 @@ def add_rig(keep_symmetry: bool=False,
                 bone_cons.influence     = cons['influence']
 
     if add_ik_constraints:
+
+        # Get the transition quadratic function
+        quadratic_function = ik_pole_quadratic_function(t1=ik_transition_threshold,
+                                                        t2=((ik_transition_threshold + 1)/2),
+                                                        t3=1,
+                                                        y1=0.0,
+                                                        y2=0.25,
+                                                        y3=1)
+
         # Loop through the scene frames and calculate the pole angle for each IK constraint to animate the pole_angle variable
-        for f in range(scene.frame_start, scene.frame_end + 1):
-            bpy.context.scene.frame_set(f)
+        for frame in range(scene.frame_start, scene.frame_end + 1):
+            bpy.context.scene.frame_set(frame)
 
-            for bone in ik_constraint_parameters:
+            for bone in ik_pole_bones:
+                #  Calculate the pole bone position
+                pole_bone_position = calculate_ik_pole_position(ik_pole_bones[bone]['base_marker'],
+                                                                ik_pole_bones[bone]['pole_marker'],
+                                                                ik_pole_bones[bone]['target_marker'],
+                                                                ik_pole_bones[bone]['aux_markers'],
+                                                                ik_transition_threshold,
+                                                                quadratic_function)
 
-                # Calculate the pole angle for the frame
-                pole_angle = calculate_ik_pole_angle(rig_name='root',
-                                    base_bone_name=ik_constraint_parameters[bone]['base_bone_name'],
-                                    pole_target_bone_name=ik_constraint_parameters[bone]['pole_target_bone_name'],
-                                    base_empty_marker_name=ik_constraint_parameters[bone]['base_empty_marker_name'],
-                                    pole_target_empty_marker_name=ik_constraint_parameters[bone]['pole_target_empty_marker_name'],
-                                    ik_empty_marker_name=ik_constraint_parameters[bone]['ik_empty_marker_name'])
-                
-                # Change the pole angle property
-                bpy.context.object.pose.bones[bone].constraints["IK"].pole_angle = pole_angle
-                
-                # Insert a keyframe for the property
-                bpy.context.object.pose.bones[bone].constraints["IK"].keyframe_insert(data_path="pole_angle")
+                rig.pose.bones[bone].location = pole_bone_position
+                rig.pose.bones[bone].keyframe_insert(data_path="location")
 
         # Reset the scene frame to the start
         scene.frame_set(scene.frame_start)
@@ -4480,6 +4532,9 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
         rig.select_set(True)
         bpy.context.view_layer.objects.active = rig
 
+        #  Get the scene render fps
+        scene_render_fps = bpy.context.scene.render.fps
+
         # Change to edit mode
         bpy.ops.object.mode_set(mode='EDIT')
 
@@ -4570,6 +4625,9 @@ def add_mesh_to_rig(body_mesh_mode: str="custom", body_height: float=1.75):
         bpy.context.view_layer.objects.active = rig
         # Parent the mesh and the rig with automatic weights
         bpy.ops.object.parent_set(type='ARMATURE_AUTO')
+
+        # Restore the scene render fps in case it was changed
+        bpy.context.scene.render.fps = scene_render_fps
 
 
     elif body_mesh_mode == "can_man":
@@ -5077,409 +5135,7 @@ def export_fbx(self: Operator,
     # Modified the functions to adapt the fbx output to UE
 
     SCALE_FACTOR = 100
-    
 
-    # def fbx_animations_do(scene_data, ref_id, f_start, f_end, start_zero, objects=None, force_keep=False):
-    #     """
-    #     Generate animation data (a single AnimStack) from objects, for a given frame range.
-    #     """
-    #     bake_step = scene_data.settings.bake_anim_step
-    #     simplify_fac = scene_data.settings.bake_anim_simplify_factor
-    #     scene = scene_data.scene
-    #     depsgraph = scene_data.depsgraph
-    #     force_keying = scene_data.settings.bake_anim_use_all_bones
-    #     force_sek = scene_data.settings.bake_anim_force_startend_keying
-
-    #     if objects is not None:
-    #         # Add bones and duplis!
-    #         for ob_obj in tuple(objects):
-    #             if not ob_obj.is_object:
-    #                 continue
-    #             if ob_obj.type == 'ARMATURE':
-    #                 objects |= {bo_obj for bo_obj in ob_obj.bones if bo_obj in scene_data.objects}
-    #             for dp_obj in ob_obj.dupli_list_gen(depsgraph):
-    #                 if dp_obj in scene_data.objects:
-    #                     objects.add(dp_obj)
-    #     else:
-    #         objects = scene_data.objects
-
-    #     back_currframe = scene.frame_current
-    #     animdata_ob = {}
-    #     p_rots = {}
-
-    #     for ob_obj in objects:
-    #         if ob_obj.parented_to_armature:
-    #             continue
-    #         ACNW = AnimationCurveNodeWrapper
-    #         loc, rot, scale, _m, _mr = ob_obj.fbx_object_tx(scene_data)
-    #         rot_deg = tuple(convert_rad_to_deg_iter(rot))
-    #         force_key = (simplify_fac == 0.0) or (ob_obj.is_bone and force_keying)
-
-    #         animdata_ob[ob_obj] = (ACNW(ob_obj.key, 'LCL_TRANSLATION', force_key, force_sek, loc),
-    #                                ACNW(ob_obj.key, 'LCL_ROTATION', force_key, force_sek, rot_deg),
-    #                                ACNW(ob_obj.key, 'LCL_SCALING', force_key, force_sek, scale))
-    #         p_rots[ob_obj] = rot
-
-    #     force_key = (simplify_fac == 0.0)
-    #     animdata_shapes = {}
-
-    #     for me, (me_key, _shapes_key, shapes) in scene_data.data_deformers_shape.items():
-    #         # Ignore absolute shape keys for now!
-    #         if not me.shape_keys.use_relative:
-    #             continue
-    #         for shape, (channel_key, geom_key, _shape_verts_co, _shape_verts_idx) in shapes.items():
-    #             acnode = AnimationCurveNodeWrapper(channel_key, 'SHAPE_KEY', force_key, force_sek, (0.0,))
-    #             # Sooooo happy to have to twist again like a mad snake... Yes, we need to write those curves twice. :/
-    #             acnode.add_group(me_key, shape.name, shape.name, (shape.name,))
-    #             animdata_shapes[channel_key] = (acnode, me, shape)
-
-    #     animdata_cameras = {}
-    #     for cam_obj, cam_key in scene_data.data_cameras.items():
-    #         cam = cam_obj.bdata.data
-    #         acnode = AnimationCurveNodeWrapper(cam_key, 'CAMERA_FOCAL', force_key, force_sek, (cam.lens,))
-    #         animdata_cameras[cam_key] = (acnode, cam)
-
-    #     currframe = f_start
-    #     while currframe <= f_end:
-    #         real_currframe = currframe - f_start if start_zero else currframe
-    #         scene.frame_set(int(currframe), subframe=currframe - int(currframe))
-
-    #         for dp_obj in ob_obj.dupli_list_gen(depsgraph):
-    #             pass  # Merely updating dupli matrix of ObjectWrapper...
-
-    #         for ob_obj, (anim_loc, anim_rot, anim_scale) in animdata_ob.items():
-    #             location_multiple = 100
-    #             scale_factor = 1
-
-    #             # if this curve is the object root then keep its scale at 1
-    #             if len(str(ob_obj).split('|')) == 1:
-    #                 location_multiple = 1
-    #                 # Todo add to FBX addon
-    #                 scale_factor = SCALE_FACTOR
-
-    #             # We compute baked loc/rot/scale for all objects (rot being euler-compat with previous value!).
-    #             p_rot = p_rots.get(ob_obj, None)
-    #             loc, rot, scale, _m, _mr = ob_obj.fbx_object_tx(scene_data, rot_euler_compat=p_rot)
-
-    #             p_rots[ob_obj] = rot
-
-    #             # Check Blender version to adjust code for version >=4.0
-    #             if bpy.app.version_string[0] < '4':
-    #                 anim_loc.add_keyframe(real_currframe, loc * location_multiple)
-    #                 anim_rot.add_keyframe(real_currframe, tuple(convert_rad_to_deg_iter(rot)))
-    #                 anim_scale.add_keyframe(real_currframe, scale / scale_factor)
-    #             else:
-    #                 anim_loc.set_keyframes(real_currframe, loc * location_multiple)
-    #                 anim_rot.set_keyframes(real_currframe, tuple(convert_rad_to_deg_iter(rot)))
-    #                 anim_scale.set_keyframes(real_currframe, scale / scale_factor)
-
-    #             for anim_shape, me, shape in animdata_shapes.values():
-    #                 # Check Blender version to adjust code for version >=4.0
-    #                 if bpy.app.version_string[0] < '4':
-    #                     anim_shape.add_keyframe(real_currframe, (shape.value * scale_factor,))
-    #                 else:
-    #                     anim_shape.set_keyframes(real_currframe, (shape.value * scale_factor,))
-    #             for anim_camera, camera in animdata_cameras.values():
-    #                 # Check Blender version to adjust code for version >=4.0
-    #                 if bpy.app.version_string[0] < '4':
-    #                     anim_camera.add_keyframe(real_currframe, (camera.lens,))
-    #                 else:
-    #                     anim_camera.set_keyframes(real_currframe, (camera.lens,))
-                
-    #         currframe += bake_step
-
-    #     scene.frame_set(back_currframe, subframe=0.0)
-
-    #     animations = {}
-
-    #     # And now, produce final data (usable by FBX export code)
-    #     # Objects-like loc/rot/scale...
-    #     for ob_obj, anims in animdata_ob.items():
-    #         for anim in anims:
-    #             anim.simplify(simplify_fac, bake_step, force_keep)
-    #             if not anim:
-    #                 continue
-    #             for obj_key, group_key, group, fbx_group, fbx_gname in anim.get_final_data(scene, ref_id, force_keep):
-    #                 anim_data = animations.setdefault(obj_key, ("dummy_unused_key", {}))
-    #                 anim_data[1][fbx_group] = (group_key, group, fbx_gname)
-
-    #     # And meshes' shape keys.
-    #     for channel_key, (anim_shape, me, shape) in animdata_shapes.items():
-    #         final_keys = {}
-    #         anim_shape.simplify(simplify_fac, bake_step, force_keep)
-    #         if not anim_shape:
-    #             continue
-    #         for elem_key, group_key, group, fbx_group, fbx_gname in anim_shape.get_final_data(scene, ref_id,
-    #                                                                                           force_keep):
-    #             anim_data = animations.setdefault(elem_key, ("dummy_unused_key", {}))
-    #             anim_data[1][fbx_group] = (group_key, group, fbx_gname)
-
-    #     # And cameras' lens keys.
-    #     for cam_key, (anim_camera, camera) in animdata_cameras.items():
-    #         final_keys = {}
-    #         anim_camera.simplify(simplify_fac, bake_step, force_keep)
-    #         if not anim_camera:
-    #             continue
-    #         for elem_key, group_key, group, fbx_group, fbx_gname in anim_camera.get_final_data(scene, ref_id,
-    #                                                                                            force_keep):
-    #             anim_data = animations.setdefault(elem_key, ("dummy_unused_key", {}))
-    #             anim_data[1][fbx_group] = (group_key, group, fbx_gname)
-
-    #     astack_key = get_blender_anim_stack_key(scene, ref_id)
-    #     alayer_key = get_blender_anim_layer_key(scene, ref_id)
-    #     name = (get_blenderID_name(ref_id) if ref_id else scene.name).encode()
-
-    #     if start_zero:
-    #         f_end -= f_start
-    #         f_start = 0.0
-
-    #     return (astack_key, animations, alayer_key, name, f_start, f_end) if animations else None
-
-    # def fbx_data_armature_elements(root, arm_obj, scene_data):
-    #     """
-    #     Write:
-    #         * Bones "data" (NodeAttribute::LimbNode, contains pretty much nothing!).
-    #         * Deformers (i.e. Skin), bind between an armature and a mesh.
-    #         ** SubDeformers (i.e. Cluster), one per bone/vgroup pair.
-    #         * BindPose.
-    #     Note armature itself has no data, it is a mere "Null" Model...
-    #     """
-    #     mat_world_arm = arm_obj.fbx_object_matrix(scene_data, global_space=True)
-    #     bones = tuple(bo_obj for bo_obj in arm_obj.bones if bo_obj in scene_data.objects)
-
-    #     bone_radius_scale = 33.0
-
-    #     # Bones "data".
-    #     for bo_obj in bones:
-    #         bo = bo_obj.bdata
-    #         bo_data_key = scene_data.data_bones[bo_obj]
-    #         fbx_bo = elem_data_single_int64(root, b"NodeAttribute", get_fbx_uuid_from_key(bo_data_key))
-    #         fbx_bo.add_string(fbx_name_class(bo.name.encode(), b"NodeAttribute"))
-    #         fbx_bo.add_string(b"LimbNode")
-    #         elem_data_single_string(fbx_bo, b"TypeFlags", b"Skeleton")
-
-    #         tmpl = elem_props_template_init(scene_data.templates, b"Bone")
-    #         props = elem_properties(fbx_bo)
-    #         elem_props_template_set(tmpl, props, "p_double", b"Size", bo.head_radius * bone_radius_scale * SCALE_FACTOR)
-    #         elem_props_template_finalize(tmpl, props)
-
-    #         # Custom properties.
-    #         if scene_data.settings.use_custom_props:
-    #             fbx_data_element_custom_properties(props, bo)
-
-    #         # Store Blender bone length - XXX Not much useful actually :/
-    #         # (LimbLength can't be used because it is a scale factor 0-1 for the parent-child distance:
-    #         # http://docs.autodesk.com/FBX/2014/ENU/FBX-SDK-Documentation/cpp_ref/class_fbx_skeleton.html#a9bbe2a70f4ed82cd162620259e649f0f )
-    #         # elem_props_set(props, "p_double", "BlenderBoneLength".encode(), (bo.tail_local - bo.head_local).length, custom=True)
-
-    #     # Skin deformers and BindPoses.
-    #     # Note: we might also use Deformers for our "parent to vertex" stuff???
-    #     deformer = scene_data.data_deformers_skin.get(arm_obj, None)
-    #     if deformer is not None:
-    #         for me, (skin_key, ob_obj, clusters) in deformer.items():
-    #             # BindPose.
-    #             mat_world_obj, mat_world_bones = fbx_data_bindpose_element(root, ob_obj, me, scene_data,
-    #                                                                        arm_obj, mat_world_arm, bones)
-
-    #             # Deformer.
-    #             fbx_skin = elem_data_single_int64(root, b"Deformer", get_fbx_uuid_from_key(skin_key))
-    #             fbx_skin.add_string(fbx_name_class(arm_obj.name.encode(), b"Deformer"))
-    #             fbx_skin.add_string(b"Skin")
-
-    #             elem_data_single_int32(fbx_skin, b"Version", FBX_DEFORMER_SKIN_VERSION)
-    #             elem_data_single_float64(fbx_skin, b"Link_DeformAcuracy", 50.0)  # Only vague idea what it is...
-
-    #             # Pre-process vertex weights (also to check vertices assigned ot more than four bones).
-    #             ob = ob_obj.bdata
-    #             bo_vg_idx = {bo_obj.bdata.name: ob.vertex_groups[bo_obj.bdata.name].index
-    #                          for bo_obj in clusters.keys() if bo_obj.bdata.name in ob.vertex_groups}
-    #             valid_idxs = set(bo_vg_idx.values())
-    #             vgroups = {vg.index: {} for vg in ob.vertex_groups}
-    #             verts_vgroups = (
-    #             sorted(((vg.group, vg.weight) for vg in v.groups if vg.weight and vg.group in valid_idxs),
-    #                    key=lambda e: e[1], reverse=True)
-    #             for v in me.vertices)
-    #             for idx, vgs in enumerate(verts_vgroups):
-    #                 for vg_idx, w in vgs:
-    #                     vgroups[vg_idx][idx] = w
-
-    #             for bo_obj, clstr_key in clusters.items():
-    #                 bo = bo_obj.bdata
-    #                 # Find which vertices are affected by this bone/vgroup pair, and matching weights.
-    #                 # Note we still write a cluster for bones not affecting the mesh, to get 'rest pose' data
-    #                 # (the TransformBlah matrices).
-    #                 vg_idx = bo_vg_idx.get(bo.name, None)
-    #                 indices, weights = ((), ()) if vg_idx is None or not vgroups[vg_idx] else zip(
-    #                     *vgroups[vg_idx].items())
-
-    #                 # Create the cluster.
-    #                 fbx_clstr = elem_data_single_int64(root, b"Deformer", get_fbx_uuid_from_key(clstr_key))
-    #                 fbx_clstr.add_string(fbx_name_class(bo.name.encode(), b"SubDeformer"))
-    #                 fbx_clstr.add_string(b"Cluster")
-
-    #                 elem_data_single_int32(fbx_clstr, b"Version", FBX_DEFORMER_CLUSTER_VERSION)
-    #                 # No idea what that user data might be...
-    #                 fbx_userdata = elem_data_single_string(fbx_clstr, b"UserData", b"")
-    #                 fbx_userdata.add_string(b"")
-    #                 if indices:
-    #                     elem_data_single_int32_array(fbx_clstr, b"Indexes", indices)
-    #                     elem_data_single_float64_array(fbx_clstr, b"Weights", weights)
-    #                 # Transform, TransformLink and TransformAssociateModel matrices...
-    #                 # They seem to be doublons of BindPose ones??? Have armature (associatemodel) in addition, though.
-    #                 # WARNING! Even though official FBX API presents Transform in global space,
-    #                 #          **it is stored in bone space in FBX data!** See:
-    #                 #          http://area.autodesk.com/forum/autodesk-fbx/fbx-sdk/why-the-values-return-
-    #                 #                 by-fbxcluster-gettransformmatrix-x-not-same-with-the-value-in-ascii-fbx-file/
-    #                 # test_data[bo_obj.name] = matrix4_to_array(mat_world_bones[bo_obj].inverted_safe() @ mat_world_obj)
-
-    #                 # Todo add to FBX addon
-    #                 transform_matrix = mat_world_bones[bo_obj].inverted_safe() @ mat_world_obj
-    #                 transform_link_matrix = mat_world_bones[bo_obj]
-    #                 transform_associate_model_matrix = mat_world_arm
-
-    #                 transform_matrix = transform_matrix.LocRotScale(
-    #                     [i * SCALE_FACTOR for i in transform_matrix.to_translation()],
-    #                     transform_matrix.to_quaternion(),
-    #                     [i * SCALE_FACTOR for i in transform_matrix.to_scale()],
-    #                 )
-
-    #                 elem_data_single_float64_array(fbx_clstr, b"Transform", matrix4_to_array(transform_matrix))
-    #                 elem_data_single_float64_array(fbx_clstr, b"TransformLink", matrix4_to_array(transform_link_matrix))
-    #                 elem_data_single_float64_array(fbx_clstr, b"TransformAssociateModel",
-    #                                                matrix4_to_array(transform_associate_model_matrix))
-
-    # def fbx_data_object_elements(root, ob_obj, scene_data):
-    #     """
-    #     Write the Object (Model) data blocks.
-    #     Note this "Model" can also be bone or dupli!
-    #     """
-    #     obj_type = b"Null"  # default, sort of empty...
-    #     if ob_obj.is_bone:
-    #         obj_type = b"LimbNode"
-    #     elif (ob_obj.type == 'ARMATURE'):
-    #         if scene_data.settings.armature_nodetype == 'ROOT':
-    #             obj_type = b"Root"
-    #         elif scene_data.settings.armature_nodetype == 'LIMBNODE':
-    #             obj_type = b"LimbNode"
-    #         else:  # Default, preferred option...
-    #             obj_type = b"Null"
-    #     elif (ob_obj.type in BLENDER_OBJECT_TYPES_MESHLIKE):
-    #         obj_type = b"Mesh"
-    #     elif (ob_obj.type == 'LIGHT'):
-    #         obj_type = b"Light"
-    #     elif (ob_obj.type == 'CAMERA'):
-    #         obj_type = b"Camera"
-
-    #     model = elem_data_single_int64(root, b"Model", ob_obj.fbx_uuid)
-    #     model.add_string(fbx_name_class(ob_obj.name.encode(), b"Model"))
-    #     model.add_string(obj_type)
-
-    #     elem_data_single_int32(model, b"Version", FBX_MODELS_VERSION)
-
-    #     # Object transform info.
-    #     loc, rot, scale, matrix, matrix_rot = ob_obj.fbx_object_tx(scene_data)
-    #     rot = tuple(convert_rad_to_deg_iter(rot))
-
-    #     tmpl = elem_props_template_init(scene_data.templates, b"Model")
-    #     # For now add only loc/rot/scale...
-    #     props = elem_properties(model)
-    #     elem_props_template_set(tmpl, props, "p_lcl_translation", b"Lcl Translation", loc,
-    #                             animatable=True, animated=((ob_obj.key, "Lcl Translation") in scene_data.animated))
-    #     elem_props_template_set(tmpl, props, "p_lcl_rotation", b"Lcl Rotation", rot,
-    #                             animatable=True, animated=((ob_obj.key, "Lcl Rotation") in scene_data.animated))
-    #     elem_props_template_set(tmpl, props, "p_lcl_scaling", b"Lcl Scaling", scale,
-    #                             animatable=True, animated=((ob_obj.key, "Lcl Scaling") in scene_data.animated))
-    #     elem_props_template_set(tmpl, props, "p_visibility", b"Visibility", float(not ob_obj.hide))
-
-    #     # Absolutely no idea what this is, but seems mandatory for validity of the file, and defaults to
-    #     # invalid -1 value...
-    #     elem_props_template_set(tmpl, props, "p_integer", b"DefaultAttributeIndex", 0)
-
-    #     elem_props_template_set(tmpl, props, "p_enum", b"InheritType", 1)  # RSrs
-
-    #     # Custom properties.
-    #     if scene_data.settings.use_custom_props:
-    #         # Here we want customprops from the 'pose' bone, not the 'edit' bone...
-    #         bdata = ob_obj.bdata_pose_bone if ob_obj.is_bone else ob_obj.bdata
-    #         fbx_data_element_custom_properties(props, bdata)
-
-    #     # Those settings would obviously need to be edited in a complete version of the exporter, may depends on
-    #     # object type, etc.
-    #     elem_data_single_int32(model, b"MultiLayer", 0)
-    #     elem_data_single_int32(model, b"MultiTake", 0)
-    #     elem_data_single_bool(model, b"Shading", True)
-    #     elem_data_single_string(model, b"Culling", b"CullingOff")
-
-    #     if obj_type == b"Camera":
-    #         # Why, oh why are FBX cameras such a mess???
-    #         # And WHY add camera data HERE??? Not even sure this is needed...
-    #         render = scene_data.scene.render
-    #         width = render.resolution_x * 1.0
-    #         height = render.resolution_y * 1.0
-    #         elem_props_template_set(tmpl, props, "p_enum", b"ResolutionMode", 0)  # Don't know what it means
-    #         elem_props_template_set(tmpl, props, "p_double", b"AspectW", width)
-    #         elem_props_template_set(tmpl, props, "p_double", b"AspectH", height)
-    #         elem_props_template_set(tmpl, props, "p_bool", b"ViewFrustum", True)
-    #         elem_props_template_set(tmpl, props, "p_enum", b"BackgroundMode", 0)  # Don't know what it means
-    #         elem_props_template_set(tmpl, props, "p_bool", b"ForegroundTransparent", True)
-
-    #     elem_props_template_finalize(tmpl, props)
-
-    # def fbx_data_bindpose_element(root, me_obj, me, scene_data, arm_obj=None, mat_world_arm=None, bones=[]):
-    #     """
-    #     Helper, since bindpose are used by both meshes shape keys and armature bones...
-    #     """
-    #     if arm_obj is None:
-    #         arm_obj = me_obj
-    #     # We assume bind pose for our bones are their "Editmode" pose...
-    #     # All matrices are expected in global (world) space.
-    #     bindpose_key = get_blender_bindpose_key(arm_obj.bdata, me)
-    #     fbx_pose = elem_data_single_int64(root, b"Pose", get_fbx_uuid_from_key(bindpose_key))
-    #     fbx_pose.add_string(fbx_name_class(me.name.encode(), b"Pose"))
-    #     fbx_pose.add_string(b"BindPose")
-
-    #     elem_data_single_string(fbx_pose, b"Type", b"BindPose")
-    #     elem_data_single_int32(fbx_pose, b"Version", FBX_POSE_BIND_VERSION)
-    #     elem_data_single_int32(fbx_pose, b"NbPoseNodes", 1 + (1 if (arm_obj != me_obj) else 0) + len(bones))
-
-    #     # First node is mesh/object.
-    #     mat_world_obj = me_obj.fbx_object_matrix(scene_data, global_space=True)
-    #     fbx_posenode = elem_empty(fbx_pose, b"PoseNode")
-    #     elem_data_single_int64(fbx_posenode, b"Node", me_obj.fbx_uuid)
-    #     elem_data_single_float64_array(fbx_posenode, b"Matrix", matrix4_to_array(mat_world_obj))
-
-    #     # Second node is armature object itself.
-    #     if arm_obj != me_obj:
-    #         fbx_posenode = elem_empty(fbx_pose, b"PoseNode")
-    #         elem_data_single_int64(fbx_posenode, b"Node", arm_obj.fbx_uuid)
-
-    #         # Todo merge into blenders FBX addon
-    #         mat_world_arm = mat_world_arm.LocRotScale(
-    #             mat_world_arm.to_translation(),
-    #             mat_world_arm.to_quaternion(),
-    #             [i / SCALE_FACTOR for i in mat_world_arm.to_scale()],
-    #         )
-
-    #         elem_data_single_float64_array(fbx_posenode, b"Matrix", matrix4_to_array(mat_world_arm))
-
-    #     # And all bones of armature!
-    #     mat_world_bones = {}
-    #     for bo_obj in bones:
-    #         bomat = bo_obj.fbx_object_matrix(scene_data, rest=True, global_space=True)
-    #         mat_world_bones[bo_obj] = bomat
-    #         fbx_posenode = elem_empty(fbx_pose, b"PoseNode")
-    #         elem_data_single_int64(fbx_posenode, b"Node", bo_obj.fbx_uuid)
-
-    #         # Todo merge into blenders FBX addon
-    #         bomat = bomat.LocRotScale(
-    #             bomat.to_translation(),
-    #             bomat.to_quaternion(),
-    #             [i / SCALE_FACTOR for i in bomat.to_scale()]
-    #         )
-
-    #         elem_data_single_float64_array(fbx_posenode, b"Matrix", matrix4_to_array(bomat))
-
-    #     return mat_world_obj, mat_world_bones
 
     SCALE_FACTOR_Blender4 = 100
 
@@ -5934,10 +5590,6 @@ def export_fbx(self: Operator,
 
     # Replace the modified functions temporarily in the FBX type is unreal engine
     if fbx_type == 'unreal_engine':
-        # export_fbx_bin.fbx_animations_do            = fbx_animations_do
-        # export_fbx_bin.fbx_data_armature_elements   = fbx_data_armature_elements
-        # export_fbx_bin.fbx_data_object_elements     = fbx_data_object_elements
-        # export_fbx_bin.fbx_data_bindpose_element    = fbx_data_bindpose_element
 
         if bpy.app.version_string[0] < '4':
             print('Exporting with Blender older than 4.0')
@@ -6048,16 +5700,6 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         precision   = 3,
         description = 'Body height in meters. This value is used when the interval variable is set to standard length. If a rig is added after using Reduce Dispersion with standard length, it will have this value as height and the bones length will be proporions of this height'
     )
-
-    # Reduce Shakiness Options
-    recording_fps: bpy.props.FloatProperty(
-        name        = '',
-        default     = 30,
-        min         = 0,
-        precision   = 3,
-        description = 'Frames per second (fps) of the capture recording'
-    )
-
     # Add Rig Options
     show_add_rig: bpy.props.BoolProperty(
         name        = '',
@@ -6084,6 +5726,14 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         name        = '',
         default     = False,
         description = 'Add IK constraints for arms and legs'
+    )
+    ik_transition_threshold: bpy.props.FloatProperty(
+        name        = '',
+        default     = 0.5,
+        min         = 0,
+        max         = 1,
+        precision   = 2,
+        description = 'Threshold of parallel degree (dot product) between base and target ik vectors. It is used to transition between vectors to determine the pole bone position'
     )
     use_limit_rotation: bpy.props.BoolProperty(
         name        = '',
@@ -6537,6 +6187,10 @@ class VIEW3D_PT_freemocap_adapter(Panel):
             split.split().column().prop(fmc_adapter_tool, 'add_ik_constraints')
 
             split = box.column().row().split(factor=0.6)
+            split.column().label(text='IK transition threshold')
+            split.split().column().prop(fmc_adapter_tool, 'ik_transition_threshold')
+
+            split = box.column().row().split(factor=0.6)
             split.column().label(text='Add rotation limits')
             split.split().column().prop(fmc_adapter_tool, 'use_limit_rotation')
 
@@ -6631,28 +6285,6 @@ class FMC_ADAPTER_OT_reduce_bone_length_dispersion(Operator):
 
         return {'FINISHED'}
 
-class FMC_ADAPTER_OT_reduce_shakiness(Operator):
-    bl_idname       = 'fmc_adapter.reduce_shakiness'
-    bl_label        = 'Freemocap Adapter - Reduce Shakiness'
-    bl_description  = 'Reduce the shakiness of the capture empties by restricting their acceleration to a defined threshold'
-    bl_options      = {'REGISTER', 'UNDO_GROUPED'}
-
-    def execute(self, context):
-        scene               = context.scene
-        fmc_adapter_tool    = scene.fmc_adapter_tool
-
-        # Get start time
-        start = time.time()
-        print('Executing Reduce Shakiness...')
-
-        reduce_shakiness(recording_fps=fmc_adapter_tool.recording_fps)
-
-        # Get end time and print execution time
-        end = time.time()
-        print('Finished. Execution time (s): ' + str(m.trunc((end - start)*1000)/1000))
-
-        return {'FINISHED'}
-
 class FMC_ADAPTER_OT_add_rig(Operator):
     bl_idname       = 'fmc_adapter.add_rig'
     bl_label        = 'Freemocap Adapter - Add Rig'
@@ -6669,22 +6301,12 @@ class FMC_ADAPTER_OT_add_rig(Operator):
         # Reset the scene frame to the start
         scene.frame_set(scene.frame_start)
 
-        # if not adjust_empties_executed:
-        #     print('Executing First Adjust Empties...')
-
-        #     # Execute Adjust Empties first
-        #     adjust_empties(z_align_ref_empty=fmc_adapter_tool.vertical_align_reference,
-        #                 z_align_angle_offset=fmc_adapter_tool.vertical_align_angle_offset,
-        #                 ground_ref_empty=fmc_adapter_tool.ground_align_reference,
-        #                 z_translation_offset=fmc_adapter_tool.vertical_align_position_offset  ,
-        #                 add_hand_middle_empty=fmc_adapter_tool.add_hand_middle_empty,                     
-        #                 )
-        
         print('Executing Add Rig...')
 
         add_rig(keep_symmetry=fmc_adapter_tool.keep_symmetry,
                 add_fingers_constraints=fmc_adapter_tool.add_fingers_constraints,
                 add_ik_constraints=fmc_adapter_tool.add_ik_constraints,
+                ik_transition_threshold=fmc_adapter_tool.ik_transition_threshold,
                 use_limit_rotation=fmc_adapter_tool.use_limit_rotation,
                 clear_constraints=fmc_adapter_tool.clear_constraints)
 
@@ -6707,16 +6329,6 @@ class FMC_ADAPTER_OT_add_body_mesh(Operator):
         # Get start time
         start = time.time()
 
-        # if not adjust_empties_executed:
-        #     print('Executing First Adjust Empties...')
-
-        #     # Execute Adjust Empties first
-        #     adjust_empties(z_align_ref_empty=fmc_adapter_tool.vertical_align_reference,
-        #                 z_align_angle_offset=fmc_adapter_tool.vertical_align_angle_offset,
-        #                 ground_ref_empty=fmc_adapter_tool.ground_align_reference,
-        #                 z_translation_offset=fmc_adapter_tool.vertical_align_position_offset                       
-        #                 )
-        
         # Execute Add Rig if there is no rig in the scene
         scene_has_rig = False
         for obj in bpy.data.objects:
@@ -6728,7 +6340,10 @@ class FMC_ADAPTER_OT_add_body_mesh(Operator):
             print('Executing Add Rig to have a rig for the mesh...')
             add_rig(keep_symmetry=fmc_adapter_tool.keep_symmetry,
                     add_fingers_constraints=fmc_adapter_tool.add_fingers_constraints,
-                    use_limit_rotation=fmc_adapter_tool.use_limit_rotation)
+                    add_ik_constraints=fmc_adapter_tool.add_ik_constraints,
+                    ik_transition_threshold=fmc_adapter_tool.ik_transition_threshold,
+                    use_limit_rotation=fmc_adapter_tool.use_limit_rotation,
+                    clear_constraints=fmc_adapter_tool.clear_constraints)
         
         print('Executing Add Body Mesh...')
         add_mesh_to_rig(body_mesh_mode=fmc_adapter_tool.body_mesh_mode,
@@ -6906,7 +6521,6 @@ classes = [FMC_ADAPTER_PROPERTIES,
            VIEW3D_PT_freemocap_adapter,
            FMC_ADAPTER_OT_adjust_empties,
            FMC_ADAPTER_OT_reduce_bone_length_dispersion,
-           FMC_ADAPTER_OT_reduce_shakiness,
            FMC_ADAPTER_OT_add_rig,
            FMC_ADAPTER_OT_add_body_mesh,
            FMC_ADAPTER_OT_export_fbx,
