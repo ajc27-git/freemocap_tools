@@ -95,8 +95,8 @@ def fbx_animations_do_blender4(scene_data, ref_id, f_start, f_end, start_zero, o
         rot_deg = tuple(convert_rad_to_deg_iter(rot))
         force_key = (simplify_fac == 0.0) or (ob_obj.is_bone and force_keying)
         animdata_ob[ob_obj] = (ACNW(ob_obj.key, 'LCL_TRANSLATION', force_key, force_sek, loc),
-                               ACNW(ob_obj.key, 'LCL_ROTATION', force_key, force_sek, rot_deg),
-                               ACNW(ob_obj.key, 'LCL_SCALING', force_key, force_sek, scale / SCALE_FACTOR_Blender4))
+                            ACNW(ob_obj.key, 'LCL_ROTATION', force_key, force_sek, rot_deg),
+                            ACNW(ob_obj.key, 'LCL_SCALING', force_key, force_sek, scale))
         p_rots[ob_obj] = rot
 
     force_key = (simplify_fac == 0.0)
@@ -117,7 +117,7 @@ def fbx_animations_do_blender4(scene_data, ref_id, f_start, f_end, start_zero, o
         cam = cam_obj.bdata.data
         acnode_lens = AnimationCurveNodeWrapper(cam_key, 'CAMERA_FOCAL', force_key, force_sek, (cam.lens,))
         acnode_focus_distance = AnimationCurveNodeWrapper(cam_key, 'CAMERA_FOCUS_DISTANCE', force_key,
-                                                          force_sek, (cam.dof.focus_distance,))
+                                                        force_sek, (cam.dof.focus_distance,))
         animdata_cameras[cam_key] = (acnode_lens, acnode_focus_distance, cam)
 
     # Get all parent bdata of animated dupli instances, so that we can quickly identify which instances in
@@ -144,7 +144,7 @@ def fbx_animations_do_blender4(scene_data, ref_id, f_start, f_end, start_zero, o
         # Create simpler iterables that return only the values we care about.
         animdata_shapes_only = [shape for _anim_shape, _me, shape in animdata_shapes.values()]
         animdata_cameras_only = [camera for _anim_camera_lens, _anim_camera_focus_distance, camera
-                                 in animdata_cameras.values()]
+                                in animdata_cameras.values()]
         # Previous frame's rotation for each object in animdata_ob, this will be updated each frame.
         animdata_ob_p_rots = p_rots.values()
 
@@ -168,7 +168,7 @@ def fbx_animations_do_blender4(scene_data, ref_id, f_start, f_end, start_zero, o
                 next_p_rots.append(rot)
                 yield from loc
                 yield from rot
-                yield from scale / SCALE_FACTOR_Blender4
+                yield from scale
             animdata_ob_p_rots = next_p_rots
             for shape in animdata_shapes_only:
                 yield shape.value
@@ -208,11 +208,10 @@ def fbx_animations_do_blender4(scene_data, ref_id, f_start, f_end, start_zero, o
         loc_xyz, rot_xyz, sca_xyz = np.split(ob_values, 3)
         # In-place convert from Blender rotation to FBX rotation.
         np.rad2deg(rot_xyz, out=rot_xyz)
-
         anim_loc, anim_rot, anim_scale = anims
         anim_loc.set_keyframes(real_currframes, loc_xyz)
         anim_rot.set_keyframes(real_currframes, rot_xyz)
-        anim_scale.set_keyframes(real_currframes, sca_xyz / SCALE_FACTOR_Blender4)
+        anim_scale.set_keyframes(real_currframes, sca_xyz)
         all_anims.extend(anims)
 
     # Set shape key curves.
@@ -221,6 +220,7 @@ def fbx_animations_do_blender4(scene_data, ref_id, f_start, f_end, start_zero, o
         # In-place convert from Blender Shape Key Value to FBX Deform Percent.
         shape_key_values *= 100.0
         anim_shape.set_keyframes(real_currframes, shape_key_values)
+        # anim_shape.set_keyframes(real_currframes, _shape.value * SCALE_FACTOR_Blender4)
         all_anims.append(anim_shape)
 
     # Set camera curves.
@@ -270,7 +270,7 @@ def fbx_data_armature_elements_blender4(root, arm_obj, scene_data):
     bones = tuple(bo_obj for bo_obj in arm_obj.bones if bo_obj in scene_data.objects)
 
     bone_radius_scale = 33.0
-    print(f"Bone radius scale: {bone_radius_scale}")
+
     # Bones "data".
     for bo_obj in bones:
         bo = bo_obj.bdata
@@ -278,11 +278,12 @@ def fbx_data_armature_elements_blender4(root, arm_obj, scene_data):
         fbx_bo = elem_data_single_int64(root, b"NodeAttribute", get_fbx_uuid_from_key(bo_data_key))
         fbx_bo.add_string(fbx_name_class(bo.name.encode(), b"NodeAttribute"))
         fbx_bo.add_string(b"LimbNode")
-        elem_data_single_string(fbx_bo, b"TypeFlags", b"Skeleton")
+        elem_data_single_string(fbx_bo, b"TypeFlags", b"Skeleton") 
 
         tmpl = elem_props_template_init(scene_data.templates, b"Bone")
         props = elem_properties(fbx_bo)
         elem_props_template_set(tmpl, props, "p_double", b"Size", bo.head_radius * bone_radius_scale * SCALE_FACTOR_Blender4)
+
         elem_props_template_finalize(tmpl, props)
 
         # Custom properties.
@@ -301,7 +302,7 @@ def fbx_data_armature_elements_blender4(root, arm_obj, scene_data):
         for me, (skin_key, ob_obj, clusters) in deformer.items():
             # BindPose.
             mat_world_obj, mat_world_bones = fbx_data_bindpose_element(root, ob_obj, me, scene_data,
-                                                                       arm_obj, mat_world_arm, bones)
+                                                                    arm_obj, mat_world_arm, bones)
 
             # Deformer.
             fbx_skin = elem_data_single_int64(root, b"Deformer", get_fbx_uuid_from_key(skin_key))
@@ -314,7 +315,7 @@ def fbx_data_armature_elements_blender4(root, arm_obj, scene_data):
             # Pre-process vertex weights so that the vertices only need to be iterated once.
             ob = ob_obj.bdata
             bo_vg_idx = {bo_obj.bdata.name: ob.vertex_groups[bo_obj.bdata.name].index
-                         for bo_obj in clusters.keys() if bo_obj.bdata.name in ob.vertex_groups}
+                        for bo_obj in clusters.keys() if bo_obj.bdata.name in ob.vertex_groups}
             valid_idxs = set(bo_vg_idx.values())
             vgroups = {vg.index: {} for vg in ob.vertex_groups}
             for idx, v in enumerate(me.vertices):
@@ -349,10 +350,15 @@ def fbx_data_armature_elements_blender4(root, arm_obj, scene_data):
                 #          http://area.autodesk.com/forum/autodesk-fbx/fbx-sdk/why-the-values-return-
                 #                 by-fbxcluster-gettransformmatrix-x-not-same-with-the-value-in-ascii-fbx-file/
                 
+                transform_matrix = mat_world_bones[bo_obj].inverted_safe() @ mat_world_obj
+
+                transform_matrix = transform_matrix.LocRotScale(
+                [i * SCALE_FACTOR_Blender4 for i in transform_matrix.to_translation()],
+                transform_matrix.to_quaternion(),
+                [i * SCALE_FACTOR_Blender4 for i in transform_matrix.to_scale()],
+                )
                 
-                
-                elem_data_single_float64_array(fbx_clstr, b"Transform",
-                                               matrix4_to_array(mat_world_bones[bo_obj].inverted_safe() @ mat_world_obj))
+                elem_data_single_float64_array(fbx_clstr, b"Transform",matrix4_to_array(transform_matrix))
                 elem_data_single_float64_array(fbx_clstr, b"TransformLink", matrix4_to_array(mat_world_bones[bo_obj]))
                 elem_data_single_float64_array(fbx_clstr, b"TransformAssociateModel", matrix4_to_array(mat_world_arm))
 
@@ -491,4 +497,3 @@ def fbx_data_bindpose_element_blender4(root, me_obj, me, scene_data, arm_obj=Non
         elem_data_single_float64_array(fbx_posenode, b"Matrix", matrix4_to_array(bomat))
 
     return mat_world_obj, mat_world_bones
-
