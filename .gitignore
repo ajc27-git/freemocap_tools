@@ -8,3 +8,8 @@ freemocap_adapter/__pycache__/__init__.cpython-310.pyc
 freemocap_tools.code-workspace
 freemocap_adapter/__pycache__/io_scene_fbx_functions_blender3.cpython-310.pyc
 freemocap_adapter/__pycache__/io_scene_fbx_functions_blender4.cpython-310.pyc
+freemocap_visualizer/__pycache__/__init__.cpython-310.pyc
+freemocap_visualizer/__pycache__/addon_interface.cpython-310.pyc
+freemocap_visualizer/__pycache__/auxiliary_functions.cpython-310.pyc
+freemocap_visualizer/__pycache__/data_definitions.cpython-310.pyc
+freemocap_visualizer/__pycache__/functions.cpython-310.pyc
