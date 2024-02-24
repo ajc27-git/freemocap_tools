@@ -7,12 +7,11 @@ Add-on to visualize the Freemocap Blender output. Some of its features:
 5. Add animated Base of Support (BOS) polygon based on points of contact and a z threshold.
 
 # Requirements
-Make sure that the scipy and shapeky pytohn modules are installed in your Blender's python folder.
-If it's not installed you will get a "ModuleNotFoundError: No module named scipy" when installing the addon.
-To install the scipy and shapely packages run the commands:
+Make sure that the scipy and shapely python modules are installed in your Blender's python folder.
+If they are not installed you will get a "ModuleNotFoundError: No module named scipy/shapely" when installing the addon.
+To install the scipy and shapely packages run this commands inside your Blender python folder:
 `python -m pip install scipy`
 `python -m pip install shapely`
-inside your Blender python folder.
 
 For example:
 `C:\Program Files\Blender Foundation\Blender 3.6\3.6\python\bin> .\python.exe -m pip install scipy`.
