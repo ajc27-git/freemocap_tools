@@ -531,11 +531,6 @@ def adjust_empties(z_align_ref_empty: str='left_knee',
     bpy.ops.screen.animation_play()
     bpy.ops.screen.animation_cancel()
 
-    ### Delete sphere meshes ###
-    for object in bpy.data.objects:
-        if "sphere" in object.name:
-            bpy.data.objects.remove(object, do_unlink=True)
-
     ### Unparent empties from empties_parent ###
     for object in bpy.data.objects:
         if object.type == "EMPTY" and object.name != 'empties_parent' and '_origin' not in object.name and 'center_of_mass' not in object.name and object.name != 'rigid_body_meshes_parent':
