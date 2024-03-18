@@ -16,6 +16,7 @@ from .core_functions import (
     add_rig,
     add_mesh_to_rig,
     add_finger_rotation_limits,
+    apply_foot_locking,
     apply_butterworth_filters,
     export_fbx
 )
@@ -24,357 +25,464 @@ from .core_functions import (
 class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
     # Adjust Empties Options
     show_adjust_empties: bpy.props.BoolProperty(
-        name        = '',
-        default     = False,
+        name = '',
+        default = False,
+        description = 'Toggle Adjust Empties Options'
     ) # type: ignore
     vertical_align_reference: bpy.props.EnumProperty(
-        name        = '',
+        name = '',
         description = 'Empty that serves as reference to align the z axis',
-        items       = [('left_knee', 'left_knee', ''),
+        items = [('left_knee', 'left_knee', ''),
                        ('trunk_center', 'trunk_center', ''),
                        ('right_knee', 'right_knee', '')]
     ) # type: ignore
     vertical_align_angle_offset: bpy.props.FloatProperty(
-        name        = '',
-        default     = 0,
+        name = '',
+        default = 0,
         description = 'Angle offset to adjust the vertical alignement of the z axis (in degrees)'
     ) # type: ignore
     ground_align_reference: bpy.props.EnumProperty(
-        name        = '',
+        name = '',
         description = 'Empty that serves as ground reference to the axes origin',
-        items       = [('left_foot_index', 'left_foot_index', ''),
+        items = [('left_foot_index', 'left_foot_index', ''),
                        ('right_foot_index', 'right_foot_index', ''),
                        ('left_heel', 'left_heel', ''),
                        ('right_heel', 'right_heel', '')]
     ) # type: ignore
     vertical_align_position_offset: bpy.props.FloatProperty(
-        name        = '',
-        default     = 0,
-        precision   = 3,
+        name = '',
+        default = 0,
+        precision = 3,
         description = 'Additional z offset to the axes origin relative to the imaginary ground level'
     ) # type: ignore
     correct_fingers_empties: bpy.props.BoolProperty(
-        name        = '',
-        default     = False,
+        name = '',
+        default = False,
         description = 'Correct the fingers empties. Match hand_wrist (axis empty) position to wrist (sphere empty)'
     ) # type: ignore
     add_hand_middle_empty: bpy.props.BoolProperty(
-        name        = '',
-        default     = False,
+        name = '',
+        default = False,
         description = 'Add an empty in the middle of the hand between index and pinky empties. This empty is used for a better orientation of the hand (experimental)'
     ) # type: ignore
     
     # Reduce Bone Length Dispersion Options
     show_reduce_bone_length_dispersion: bpy.props.BoolProperty(
-        name        = '',
-        default     = False,
+        name = '',
+        default = False,
+        description = 'Toggle Reduce Bone Length Dispersion Options'
     ) # type: ignore
     interval_variable: bpy.props.EnumProperty(
-        name        = '',
+        name = '',
         description = 'Variable used to define the new length dispersion interval',
-        items       = [ ('capture_median', 'Capture Median', 'Use the bones median length from the capture. Defines the new dispersion interval as [median*(1-interval_factor),median*(1+interval_factor)]'),
+        items = [ ('capture_median', 'Capture Median', 'Use the bones median length from the capture. Defines the new dispersion interval as [median*(1-interval_factor),median*(1+interval_factor)]'),
                         ('standard_length', 'Standard length', 'Use the standard lengths based on the total body (rig) height. Defines the new dispersion interval as [length*(1-interval_factor),length*(1+interval_factor)]'),
                         ('capture_stdev', 'Capture Std Dev', 'Use the bones length standard deviation from the capture. Defines the new dispersion interval as [median-interval_factor*stdev,median+interval_factor*stdev]')]
     ) # type: ignore
     interval_factor: bpy.props.FloatProperty(
-        name        = '',
-        default     = 0,
-        min         = 0,
-        precision   = 3,
+        name = '',
+        default = 0,
+        min = 0,
+        precision = 3,
         description = 'Factor to multiply the variable and form the limits of the dispersion interval like [median-factor*variable,median+factor*variable]. ' +
                       'If variable is median, the factor will be limited to values inside [0, 1].' + 
                       'If variable is stdev, the factor will be limited to values inside [0, median/stdev]'
     ) # type: ignore
     body_height: bpy.props.FloatProperty(
-        name        = '',
-        default     = 1.75,
-        min         = 0,
-        precision   = 3,
+        name = '',
+        default = 1.75,
+        min = 0,
+        precision = 3,
         description = 'Body height in meters. This value is used when the interval variable is set to standard length. If a rig is added after using Reduce Dispersion with standard length, it will have this value as height and the bones length will be proporions of this height'
     ) # type: ignore
     # Add Rig Options
     show_add_rig: bpy.props.BoolProperty(
-        name        = '',
-        default     = False,
+        name = '',
+        default = False,
+        description = 'Toggle Add Rig Options'
     ) # type: ignore
     bone_length_method: bpy.props.EnumProperty(
-        name        = '',
+        name = '',
         description = 'Method use to calculate length of major bones',
-        items       = [('median_length', 'Median Length', ''),
+        items = [('median_length', 'Median Length', ''),
                        #('current_frame', 'Current Frame', '')]
                        ]
     ) # type: ignore
     keep_symmetry: bpy.props.BoolProperty(
-        name        = '',
-        default     = False,
+        name = '',
+        default = False,
         description = 'Keep right/left side symmetry (use average right/left side bone length)'
     ) # type: ignore
     add_fingers_constraints: bpy.props.BoolProperty(
-        name        = '',
-        default     = True,
+        name = '',
+        default = True,
         description = 'Add bone constraints for fingers'
     ) # type: ignore
     add_ik_constraints: bpy.props.BoolProperty(
-        name        = '',
-        default     = False,
+        name = '',
+        default = False,
         description = 'Add IK constraints for arms and legs'
     ) # type: ignore
     ik_transition_threshold: bpy.props.FloatProperty(
-        name        = '',
-        default     = 0.5,
-        min         = 0,
-        max         = 1,
-        precision   = 2,
+        name = '',
+        default = 0.5,
+        min = 0,
+        max = 1,
+        precision = 2,
         description = 'Threshold of parallel degree (dot product) between base and target ik vectors. It is used to transition between vectors to determine the pole bone position'
     ) # type: ignore
     use_limit_rotation: bpy.props.BoolProperty(
-        name        = '',
-        default     = False,
+        name = '',
+        default = False,
         description = 'Add rotation limits (human skeleton) to the bones constraints (experimental)'
     ) # type: ignore
     clear_constraints: bpy.props.BoolProperty(
-        name        = '',
-        default     = False,
+        name = '',
+        default = False,
         description = 'Clear added constraints after baking animation'
     ) # type: ignore
     
     # Add Body Mesh Options
     show_add_body_mesh: bpy.props.BoolProperty(
-        name        = '',
-        default     = False,
+        name = '',
+        default = False,
+        description = 'Toggle Add Body Mesh Options'
     ) # type: ignore
     body_mesh_mode: bpy.props.EnumProperty(
-        name        = '',
-        default     = 'skelly_parts',
+        name = '',
+        default = 'skelly_parts',
         description = 'Mode (source) for adding the mesh to the rig',
-        items       = [('skelly_parts', 'Skelly Parts', ''),
-                       ('skelly', 'Skelly', ''),
-                       ('can_man', 'Custom', ''),
-                       ]
+        items = [('skelly_parts', 'Skelly Parts', ''),
+                 ('skelly', 'Skelly', ''),
+                 ('can_man', 'Custom', ''),
+                ]
     ) # type: ignore
 
     # Export FBX Options
     show_export_fbx: bpy.props.BoolProperty(
-        name        = '',
-        default     = False,
+        name = '',
+        default = False,
+        description = 'Toggle Export FBX Options'
     ) # type: ignore
     fbx_type: bpy.props.EnumProperty(
-        name        = '',
+        name = '',
         description = 'Type of the FBX file',
-        items       = [('standard', 'Standard', ''),
-                       ('unreal_engine', 'Unreal Engine', '')
-                       ]
+        items = [('standard', 'Standard', ''),
+                 ('unreal_engine', 'Unreal Engine', '')
+                ]
     ) # type: ignore
 
     # Add Finger Rotation Limits Options
     show_add_finger_rotation_limits: bpy.props.BoolProperty(
-        name        = '',
-        default     = False,
+        name = '',
+        default = False,
+        description = 'Toggle Add Finger Rotation Limits options'
+    ) # type: ignore
+
+    # Apply Foot Locking Options
+    show_apply_foot_locking: bpy.props.BoolProperty(
+        name = '',
+        default = False,
+        description = 'Toggle Apply Foot Locking options'
+    ) # type: ignore
+    foot_locking_target_foot: bpy.props.EnumProperty(
+        name = '',
+        description = 'Target foot for applying foot locking',
+        items = [('both_feet', 'Both Feet', ''),
+                 ('left_foot', 'Left Foot', ''),
+                 ('right_foot', 'Right Foot', '')
+                ]
+    ) # type: ignore
+    foot_locking_target_base_markers: bpy.props.EnumProperty(
+        name = '',
+        description = 'Target foot base markers for applying foot locking',
+        items = [('foot_index_and_heel', 'foot_index and heel', ''),
+                 ('foot_index', 'foot_index', ''),
+                 ('heel', 'heel', '')
+                ]
+    ) # type: ignore
+    foot_locking_z_threshold: bpy.props.FloatProperty(
+        name = '',
+        default = 0.01,
+        precision = 3,
+        description = 'Vertical threshold under which foot markers are '
+                      'considered for applying foot locking'
+    ) # type: ignore
+    foot_locking_ground_level: bpy.props.FloatProperty(
+        name = '',
+        default = 0.0,
+        precision = 3,
+        description = 'Ground level for applying foot locking. Markers with '
+                      'z global coordinate lower than this value will be '
+                      'fixed to this level. It must be lower than the '
+                      'z threshold'
+    ) # type: ignore
+    foot_locking_frame_window_min_size: bpy.props.IntProperty(
+        name = '',
+        default = 10,
+        min = 1,
+        description = 'Minimum frame window size for applying foot locking. '
+                      'A markers z global coordinate has to be lower than the '
+                      'z threshold for a consecutive frames count equal or '
+                      'bigger than this value.'
+                      'It must be equal or greater than '
+                      'initial_attenuation_count + final_attenuation_count'
+    ) # type: ignore
+    foot_locking_initial_attenuation_count: bpy.props.IntProperty(
+        name = '',
+        default = 5,
+        min = 0,
+        description = 'This are the first frames of the window which have '
+                      'their z coordinate attenuated by the the initial '
+                      'quadratic attenuation function'
+    ) # type: ignore
+    foot_locking_final_attenuation_count: bpy.props.IntProperty(
+        name = '',
+        default = 5,
+        min = 0,
+        description = 'This are the last frames of the window which have '
+                      'their z coordinate attenuated by the the final '
+                      'quadratic attenuation function'
+    ) # type: ignore
+    foot_locking_lock_xy_at_ground_level: bpy.props.BoolProperty(
+        name = '',
+        default = False,
+        description = 'When applying foot locking, lock also the x and y '
+                      'coordinates at the ground level. This is useful only '
+                      'when character is standing still as it might leed to '
+                      '"sticky" or "lead" feet effect'
+    ) # type: ignore
+    foot_locking_knee_hip_compensation_coefficient: bpy.props.FloatProperty(
+        name = '',
+        default = 1.0,
+        precision = 3,
+        min = 0.0,
+        max = 1.0,
+        description = 'After calculating the ankle new z global coordinate, '
+                      'the knee and hip markers will be adjusted on the z '
+                      'axis by the same delta multiplied by this coefficient.'
+                      'A value of 1.0 means knee and hip have the same '
+                      'adjustment as the ankle. A value of 0 means knee and '
+                      'hip have no adjustment at all. Values lower than 1.0 '
+                      'are useful when the rig has IK constraints on the legs.'
+                      'This way the ankle adjustment is compensated by the '
+                      'knee IK bending'
+    ) # type: ignore
+    foot_locking_compensate_upper_body: bpy.props.BoolProperty(
+        name = '',
+        default = True,
+        description = 'Compensate the upper body markers by setting the new '
+                      'z coordinate of the hips_center marker as the average '
+                      'z coordinate of left and right hips markers.'
+                      'Then propagate the new z delta to the upper body '
+                      'markers starting from the trunk_center.'
     ) # type: ignore
 
     # Apply Butterworth Filters Options
     show_apply_butterworth_filters: bpy.props.BoolProperty(
-        name        = '',
-        default     = False,
+        name = '',
+        default = False,
+        description = 'Toggle Apply Butterworth Filters Options'
     ) # type: ignore
     position_correction_mode: bpy.props.EnumProperty(
-        name        = '',
+        name = '',
         description = 'Position correction mode',
-        items       = [('overall', 'Overall (Faster)', ''),
+        items = [('overall', 'Overall (Faster)', ''),
                        ('each_children', 'Each Children (Slower)', '')],
     ) # type: ignore
     apply_global_filter_core: bpy.props.BoolProperty(
-        name        = '',
-        default     = False,
-        description = 'Apply global Butterworth filter to core empties (hips_center, trunk_center and neck_center)'
+        name = '',
+        default = False,
+        description = 'Apply global Butterworth filter to core empties '
+                      '(hips_center, trunk_center and neck_center)'
     ) # type: ignore
     global_filter_core_frequency: bpy.props.FloatProperty(
-        name        = '',
-        default     = 7,
-        min         = 0,
-        precision   = 2,
+        name = '',
+        default = 7,
+        min = 0,
+        precision = 2,
         description = 'Core empties global Butterworth filter cutoff frequency (Hz)'
     ) # type: ignore
     apply_local_filter_core: bpy.props.BoolProperty(
-        name        = '',
-        default     = False,
+        name = '',
+        default = False,
         description = 'Apply local Butterworth filter to core empties'
     ) # type: ignore
     local_filter_origin_core: bpy.props.EnumProperty(
-        name        = '',
+        name = '',
         description = 'Local filter origin',
-        items       = [('hips_center', 'Hips', ''),
+        items = [('hips_center', 'Hips', ''),
                        ],
     ) # type: ignore
     local_filter_core_frequency: bpy.props.FloatProperty(
-        name        = '',
-        default     = 7,
-        min         = 0,
-        precision   = 2,
+        name = '',
+        default = 7,
+        min = 0,
+        precision = 2,
         description = 'Core empties local Butterworth filter cutoff frequency (Hz)'
     ) # type: ignore
     apply_global_filter_arms: bpy.props.BoolProperty(
-        name        = 'Arms',
-        default     = False,
+        name = 'Arms',
+        default = False,
         description = 'Apply global Butterworth filter to arms empties (shoulde and elbow)'
     ) # type: ignore
     global_filter_arms_frequency: bpy.props.FloatProperty(
-        name        = '',
-        default     = 7,
-        min         = 0,
-        precision   = 2,
+        name = '',
+        default = 7,
+        min = 0,
+        precision = 2,
         description = 'Arms empties global Butterworth filter cutoff frequency (Hz)'
     ) # type: ignore
     apply_local_filter_arms: bpy.props.BoolProperty(
-        name        = '',
-        default     = False,
+        name = '',
+        default = False,
         description = 'Apply local Butterworth filter to arms empties'
     ) # type: ignore
     local_filter_origin_arms: bpy.props.EnumProperty(
-        name        = '',
+        name = '',
         description = 'Local filter origin',
-        items       = [('neck_center', 'Neck', ''),
+        items = [('neck_center', 'Neck', ''),
                        ],
     ) # type: ignore
     local_filter_arms_frequency: bpy.props.FloatProperty(
-        name        = '',
-        default     = 7,
-        min         = 0,
-        precision   = 2,
+        name = '',
+        default = 7,
+        min = 0,
+        precision = 2,
         description = 'Arms empties local Butterworth filter cutoff frequency (Hz)'
     ) # type: ignore
     apply_global_filter_hands: bpy.props.BoolProperty(
-        name        = 'Hands',
-        default     = False,
+        name = 'Hands',
+        default = False,
         description = 'Apply global Butterworth filter to hands empties (wrist and hand)'
     ) # type: ignore
     global_filter_hands_frequency: bpy.props.FloatProperty(
-        name        = '',
-        default     = 7,
-        min         = 0,
-        precision   = 2,
+        name = '',
+        default = 7,
+        min = 0,
+        precision = 2,
         description = 'Hands empties global Butterworth filter cutoff frequency (Hz)'
     ) # type: ignore
     apply_local_filter_hands: bpy.props.BoolProperty(
-        name        = '',
-        default     = False,
+        name = '',
+        default = False,
         description = 'Apply local Butterworth filter to hands empties'
     ) # type: ignore
     local_filter_origin_hands: bpy.props.EnumProperty(
-        name        = '',
+        name = '',
         description = 'Local filter origin',
-        items       = [('side_elbow', 'Elbow', ''),
+        items = [('side_elbow', 'Elbow', ''),
                        ],
     ) # type: ignore
     local_filter_hands_frequency: bpy.props.FloatProperty(
-        name        = '',
-        default     = 7,
-        min         = 0,
-        precision   = 2,
+        name = '',
+        default = 7,
+        min = 0,
+        precision = 2,
         description = 'Hands empties local Butterworth filter cutoff frequency (Hz)'
     ) # type: ignore
     apply_global_filter_fingers: bpy.props.BoolProperty(
-        name        = 'Fingers',
-        default     = False,
+        name = 'Fingers',
+        default = False,
         description = 'Apply global Butterworth filter to fingers empties (_ip, _pip, _dip and _tip)'
     ) # type: ignore
     global_filter_fingers_frequency: bpy.props.FloatProperty(
-        name        = '',
-        default     = 7,
-        min         = 0,
-        precision   = 2,
+        name = '',
+        default = 7,
+        min = 0,
+        precision = 2,
         description = 'Fingers empties global Butterworth filter cutoff frequency (Hz)'
     ) # type: ignore
     apply_local_filter_fingers: bpy.props.BoolProperty(
-        name        = '',
-        default     = False,
+        name = '',
+        default = False,
         description = 'Apply local Butterworth filter to fingers empties'
     ) # type: ignore
     local_filter_origin_fingers: bpy.props.EnumProperty(
-        name        = '',
+        name = '',
         description = 'Local filter origin',
-        items       = [('side_wrist', 'Wrist', ''),
+        items = [('side_wrist', 'Wrist', ''),
                        ],
     ) # type: ignore
     local_filter_fingers_frequency: bpy.props.FloatProperty(
-        name        = '',
-        default     = 7,
-        min         = 0,
-        precision   = 2,
+        name = '',
+        default = 7,
+        min = 0,
+        precision = 2,
         description = 'Fingers empties local Butterworth filter cutoff frequency (Hz)'
     ) # type: ignore
     apply_global_filter_legs: bpy.props.BoolProperty(
-        name        = 'Legs',
-        default     = False,
+        name = 'Legs',
+        default = False,
         description = 'Apply global Butterworth filter to legs empties (hips and knees)'
     ) # type: ignore
     global_filter_legs_frequency: bpy.props.FloatProperty(
-        name        = '',
-        default     = 7,
-        min         = 0,
-        precision   = 2,
+        name = '',
+        default = 7,
+        min = 0,
+        precision = 2,
         description = 'Legs empties global Butterworth filter cutoff frequency (Hz)'
     ) # type: ignore
     apply_local_filter_legs: bpy.props.BoolProperty(
-        name        = '',
-        default     = False,
+        name = '',
+        default = False,
         description = 'Apply local Butterworth filter to legs empties'
     ) # type: ignore
     local_filter_origin_legs: bpy.props.EnumProperty(
-        name        = '',
+        name = '',
         description = 'Local filter origin',
-        items       = [('hips_center', 'Hips', ''),
+        items = [('hips_center', 'Hips', ''),
                        ],
     ) # type: ignore
     local_filter_legs_frequency: bpy.props.FloatProperty(
-        name        = '',
-        default     = 7,
-        min         = 0,
-        precision   = 2,
+        name = '',
+        default = 7,
+        min = 0,
+        precision = 2,
         description = 'Legs empties local Butterworth filter cutoff frequency (Hz)'
     ) # type: ignore
     apply_global_filter_feet: bpy.props.BoolProperty(
-        name        = 'Feet',
-        default     = False,
+        name = 'Feet',
+        default = False,
         description = 'Apply global Butterworth filter to feet empties (ankle, heel and foot_index)'
     ) # type: ignore
     global_filter_feet_frequency: bpy.props.FloatProperty(
-        name        = '',
-        default     = 7,
-        min         = 0,
-        precision   = 2,
+        name = '',
+        default = 7,
+        min = 0,
+        precision = 2,
         description = 'Feet empties global Butterworth filter cutoff frequency (Hz)'
     ) # type: ignore
     apply_local_filter_feet: bpy.props.BoolProperty(
-        name        = '',
-        default     = False,
+        name = '',
+        default = False,
         description = 'Apply local Butterworth filter to feet empties'
     ) # type: ignore
     local_filter_origin_feet: bpy.props.EnumProperty(
-        name        = '',
+        name = '',
         description = 'Local filter origin',
-        items       = [('side_knee', 'Knee', ''),
+        items = [('side_knee', 'Knee', ''),
                        ],
     ) # type: ignore
     local_filter_feet_frequency: bpy.props.FloatProperty(
-        name        = '',
-        default     = 7,
-        min         = 0,
-        precision   = 2,
+        name = '',
+        default = 7,
+        min = 0,
+        precision = 2,
         description = 'Feet empties local Butterworth filter cutoff frequency (Hz)'
     ) # type: ignore
 
 # UI Panel Class
 class VIEW3D_PT_freemocap_adapter(Panel):
-    bl_space_type   = "VIEW_3D"
-    bl_region_type  = "UI"
-    bl_category     = "Freemocap Adapter Alt"
-    bl_label        = "Freemocap Adapter Alt"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Freemocap Adapter Alt"
+    bl_label = "Freemocap Adapter Alt"
     
     def draw(self, context):
-        layout              = self.layout
-        scene               = context.scene
-        fmc_adapter_tool    = scene.fmc_adapter_tool
+        layout = self.layout
+        scene = context.scene
+        fmc_adapter_tool = scene.fmc_adapter_tool
         
         # Create a button to toggle Adjust Empties Options visibility
         row = layout.row(align=True)
@@ -557,6 +665,58 @@ class VIEW3D_PT_freemocap_adapter(Panel):
             box = layout.box()
             box.operator('fmc_adapter.add_finger_rotation_limits', text='4. Add Finger Rotation Limits')
 
+        # Create a button to toggle Add Finger Rotation Limits Options visibility
+        row = layout.row(align=True)
+        row.prop(fmc_adapter_tool, "show_apply_foot_locking", text="", icon='TRIA_DOWN' if fmc_adapter_tool.show_apply_foot_locking else 'TRIA_RIGHT', emboss=False)
+        row.label(text="Apply Foot Locking")
+
+        if fmc_adapter_tool.show_apply_foot_locking:
+
+            # Apply Foot Locking Options
+            box = layout.box()
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Target Foot')
+            split.split().column().prop(fmc_adapter_tool, 'foot_locking_target_foot')
+
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Target foot base markers')
+            split.split().column().prop(fmc_adapter_tool, 'foot_locking_target_base_markers')
+
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Z Threshold (m)')
+            split.split().column().prop(fmc_adapter_tool, 'foot_locking_z_threshold')
+
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Ground Level (m)')
+            split.split().column().prop(fmc_adapter_tool, 'foot_locking_ground_level')
+
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Frame Window Minimum Size')
+            split.split().column().prop(fmc_adapter_tool, 'foot_locking_frame_window_min_size')
+
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Initial Attenuation Count')
+            split.split().column().prop(fmc_adapter_tool, 'foot_locking_initial_attenuation_count')
+
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Final Attenuation Count')
+            split.split().column().prop(fmc_adapter_tool, 'foot_locking_final_attenuation_count')
+
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Lock XY at Ground Level')
+            split.split().column().prop(fmc_adapter_tool, 'foot_locking_lock_xy_at_ground_level')
+
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Knee Hip Compensation Coefficient')
+            split.split().column().prop(fmc_adapter_tool, 'foot_locking_knee_hip_compensation_coefficient')
+
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Compensate Upper Body Markers')
+            split.split().column().prop(fmc_adapter_tool, 'foot_locking_compensate_upper_body')
+
+            box = layout.box()
+            box.operator('fmc_adapter.apply_foot_locking', text='4.5. Apply Foot Locking')
+
         # Create a button to toggle Rig Options visibility
         row = layout.row(align=True)
         row.prop(fmc_adapter_tool, "show_add_rig", text="", icon='TRIA_DOWN' if fmc_adapter_tool.show_add_rig else 'TRIA_RIGHT', emboss=False)
@@ -626,14 +786,14 @@ class VIEW3D_PT_freemocap_adapter(Panel):
 
 # Operator classes that executes the methods
 class FMC_ADAPTER_OT_adjust_empties(Operator):
-    bl_idname       = 'fmc_adapter.adjust_empties'
-    bl_label        = 'Freemocap Adapter - Adjust Empties'
-    bl_description  = "Change the position of the empties_parent empty so it is placed in an imaginary ground plane of the capture between the actor's feet"
-    bl_options      = {'REGISTER', 'UNDO_GROUPED'}
+    bl_idname = 'fmc_adapter.adjust_empties'
+    bl_label = 'Freemocap Adapter - Adjust Empties'
+    bl_description = "Change the position of the empties_parent empty so it is placed in an imaginary ground plane of the capture between the actor's feet"
+    bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
-        scene               = context.scene
-        fmc_adapter_tool    = scene.fmc_adapter_tool
+        scene = context.scene
+        fmc_adapter_tool = scene.fmc_adapter_tool
 
         # Get start time
         start = time.time()
@@ -653,14 +813,14 @@ class FMC_ADAPTER_OT_adjust_empties(Operator):
         return {'FINISHED'}
 
 class FMC_ADAPTER_OT_reduce_bone_length_dispersion(Operator):
-    bl_idname       = 'fmc_adapter.reduce_bone_length_dispersion'
-    bl_label        = 'Freemocap Adapter - Reduce Bone Length Dispersion'
-    bl_description  = 'Reduce the bone length dispersion by moving the tail empty and its children along the bone projection so the bone new length is within the interval'
-    bl_options      = {'REGISTER', 'UNDO_GROUPED'}
+    bl_idname = 'fmc_adapter.reduce_bone_length_dispersion'
+    bl_label = 'Freemocap Adapter - Reduce Bone Length Dispersion'
+    bl_description = 'Reduce the bone length dispersion by moving the tail empty and its children along the bone projection so the bone new length is within the interval'
+    bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
-        scene               = context.scene
-        fmc_adapter_tool    = scene.fmc_adapter_tool
+        scene = context.scene
+        fmc_adapter_tool = scene.fmc_adapter_tool
 
         # Get start time
         start = time.time()
@@ -677,15 +837,15 @@ class FMC_ADAPTER_OT_reduce_bone_length_dispersion(Operator):
         return {'FINISHED'}
 
 class FMC_ADAPTER_OT_apply_butterworth_filters(Operator):
-    bl_idname       = 'fmc_adapter.apply_butterworth_filters'
-    bl_label        = 'Freemocap Adapter - Apply Butterworth Filters'
-    bl_description  = 'Apply Butterworth filters to the marker empties'
-    bl_options      = {'REGISTER', 'UNDO_GROUPED'}
+    bl_idname = 'fmc_adapter.apply_butterworth_filters'
+    bl_label = 'Freemocap Adapter - Apply Butterworth Filters'
+    bl_description = 'Apply Butterworth filters to the marker empties'
+    bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
 
-        scene               = context.scene
-        fmc_adapter_tool    = scene.fmc_adapter_tool
+        scene = context.scene
+        fmc_adapter_tool = scene.fmc_adapter_tool
 
         # Get start time
         start = time.time()
@@ -788,15 +948,15 @@ class FMC_ADAPTER_OT_apply_butterworth_filters(Operator):
         return {'FINISHED'}
 
 class FMC_ADAPTER_OT_add_finger_rotation_limits(Operator):
-    bl_idname       = 'fmc_adapter.add_finger_rotation_limits'
-    bl_label        = 'Freemocap Adapter - Add Finger Rotation Limits'
-    bl_description  = 'Translate the finger marker empties so the bones respect the rotation constraint'
-    bl_options      = {'REGISTER', 'UNDO_GROUPED'}
+    bl_idname = 'fmc_adapter.add_finger_rotation_limits'
+    bl_label = 'Freemocap Adapter - Add Finger Rotation Limits'
+    bl_description = 'Translate the finger marker empties so the bones respect the rotation constraint'
+    bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
 
-        scene               = context.scene
-        fmc_adapter_tool    = scene.fmc_adapter_tool
+        scene = context.scene
+        fmc_adapter_tool = scene.fmc_adapter_tool
 
         # Get start time
         start = time.time()
@@ -812,15 +972,63 @@ class FMC_ADAPTER_OT_add_finger_rotation_limits(Operator):
 
         return {'FINISHED'}
 
-class FMC_ADAPTER_OT_add_rig(Operator):
-    bl_idname       = 'fmc_adapter.add_rig'
-    bl_label        = 'Freemocap Adapter - Add Rig'
-    bl_description  = 'Add a Rig to the capture empties. The method sets the rig rest pose as a TPose'
-    bl_options      = {'REGISTER', 'UNDO_GROUPED'}
+class FMC_ADAPTER_OT_apply_foot_locking(Operator):
+    bl_idname = 'fmc_adapter.apply_foot_locking'
+    bl_label = 'Freemocap Adapter - Apply Foot Locking'
+    bl_description = 'Apply the foot locking constraint'   
+    bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
-        scene               = context.scene
-        fmc_adapter_tool    = scene.fmc_adapter_tool
+
+        scene = context.scene
+        fmc_adapter_tool = scene.fmc_adapter_tool
+
+        # Get start time
+        start = time.time()
+
+        print('Executing Apply Foot Locking...')
+
+        # Prepare the target foot list
+        if fmc_adapter_tool.foot_locking_target_foot == 'both_feet':
+            target_foot_list = ['left_foot', 'right_foot']
+        else:
+            target_foot_list = [fmc_adapter_tool.foot_locking_target_foot]
+
+        # Prepare the target base markers
+        if fmc_adapter_tool.foot_locking_target_base_markers == 'foot_index_and_heel':
+            target_base_markers_list = ['foot_index', 'heel']
+        else:
+            target_base_markers_list = [fmc_adapter_tool.foot_locking_target_base_markers]
+
+        # Execute export fbx function
+        apply_foot_locking(
+            target_foot=target_foot_list,
+            target_base_markers=target_base_markers_list,
+            z_threshold=fmc_adapter_tool.foot_locking_z_threshold,
+            ground_level=fmc_adapter_tool.foot_locking_ground_level,
+            frame_window_min_size=fmc_adapter_tool.foot_locking_frame_window_min_size,
+            initial_attenuation_count=fmc_adapter_tool.foot_locking_initial_attenuation_count,
+            final_attenuation_count=fmc_adapter_tool.foot_locking_final_attenuation_count,
+            lock_xy_at_ground_level=fmc_adapter_tool.foot_locking_lock_xy_at_ground_level,
+            knee_hip_compensation_coefficient=fmc_adapter_tool.foot_locking_knee_hip_compensation_coefficient,
+            compensate_upper_body=fmc_adapter_tool.foot_locking_compensate_upper_body
+        )
+
+        # Get end time and print execution time
+        end = time.time()
+        print('Finished. Execution time (s): ' + str(m.trunc((end - start)*1000)/1000))
+
+        return {'FINISHED'}
+
+class FMC_ADAPTER_OT_add_rig(Operator):
+    bl_idname = 'fmc_adapter.add_rig'
+    bl_label = 'Freemocap Adapter - Add Rig'
+    bl_description = 'Add a Rig to the capture empties. The method sets the rig rest pose as a TPose'
+    bl_options = {'REGISTER', 'UNDO_GROUPED'}
+
+    def execute(self, context):
+        scene = context.scene
+        fmc_adapter_tool = scene.fmc_adapter_tool
 
         # Get start time
         start = time.time()
@@ -844,14 +1052,14 @@ class FMC_ADAPTER_OT_add_rig(Operator):
         return {'FINISHED'}
 
 class FMC_ADAPTER_OT_add_body_mesh(Operator):
-    bl_idname       = 'fmc_adapter.add_body_mesh'
-    bl_label        = 'Freemocap Adapter - Add Body Mesh'
-    bl_description  = 'Add a body mesh to the rig. The mesh can be a file or a custom mesh made with basic shapes. This method first executes Add Empties and Add Rig(if no rig available)'
-    bl_options      = {'REGISTER', 'UNDO_GROUPED'}
+    bl_idname = 'fmc_adapter.add_body_mesh'
+    bl_label = 'Freemocap Adapter - Add Body Mesh'
+    bl_description = 'Add a body mesh to the rig. The mesh can be a file or a custom mesh made with basic shapes. This method first executes Add Empties and Add Rig(if no rig available)'
+    bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
-        scene               = context.scene
-        fmc_adapter_tool    = scene.fmc_adapter_tool
+        scene = context.scene
+        fmc_adapter_tool = scene.fmc_adapter_tool
 
         # Get start time
         start = time.time()
@@ -883,15 +1091,15 @@ class FMC_ADAPTER_OT_add_body_mesh(Operator):
         return {'FINISHED'}
 
 class FMC_ADAPTER_OT_export_fbx(Operator):
-    bl_idname       = 'fmc_adapter.export_fbx'
-    bl_label        = 'Freemocap Adapter - Export FBX'
-    bl_description  = 'Exports a FBX file containing the rig, the mesh and the baked animation'
-    bl_options      = {'REGISTER', 'UNDO_GROUPED'}
+    bl_idname = 'fmc_adapter.export_fbx'
+    bl_label = 'Freemocap Adapter - Export FBX'
+    bl_description = 'Exports a FBX file containing the rig, the mesh and the baked animation'
+    bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
 
-        scene               = context.scene
-        fmc_adapter_tool    = scene.fmc_adapter_tool
+        scene = context.scene
+        fmc_adapter_tool = scene.fmc_adapter_tool
 
         # Get start time
         start = time.time()

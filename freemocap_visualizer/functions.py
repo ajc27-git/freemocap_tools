@@ -635,6 +635,9 @@ def animate_base_of_support(points_of_contact: list, base_of_support: bpy.types.
         bpy.data.node_groups["Geometry Nodes_COM_Vertical_Projection"].nodes["In-Out BOS Switch"].inputs[1].keyframe_insert(data_path='default_value', frame=frame)
         bpy.data.node_groups["Geometry Nodes_COM_Vertical_Projection"].nodes["BOS Visible Switch"].inputs[1].keyframe_insert(data_path='default_value', frame=frame)
 
+    # Restore the current frame
+    scene.frame_current = current_frame
+
 # Function to add the joint angles
 def add_joint_angles(angles_color: tuple,
                      text_color: tuple)->None:

@@ -12,14 +12,31 @@ import addon_utils
 scipy_available = True
 try:
     from scipy.signal import butter, filtfilt
+    from scipy.optimize import minimize
 except ImportError:
     scipy_available = False
     print("scipy is not installed. Please install scipy to use this addon.")
 
-from .data_definitions import anthropomorphic_dimensions, virtual_bones, empties_dict, ik_constraint_parameters, ik_pole_bones, skelly_parts
-from .io_scene_fbx_functions_blender3 import fbx_animations_do_blender3, fbx_data_armature_elements_blender3, fbx_data_object_elements_blender3, fbx_data_bindpose_element_blender3
-from .io_scene_fbx_functions_blender4 import fbx_animations_do_blender4, fbx_data_armature_elements_blender4, fbx_data_object_elements_blender4, fbx_data_bindpose_element_blender4
-
+from .data_definitions import (anthropomorphic_dimensions,
+                               virtual_bones,
+                               empties_dict,
+                               ik_constraint_parameters,
+                               ik_pole_bones,
+                               skelly_parts,
+                               foot_locking_markers
+)
+if bpy.app.version_string[0] < '4':
+    from .io_scene_fbx_functions_blender3 import (fbx_animations_do_blender3,
+                                                fbx_data_armature_elements_blender3,
+                                                fbx_data_object_elements_blender3,
+                                                fbx_data_bindpose_element_blender3
+    )
+if bpy.app.version_string[0] >= '4':
+    from .io_scene_fbx_functions_blender4 import (fbx_animations_do_blender4,
+                                                fbx_data_armature_elements_blender4,
+                                                fbx_data_object_elements_blender4,
+                                                fbx_data_bindpose_element_blender4
+    )
 
 # Global Variables
 # Variable to save if the function Adjust Empties has been already executed
@@ -36,7 +53,8 @@ empty_positions = {}
 empty_speeds = {}
 
 # Function to update all the empties positions in the dictionary
-def update_empty_positions(target_empty: str=''):
+def update_empty_positions(target_empty: str='',
+                           position_reference: str='local') -> None:
 
     print('Updating Empty Positions Dictionary...')
 
@@ -55,17 +73,32 @@ def update_empty_positions(target_empty: str=''):
             empty_positions[target_empty[0]] = {'x': [], 'y': [], 'z': []}
             empty_positions[target_empty[1]] = {'x': [], 'y': [], 'z': []}
 
-            # Iterate through each scene frame and save the coordinates of the empties in the dictionary.
-            for frame in range (scene.frame_start, scene.frame_end):
-                # Set scene frame
-                scene.frame_set(frame)
-                # Save the x, y, z position of the empties
-                empty_positions[target_empty[0]]['x'].append(bpy.data.objects[target_empty[0]].location[0])
-                empty_positions[target_empty[0]]['y'].append(bpy.data.objects[target_empty[0]].location[1])
-                empty_positions[target_empty[0]]['z'].append(bpy.data.objects[target_empty[0]].location[2])
-                empty_positions[target_empty[1]]['x'].append(bpy.data.objects[target_empty[1]].location[0])
-                empty_positions[target_empty[1]]['y'].append(bpy.data.objects[target_empty[1]].location[1])
-                empty_positions[target_empty[1]]['z'].append(bpy.data.objects[target_empty[1]].location[2])
+            # Iterate through each scene frame and save the coordinates of the
+            # empties in the dictionary. Separate between local and global
+            # position reference
+            if position_reference == 'local':
+                for frame in range (scene.frame_start, scene.frame_end):
+                    # Set scene frame
+                    scene.frame_set(frame)
+                    # Save the x, y, z position of the empties
+                    empty_positions[target_empty[0]]['x'].append(bpy.data.objects[target_empty[0]].location[0])
+                    empty_positions[target_empty[0]]['y'].append(bpy.data.objects[target_empty[0]].location[1])
+                    empty_positions[target_empty[0]]['z'].append(bpy.data.objects[target_empty[0]].location[2])
+                    empty_positions[target_empty[1]]['x'].append(bpy.data.objects[target_empty[1]].location[0])
+                    empty_positions[target_empty[1]]['y'].append(bpy.data.objects[target_empty[1]].location[1])
+                    empty_positions[target_empty[1]]['z'].append(bpy.data.objects[target_empty[1]].location[2])
+
+            elif position_reference == 'global':
+                for frame in range (scene.frame_start, scene.frame_end):
+                    # Set scene frame
+                    scene.frame_set(frame)
+                    # Save the x, y, z position of the empties
+                    empty_positions[target_empty[0]]['x'].append(bpy.data.objects[target_empty[0]].matrix_world.to_translation()[0])
+                    empty_positions[target_empty[0]]['y'].append(bpy.data.objects[target_empty[0]].matrix_world.to_translation()[1])
+                    empty_positions[target_empty[0]]['z'].append(bpy.data.objects[target_empty[0]].matrix_world.to_translation()[2])
+                    empty_positions[target_empty[1]]['x'].append(bpy.data.objects[target_empty[1]].matrix_world.to_translation()[0])
+                    empty_positions[target_empty[1]]['y'].append(bpy.data.objects[target_empty[1]].matrix_world.to_translation()[1])
+                    empty_positions[target_empty[1]]['z'].append(bpy.data.objects[target_empty[1]].matrix_world.to_translation()[2])
 
         else:
             #  Reset the empty positions
@@ -90,16 +123,30 @@ def update_empty_positions(target_empty: str=''):
         for empty in marker_empties:
             empty_positions[empty] = {'x': [], 'y': [], 'z': []}
 
-        # Iterate through each scene frame and save the coordinates of each empty in the dictionary.
-        for frame in range (scene.frame_start, scene.frame_end):
-            # Set scene frame
-            scene.frame_set(frame)
-            # Iterate through each empty
-            for empty in marker_empties:
-                # Save the x, y, z position of the empty
-                empty_positions[empty]['x'].append(bpy.data.objects[empty].location[0])
-                empty_positions[empty]['y'].append(bpy.data.objects[empty].location[1])
-                empty_positions[empty]['z'].append(bpy.data.objects[empty].location[2])
+        # Iterate through each scene frame and save the coordinates of each
+        # empty in the dictionary. Separate between local and global
+        # position reference
+        if position_reference == 'local':
+            for frame in range (scene.frame_start, scene.frame_end):
+                # Set scene frame
+                scene.frame_set(frame)
+                # Iterate through each empty
+                for empty in marker_empties:
+                    # Save the x, y, z position of the empty
+                    empty_positions[empty]['x'].append(bpy.data.objects[empty].location[0])
+                    empty_positions[empty]['y'].append(bpy.data.objects[empty].location[1])
+                    empty_positions[empty]['z'].append(bpy.data.objects[empty].location[2])
+        
+        elif position_reference == 'global':
+            for frame in range (scene.frame_start, scene.frame_end):
+                # Set scene frame
+                scene.frame_set(frame)
+                # Iterate through each empty
+                for empty in marker_empties:
+                    # Save the x, y, z position of the empty
+                    empty_positions[empty]['x'].append(bpy.data.objects[empty].matrix_world.to_translation()[0])
+                    empty_positions[empty]['y'].append(bpy.data.objects[empty].matrix_world.to_translation()[1])
+                    empty_positions[empty]['z'].append(bpy.data.objects[empty].matrix_world.to_translation()[2])
 
     # Reset the scene frame to the start
     scene.frame_set(scene.frame_start)
@@ -422,11 +469,11 @@ def calculate_ik_pole_angle(rig_name: str='root',
     return pole_angle_radians
 
 #  Function to define a quadratic function for the ik pole bone position calculus transition
-def ik_pole_quadratic_function(t1, t2, t3, y1, y2, y3):
+def quadratic_function(x1, x2, x3, y1, y2, y3):
     A = np.array([
-        [t1**2, t1, 1],
-        [t2**2, t2, 1],
-        [t3**2, t3, 1]
+        [x1**2, x1, 1],
+        [x2**2, x2, 1],
+        [x3**2, x3, 1]
     ])
     b = np.array([y1, y2, y3])
     
@@ -505,6 +552,63 @@ def calculate_ik_pole_position(base_marker_name: str,
 
     return pole_bone_position
 
+# Function to translate the empties recursively
+def translate_empty(empties_dict, empty, frame_index, delta, recursivity: bool=True):
+
+    try:
+        # Translate the empty in the animation location curve
+        actual_x = bpy.data.objects[empty].animation_data.action.fcurves[0].keyframe_points[frame_index].co[1]
+        bpy.data.objects[empty].animation_data.action.fcurves[0].keyframe_points[frame_index].co[1] = actual_x + delta[0]
+        actual_y = bpy.data.objects[empty].animation_data.action.fcurves[1].keyframe_points[frame_index].co[1]
+        bpy.data.objects[empty].animation_data.action.fcurves[1].keyframe_points[frame_index].co[1] = actual_y + delta[1]
+        actual_z = bpy.data.objects[empty].animation_data.action.fcurves[2].keyframe_points[frame_index].co[1]
+        bpy.data.objects[empty].animation_data.action.fcurves[2].keyframe_points[frame_index].co[1] = actual_z + delta[2]
+    except:
+        # Empty does not exist or does not have animation data
+        #print('Empty ' + empty + ' does not have animation data on frame ' + str(frame_index))
+        pass
+
+    # If recursivity is set to True then call this function to the children of the empty
+    if recursivity:
+
+        # If empty has children then call this function for every child
+        if empty in empties_dict:
+            for child in empties_dict[empty]['children']:
+                translate_empty(empties_dict, child, frame_index, delta, recursivity)
+
+# Function to rotate the virtual bones by its tail empty using a rotation matrix. Do it recursively for its children
+def rotate_virtual_bone(empty, origin, rot_matrix: mathutils.Matrix):
+    # Get the scene current frame
+    frame_index = bpy.context.scene.frame_current
+
+    # Get the current location of the empty
+    empty_current_location = bpy.data.objects[empty].matrix_world.translation
+
+    # Get local vector from origin to the virtual bone tail empty
+    empty_local_vector = empty_current_location - origin
+
+    # Rotate the local vector using the rotation matrix
+    rotated_empty_vector = rot_matrix @ empty_local_vector
+
+    # Get the world space rotated empty vector
+    new_empty_vector = origin + rotated_empty_vector
+
+    # Change the position of the empty in the world space
+    bpy.data.objects[empty].matrix_world.translation = new_empty_vector
+
+    # Translate the empty in the animation location curve
+    try:
+        bpy.data.objects[empty].animation_data.action.fcurves[0].keyframe_points[frame_index].co[1] = new_empty_vector[0]
+        bpy.data.objects[empty].animation_data.action.fcurves[1].keyframe_points[frame_index].co[1] = new_empty_vector[1]
+        bpy.data.objects[empty].animation_data.action.fcurves[2].keyframe_points[frame_index].co[1] = new_empty_vector[2]
+    except:
+        # Empty does not exist or does not have animation data
+        print('Empty ' + empty + ' does not have animation data on frame ' + str(frame_index))
+
+    # If empty has children then call this function for every child
+    if empty in empties_dict:
+        for child in empties_dict[empty]['children']:
+            rotate_virtual_bone(child, origin, rot_matrix)
 
 ######################################################################
 ######################### ADJUST EMPTIES #############################
@@ -810,29 +914,6 @@ def reduce_bone_length_dispersion(interval_variable: str='capture_median', inter
 
         print('Total empties positions corrected: ' + str(empties_positions_corrected))
     
-# Function to translate the empties recursively
-def translate_empty(empties_dict, empty, frame_index, delta, recursivity: bool=True):
-
-    try:
-        # Translate the empty in the animation location curve
-        actual_x = bpy.data.objects[empty].animation_data.action.fcurves[0].keyframe_points[frame_index].co[1]
-        bpy.data.objects[empty].animation_data.action.fcurves[0].keyframe_points[frame_index].co[1] = actual_x + delta[0]
-        actual_y = bpy.data.objects[empty].animation_data.action.fcurves[1].keyframe_points[frame_index].co[1]
-        bpy.data.objects[empty].animation_data.action.fcurves[1].keyframe_points[frame_index].co[1] = actual_y + delta[1]
-        actual_z = bpy.data.objects[empty].animation_data.action.fcurves[2].keyframe_points[frame_index].co[1]
-        bpy.data.objects[empty].animation_data.action.fcurves[2].keyframe_points[frame_index].co[1] = actual_z + delta[2]
-    except:
-        # Empty does not exist or does not have animation data
-        #print('Empty ' + empty + ' does not have animation data on frame ' + str(frame_index))
-        pass
-
-    # If recursivity is set to True then call this function to the children of the empty
-    if recursivity:
-
-        # If empty has children then call this function for every child
-        if empty in empties_dict:
-            for child in empties_dict[empty]['children']:
-                translate_empty(empties_dict, child, frame_index, delta, recursivity)
 
 # Function to add fingers rotation limits constraints. Starting from the fingers mcp, each hand virtual bone rotation will be
 # analysed. If the rotation is outside the limits, the bone tail empty will be translated around the bone head empty.
@@ -990,39 +1071,6 @@ def add_finger_rotation_limits():
     # Reset the scene frame
     scene.frame_set(scene.frame_start)
 
-# Function to rotate the virtual bones by its tail empty using a rotation matrix. Do it recursively for its children
-def rotate_virtual_bone(empty, origin, rot_matrix: mathutils.Matrix):
-    # Get the scene current frame
-    frame_index = bpy.context.scene.frame_current
-
-    # Get the current location of the empty
-    empty_current_location = bpy.data.objects[empty].matrix_world.translation
-
-    # Get local vector from origin to the virtual bone tail empty
-    empty_local_vector = empty_current_location - origin
-
-    # Rotate the local vector using the rotation matrix
-    rotated_empty_vector = rot_matrix @ empty_local_vector
-
-    # Get the world space rotated empty vector
-    new_empty_vector = origin + rotated_empty_vector
-
-    # Change the position of the empty in the world space
-    bpy.data.objects[empty].matrix_world.translation = new_empty_vector
-
-    # Translate the empty in the animation location curve
-    try:
-        bpy.data.objects[empty].animation_data.action.fcurves[0].keyframe_points[frame_index].co[1] = new_empty_vector[0]
-        bpy.data.objects[empty].animation_data.action.fcurves[1].keyframe_points[frame_index].co[1] = new_empty_vector[1]
-        bpy.data.objects[empty].animation_data.action.fcurves[2].keyframe_points[frame_index].co[1] = new_empty_vector[2]
-    except:
-        # Empty does not exist or does not have animation data
-        print('Empty ' + empty + ' does not have animation data on frame ' + str(frame_index))
-
-    # If empty has children then call this function for every child
-    if empty in empties_dict:
-        for child in empties_dict[empty]['children']:
-            rotate_virtual_bone(child, origin, rot_matrix)
 
 # Function to apply different butterworth filters to the empty positions
 def apply_butterworth_filters(global_filter_categories: list=[],
@@ -2266,12 +2314,12 @@ def add_rig(keep_symmetry: bool=False,
     if add_ik_constraints:
 
         # Get the transition quadratic function
-        quadratic_function = ik_pole_quadratic_function(t1=ik_transition_threshold,
-                                                        t2=((ik_transition_threshold + 1)/2),
-                                                        t3=1,
-                                                        y1=0.0,
-                                                        y2=0.25,
-                                                        y3=1)
+        ik_quadratic_function = quadratic_function(x1=ik_transition_threshold,
+                                                x2=((ik_transition_threshold + 1)/2),
+                                                x3=1,
+                                                y1=0.0,
+                                                y2=0.25,
+                                                y3=1)
 
         # Loop through the scene frames and calculate the pole angle for each IK constraint to animate the pole_angle variable
         for frame in range(scene.frame_start, scene.frame_end + 1):
@@ -2284,7 +2332,7 @@ def add_rig(keep_symmetry: bool=False,
                                                                 ik_pole_bones[bone]['target_marker'],
                                                                 ik_pole_bones[bone]['aux_markers'],
                                                                 ik_transition_threshold,
-                                                                quadratic_function)
+                                                                ik_quadratic_function)
 
                 rig.pose.bones[bone].location = pole_bone_position
                 rig.pose.bones[bone].keyframe_insert(data_path="location")
@@ -3105,3 +3153,327 @@ def export_fbx(self: Operator,
             # Restore the original rig name
             capture_object.name = rig_original_name
 
+def apply_foot_locking(
+        target_foot: list=['left_foot', 'right_foot'],
+        target_base_markers: list=['foot_index', 'heel'],
+        z_threshold: float=0.01,
+        ground_level: float=0.0,
+        frame_window_min_size: int=10,
+        initial_attenuation_count: int=5,
+        final_attenuation_count: int=5,
+        lock_xy_at_ground_level: bool=False,
+        knee_hip_compensation_coefficient: float=1.0,
+        compensate_upper_body: bool=True)->None:
+    
+    # Get the scene context
+    scene = bpy.context.scene
+
+    # Get current frame
+    current_frame = scene.frame_current
+
+    # Update the empties position dictionary with the global positions
+    update_empty_positions(position_reference='global')
+
+    # Get the scene start and end frames
+    start_frame = scene.frame_start
+    end_frame = scene.frame_end
+
+    # Get the relative last frame
+    last_frame = end_frame - start_frame
+
+    # Get the transformation matrix of the empties parent object
+    empty_parent_matrix = bpy.data.objects['empties_parent'].matrix_world
+
+    # Define the attenuation functions
+    initial_attenuation = quadratic_function(
+        x1=0,
+        x2=(initial_attenuation_count / 2),
+        x3=(initial_attenuation_count - 1),
+        y1=z_threshold,
+        y2=z_threshold - (z_threshold - ground_level) * 3 / 4,
+        y3=ground_level)
+    
+    final_attenuation = quadratic_function(
+        x1=0,
+        x2=(final_attenuation_count / 2),
+        x3=(final_attenuation_count - 1),
+        y1=ground_level,
+        y2=ground_level + (z_threshold - ground_level) * 3 / 4,
+        y3=z_threshold)
+    
+    # Define the error function to be optimized when adjusting the
+    # ankle position
+    def error_function(z_C, x_C, y_C, x_A, y_A, z_A, x_B, y_B, z_B, length_A_to_C, length_B_to_C):
+        error1 = (x_A - x_C)**2 + (y_A - y_C)**2 + (z_A - z_C)**2 - length_A_to_C**2
+        error2 = (x_B - x_C)**2 + (y_B - y_C)**2 + (z_B - z_C)**2 - length_B_to_C**2
+        return error1**2 + error2**2
+    
+    # Set the overall_changed_frames variable to save all the frames
+    # that were changed for posterior upper body adjustment
+    overall_changed_frames = []
+
+    # Iterate through the foot_locking_markers dictionary
+    for foot in foot_locking_markers:
+        if foot not in target_foot:
+            continue
+
+        # Variable to save the changed frames for later ankle adjustment
+        changed_frames = []
+        # Update the correspondent virtual bones info
+        update_virtual_bones_info(
+            target_bone=foot_locking_markers[foot]['bones'][0])
+        update_virtual_bones_info(
+            target_bone=foot_locking_markers[foot]['bones'][1])
+
+        # Iterate through the base markers
+        for base_marker in foot_locking_markers[foot]['base']:
+            if base_marker not in (foot.split('_')[0] + '_foot_index',
+                                   foot.split('_')[0] + '_heel'):
+                continue
+
+            # Set the initial variables
+            frame = 0
+            window = 0
+            final_attenuation_aux = final_attenuation_count
+
+            # Iterate through the animation frames
+            while frame < last_frame:
+                if empty_positions[base_marker]['z'][frame] < z_threshold:
+                    # Marker is under threshold the next frames are checked to conform the window
+                    window += 1
+
+                    for following_frame in range(frame + 1, last_frame):
+                        if empty_positions[base_marker]['z'][following_frame] < z_threshold:
+                            # Following marker is under threshold, the window is increased
+                            window += 1
+                        if following_frame == last_frame - 1 or empty_positions[base_marker]['z'][following_frame] >= z_threshold:
+                            # Following marker is the last one or is not under threshold, the window size is checked
+                            if window < frame_window_min_size:
+                                # Window is not big enough. Break the cycle and continue from the frame that was over threshold
+                                # Before continuing, make sure that no marker is below the ground level
+                                for window_frame in range(frame, frame + window):
+                                    if empty_positions[base_marker]['z'][window_frame] < ground_level:
+                                        # Marker's z position is forced to the ground level
+                                        # Get the delta vector on the global z axis
+                                        delta_vector = mathutils.Vector([0, 0, ground_level - empty_positions[base_marker]['z'][window_frame]])
+                                        # Adjust the delta vector to the empty parent axis
+                                        delta_vector_adjusted = delta_vector @ empty_parent_matrix
+                                        try:
+                                            # Change the marker's local position with the adjusted delta vector
+                                            bpy.data.objects[base_marker].animation_data.action.fcurves[0].keyframe_points[start_frame + window_frame].co[1] += delta_vector_adjusted[0]
+                                            bpy.data.objects[base_marker].animation_data.action.fcurves[1].keyframe_points[start_frame + window_frame].co[1] += delta_vector_adjusted[1]
+                                            bpy.data.objects[base_marker].animation_data.action.fcurves[2].keyframe_points[start_frame + window_frame].co[1] += delta_vector_adjusted[2]
+                                            changed_frames.append(start_frame + window_frame)
+                                        except:
+                                            print('error:' + str(e))
+
+                                frame = following_frame
+                                window = 0
+                                break
+                            else:
+                                # Window is big enough so the locking logic is applied
+                                # Initial attenuation is applied
+                                for locking_frame in range(frame, frame + initial_attenuation_count):
+                                    # Get the z position from the initial attenuation function
+                                    new_z_position = round(initial_attenuation(locking_frame - frame), 5)
+                                    # Get the delta vector on the global z axis
+                                    delta_vector = mathutils.Vector([0, 0, new_z_position - empty_positions[base_marker]['z'][locking_frame]])
+                                    # Adjust the delta vector to the empty parent axis
+                                    delta_vector_adjusted = delta_vector @ empty_parent_matrix
+                                    try:
+                                        # Change the marker's local position with the adjusted delta vector
+                                        bpy.data.objects[base_marker].animation_data.action.fcurves[0].keyframe_points[start_frame + locking_frame].co[1] += delta_vector_adjusted[0]
+                                        bpy.data.objects[base_marker].animation_data.action.fcurves[1].keyframe_points[start_frame + locking_frame].co[1] += delta_vector_adjusted[1]
+                                        bpy.data.objects[base_marker].animation_data.action.fcurves[2].keyframe_points[start_frame + locking_frame].co[1] += delta_vector_adjusted[2]
+                                        changed_frames.append(start_frame + locking_frame)
+                                    except Exception as e:
+                                        # Empty does not exist or does not have animation data
+                                        print('error:' + str(e))
+
+                                # Check if the window ends at the last frame. If so the final attenuation aux variable is set to zero
+                                if following_frame == last_frame - 1:
+                                    final_attenuation_aux = 0
+
+                                # If the lock_xy_at_ground_level is True, save the x and y position of the first frame of the next loop
+                                if lock_xy_at_ground_level:
+                                    ground_level_x = bpy.data.objects[base_marker].animation_data.action.fcurves[0].keyframe_points[start_frame + frame + initial_attenuation_count].co[1]
+                                    ground_level_y = bpy.data.objects[base_marker].animation_data.action.fcurves[1].keyframe_points[start_frame + frame + initial_attenuation_count].co[1]
+                                
+                                # For the frames between the initial attenuation and the final attenuation the z position is set to the ground level
+                                for locking_frame in range(frame + initial_attenuation_count, frame + (window - final_attenuation_aux)):
+                                    # Get the delta vector on the global z axis consider x and y position if lock_xy_at_ground_level is True
+                                    if lock_xy_at_ground_level:
+                                        delta_vector = mathutils.Vector([ground_level_x - empty_positions[base_marker]['x'][locking_frame],
+                                                                        ground_level_y - empty_positions[base_marker]['y'][locking_frame],
+                                                                        ground_level - empty_positions[base_marker]['z'][locking_frame]])
+                                    else:
+                                        delta_vector = mathutils.Vector([0, 0, ground_level - empty_positions[base_marker]['z'][locking_frame]])
+
+                                    # Adjust the delta vector to the empty parent axis
+                                    delta_vector_adjusted = delta_vector @ empty_parent_matrix
+
+                                    try:
+                                    # Change the marker's local position with the adjusted delta vector
+                                        bpy.data.objects[base_marker].animation_data.action.fcurves[0].keyframe_points[start_frame + locking_frame].co[1] += delta_vector_adjusted[0]
+                                        bpy.data.objects[base_marker].animation_data.action.fcurves[1].keyframe_points[start_frame + locking_frame].co[1] += delta_vector_adjusted[1]
+                                        bpy.data.objects[base_marker].animation_data.action.fcurves[2].keyframe_points[start_frame + locking_frame].co[1] += delta_vector_adjusted[2]
+                                        changed_frames.append(start_frame + locking_frame)
+                                    except Exception as e:
+                                        # Empty does not exist or does not have animation data
+                                        print('error:' + str(e))
+
+                                # Final attenuation is applied if final_attenuation_count is greater than zero
+                                for locking_frame in range(frame + (window - final_attenuation_aux), frame + window):
+                                    # Get the z position from the final attenuation function
+                                    new_z_position = round(final_attenuation(locking_frame - (frame + window - final_attenuation_aux)), 5)
+                                    # Get the delta vector on the global z axis
+                                    delta_vector = mathutils.Vector([0, 0, new_z_position - empty_positions[base_marker]['z'][locking_frame]])
+                                    # Adjust the delta vector to the empty parent axis
+                                    delta_vector_adjusted = delta_vector @ empty_parent_matrix
+
+                                    try:
+                                        # Change the marker's local position with the adjusted delta vector
+                                        bpy.data.objects[base_marker].animation_data.action.fcurves[0].keyframe_points[start_frame + locking_frame].co[1] += delta_vector_adjusted[0]
+                                        bpy.data.objects[base_marker].animation_data.action.fcurves[1].keyframe_points[start_frame + locking_frame].co[1] += delta_vector_adjusted[1]
+                                        bpy.data.objects[base_marker].animation_data.action.fcurves[2].keyframe_points[start_frame + locking_frame].co[1] += delta_vector_adjusted[2]
+                                        changed_frames.append(start_frame + locking_frame)
+                                    except Exception as e:
+                                        # Empty does not exist or does not have animation data
+                                        print('error:' + str(e))
+                                    
+                                frame = following_frame
+                                window = 0
+                                break
+
+                frame += 1
+
+        # Update the empties position dictionary with the global positions
+        # for the two base markers
+        update_empty_positions(
+            target_empty=[foot_locking_markers[foot]['base'][0], foot_locking_markers[foot]['base'][1]],
+            position_reference='global'
+        )
+
+        # Adjust the ankle marker position in the previous modified frames so the median
+        # ankle-foot_index and ankle-heel distances are equal to the median lengths before the change
+        for changed_frame in list(set(changed_frames)):
+            # Get the initial position variables of the ankle z position's optimization problem
+            base_marker_0_x = empty_positions[foot_locking_markers[foot]['base'][0]]['x'][changed_frame - start_frame]
+            base_marker_0_y = empty_positions[foot_locking_markers[foot]['base'][0]]['y'][changed_frame - start_frame]
+            base_marker_0_z = empty_positions[foot_locking_markers[foot]['base'][0]]['z'][changed_frame - start_frame]
+            base_marker_1_x = empty_positions[foot_locking_markers[foot]['base'][1]]['x'][changed_frame - start_frame]
+            base_marker_1_y = empty_positions[foot_locking_markers[foot]['base'][1]]['y'][changed_frame - start_frame]
+            base_marker_1_z = empty_positions[foot_locking_markers[foot]['base'][1]]['z'][changed_frame - start_frame]
+
+            ankle_marker_x = empty_positions[foot_locking_markers[foot]['ankle'][0]]['x'][changed_frame - start_frame]
+            ankle_marker_y = empty_positions[foot_locking_markers[foot]['ankle'][0]]['y'][changed_frame - start_frame]
+
+            base_bone_0_distance = virtual_bones[foot_locking_markers[foot]['bones'][0]]['median']
+            base_bone_1_distance = virtual_bones[foot_locking_markers[foot]['bones'][1]]['median']
+
+            #  Get the current ankle z position
+            current_ankle_pos = empty_positions[foot_locking_markers[foot]['ankle'][0]]['z'][changed_frame - start_frame]
+
+            # Set the initial ankle z guess as the actual ankle z
+            # position. If the initial ankle z guess is not higher than
+            # both of the base markers z positions then set the initial
+            # ankle z guess to the highest base marker z position plus
+            # a margin
+            initial_ankle_z_guess = max(current_ankle_pos,
+                                        max([base_marker_0_z,
+                                             base_marker_1_z]) + 0.1)
+                
+            # Use scipy.optimize.minimize to minimize the error function
+            # and find the optimal z coordinate of C
+            result = minimize(error_function,
+                              initial_ankle_z_guess,
+                              args=(ankle_marker_x,
+                                    ankle_marker_y,
+                                    base_marker_0_x,
+                                    base_marker_0_y,
+                                    base_marker_0_z,
+                                    base_marker_1_x,
+                                    base_marker_1_y,
+                                    base_marker_1_z,
+                                    base_bone_0_distance,
+                                    base_bone_1_distance)
+            )
+
+            # Set the new ankle z position
+            # Get the delta vector on the global z axis
+            delta_vector = mathutils.Vector([0, 0, result.x[0] - empty_positions[foot_locking_markers[foot]['ankle'][0]]['z'][changed_frame - start_frame]])
+            # Adjust the delta vector to the empty parent axis
+            delta_vector_adjusted = delta_vector @ empty_parent_matrix
+            try:
+                # Change the marker's local position with the adjusted delta vector
+                bpy.data.objects[foot_locking_markers[foot]['ankle'][0]].animation_data.action.fcurves[0].keyframe_points[changed_frame].co[1] += delta_vector_adjusted[0]
+                bpy.data.objects[foot_locking_markers[foot]['ankle'][0]].animation_data.action.fcurves[1].keyframe_points[changed_frame].co[1] += delta_vector_adjusted[1]
+                bpy.data.objects[foot_locking_markers[foot]['ankle'][0]].animation_data.action.fcurves[2].keyframe_points[changed_frame].co[1] += delta_vector_adjusted[2]
+            except Exception as e:
+                # Empty does not exist or does not have animation data
+                print('error:' + str(e))
+
+            # Compensate the knee and the hip markers if knee_hip_compensation_coefficient is not zero
+            if knee_hip_compensation_coefficient != 0:
+                # Get the delta vector on the global z axis
+                ankle_z_delta = mathutils.Vector([0, 0, result.x[0] - current_ankle_pos])
+                # Adjust the ankle z delta to the empty parent axis
+                ankle_z_delta_adjusted = ankle_z_delta @ empty_parent_matrix
+                # Change the compensation markers' z position
+                for compensation_marker in foot_locking_markers[foot]['compensation_markers']:
+                    try:
+                        marker_x_position = bpy.data.objects[compensation_marker].animation_data.action.fcurves[0].keyframe_points[changed_frame].co[1]
+                        marker_y_position = bpy.data.objects[compensation_marker].animation_data.action.fcurves[1].keyframe_points[changed_frame].co[1]
+                        marker_z_position = bpy.data.objects[compensation_marker].animation_data.action.fcurves[2].keyframe_points[changed_frame].co[1]
+
+                        bpy.data.objects[compensation_marker].animation_data.action.fcurves[0].keyframe_points[changed_frame].co[1] = marker_x_position + ankle_z_delta_adjusted[0] * knee_hip_compensation_coefficient
+                        bpy.data.objects[compensation_marker].animation_data.action.fcurves[1].keyframe_points[changed_frame].co[1] = marker_y_position + ankle_z_delta_adjusted[1] * knee_hip_compensation_coefficient
+                        bpy.data.objects[compensation_marker].animation_data.action.fcurves[2].keyframe_points[changed_frame].co[1] = marker_z_position + ankle_z_delta_adjusted[2] * knee_hip_compensation_coefficient
+                    except Exception as e:
+                        # Empty does not exist or does not have animation data
+                        print('error:' + str(e))
+
+        # Update the overall_changed_frames list
+        overall_changed_frames += list(set(changed_frames))
+
+    if compensate_upper_body:
+        # Compensate the upper body markers starting from the hips_center
+                    
+        # Update the empties position dictionary with the global positions
+        # for the two hip markers
+        update_empty_positions(
+            target_empty=['left_hip', 'right_hip'],
+            position_reference='global'
+        )
+
+        # Iterate through the overall_changed_frames list
+        for changed_frame in list(set(overall_changed_frames)):
+            # Get the new hips_center z coordinate as the average of the
+            # left and right hip z coordinates
+            new_hips_center_z = (empty_positions['left_hip']['z'][changed_frame - start_frame] + empty_positions['right_hip']['z'][changed_frame - start_frame]) / 2
+            # Get the delta vector on the global z axis
+            hips_center_z_delta = mathutils.Vector([0, 0, new_hips_center_z - empty_positions['hips_center']['z'][changed_frame - start_frame]])
+            # Adjust the delta vector to the empty parent axis
+            hips_center_z_delta_adjusted = hips_center_z_delta @ empty_parent_matrix
+
+            try:
+                # Change the marker's local position with the adjusted delta vector
+                bpy.data.objects['hips_center'].animation_data.action.fcurves[0].keyframe_points[changed_frame].co[1] += hips_center_z_delta_adjusted[0]
+                bpy.data.objects['hips_center'].animation_data.action.fcurves[1].keyframe_points[changed_frame].co[1] += hips_center_z_delta_adjusted[1]
+                bpy.data.objects['hips_center'].animation_data.action.fcurves[2].keyframe_points[changed_frame].co[1] += hips_center_z_delta_adjusted[2]
+            except Exception as e:
+                # Empty does not exist or does not have animation data
+                print('error:' + str(e))
+
+            # Recursevely translate the empties from trunk_center
+            translate_empty(
+                empties_dict=empties_dict,
+                empty='trunk_center',
+                frame_index=changed_frame,
+                delta=hips_center_z_delta_adjusted,
+                recursivity=True)
+
+
+    # Restore the current frame
+    scene.frame_current = current_frame
+        
