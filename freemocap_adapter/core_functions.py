@@ -2043,7 +2043,8 @@ def add_rig(keep_symmetry: bool=False,
     constraints = {
         "pelvis": [
             {'type':'COPY_LOCATION','target':'hips_center','use_offset':False},
-            {'type':'LOCKED_TRACK','target':'right_hip','track_axis':'TRACK_NEGATIVE_X','lock_axis':'LOCK_Z','influence':1.0}],
+            {'type':'LOCKED_TRACK','target':'right_hip','track_axis':'TRACK_NEGATIVE_X','lock_axis':'LOCK_Z','influence':1.0},
+            {'type':'LOCKED_TRACK','target':'right_hip','track_axis':'TRACK_NEGATIVE_X','lock_axis':'LOCK_Y','influence':1.0}],
         "pelvis.R": [
             {'type':'DAMPED_TRACK','target':'right_hip','track_axis':'TRACK_Y'}],
         "pelvis.L": [
@@ -2100,10 +2101,6 @@ def add_rig(keep_symmetry: bool=False,
             {'type':'COPY_LOCATION','target':'left_wrist','use_offset':False},
             {'type':'DAMPED_TRACK','target':'left_' + hand_damped_track_target,'track_axis':'TRACK_Y'},
             {'type':'LOCKED_TRACK','target':'left_hand_index_finger_mcp','track_axis':'TRACK_X','lock_axis':'LOCK_Y','influence':1.0}],
-        # "arm_pole_target.R": [
-        #     {'type':'COPY_LOCATION','target':'right_elbow','use_offset':True}],
-        # "arm_pole_target.L": [
-        #     {'type':'COPY_LOCATION','target':'left_elbow','use_offset':True}],
         "hand.R": [
             {'type':'DAMPED_TRACK','target':'right_' + hand_damped_track_target,'track_axis':'TRACK_Y'},
             {'type':'LOCKED_TRACK','target':'right_' + hand_locked_track_target,'track_axis':'TRACK_Z','lock_axis':'LOCK_Y','influence':1.0},
