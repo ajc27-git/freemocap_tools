@@ -153,42 +153,6 @@ def update_empty_positions(target_empty: str='',
 
     print('Empty Positions Dictionary update completed.')
 
-# Function to update all the empties speeds in the dictionary
-def update_empty_speeds(recording_fps):
-    
-    print('Updating Empty Speeds Dictionary...')
-
-    # Get the scene context
-    scene = bpy.context.scene
-
-    # Change to Object Mode
-    bpy.ops.object.mode_set(mode="OBJECT")
-
-    # Reset the empty speeds dictionary with an array with one element of value zero for each empty marker
-    for object in bpy.data.objects:
-        if object.type == 'EMPTY' and object.name != 'empties_parent' and '_origin' not in object.name and 'center_of_mass' not in object.name and object.name != 'rigid_body_meshes_parent':
-            empty_speeds[object.name] = {'speed': [0]}
-
-    # Iterate through each scene frame starting from frame start + 1 and save the speed of each empty in the dictionary
-    for frame in range (scene.frame_start + 1, scene.frame_end + 1):
-        # Set scene frame
-        scene.frame_set(frame)
-        # Iterate through each object
-        for object in bpy.data.objects:
-            if object.type == 'EMPTY' and object.name != 'empties_parent' and '_origin' not in object.name and 'center_of_mass' not in object.name and object.name != 'rigid_body_meshes_parent':
-                # Save the speed of the empty based on the recording fps and the distance to the position of the empty in the previous frame
-                #print('length:' + str(len(empty_positions[object.name]['x'])))
-                #print('frame:'+str(frame))
-                current_frame_position  = (empty_positions[object.name]['x'][frame-1], empty_positions[object.name]['y'][frame-1], empty_positions[object.name]['z'][frame-1])
-                previous_frame_position = (empty_positions[object.name]['x'][frame-2], empty_positions[object.name]['y'][frame-2], empty_positions[object.name]['z'][frame-2])
-                seconds_per_frame       = 1 / recording_fps
-                empty_speeds[object.name]['speed'].append(m.dist(current_frame_position, previous_frame_position) / seconds_per_frame)
-
-    # Reset the scene frame to the start
-    scene.frame_set(scene.frame_start)
-
-    print('Empty Speeds Dictionary update completed.')
-    
 # Function to update all the information of the virtual bones dictionary (lengths, median and stdev)
 def update_virtual_bones_info(target_bone: str=''):
 
@@ -367,106 +331,6 @@ def draw_vector(origin, angle, name):
     # bpy.data.objects["Empty"].name = 'Sphere_' + name
 
     return
-
-### NOT IN USE ###
-# Function to calculate the pole angle necessary to make the ik base bone point to the pole target empty marker
-def calculate_ik_pole_angle(rig_name: str='root',
-                            base_bone_name: str='upper_arm.L',
-                            pole_target_bone_name: str='arm_pole_target.L',
-                            base_empty_marker_name: str='left_shoulder',
-                            pole_target_empty_marker_name: str='left_elbow',
-                            ik_empty_marker_name: str='left_wrist') -> float:
-    
-    # Get reference to the armature
-    rig = bpy.data.objects[rig_name]
-
-    # Get references to the base, ik and pole_target bones
-    base_bone           = rig.pose.bones[base_bone_name]
-    pole_target_bone    = rig.pose.bones[pole_target_bone_name]
-
-    # Get the empty marker objects
-    base_empty_marker           = bpy.data.objects[base_empty_marker_name]
-    pole_target_empty_marker    = bpy.data.objects[pole_target_empty_marker_name]
-    ik_empty_marker             = bpy.data.objects[ik_empty_marker_name]
-
-    # Get the IK vector (from ik_empty_marker to base_empty_marker, example: shoulder to wrist)
-    ik_vector = ik_empty_marker.matrix_world.translation - base_empty_marker.matrix_world.translation
-    
-    # Get the vector from base bone head to the pole target bone head
-    base_to_pole_target_vector = pole_target_bone.head - base_bone.head
-
-    # Get the pole axis vector (perpendicular projection of pole target position on the ik_vector
-    pole_axis_vector = base_to_pole_target_vector - ik_vector * (ik_vector.dot(base_to_pole_target_vector) / ik_vector.length_squared)
-
-    # Get the vector from the base bone head to the pole_target_empty_marker (example: shoulder to elbow)
-    base_to_pole_target_empty_vector = pole_target_empty_marker.matrix_world.translation - base_empty_marker.matrix_world.translation
-
-    # Get the base bone local y axis (example: upper_arm y axis)
-    base_bone_y_axis = base_bone.y_axis
-
-    # Normalize the vectors
-    ik_vector.normalize()
-    base_to_pole_target_empty_vector.normalize()
-    base_bone_y_axis.normalize()
-
-    # Calculate the perpendicular vectors to the ik_vector
-    y_axis_perpendicular_vector                     = base_bone_y_axis - ik_vector * (base_bone_y_axis.dot(ik_vector) / ik_vector.magnitude)
-    base_to_pole_target_empty_perpendicular_vector  = base_to_pole_target_empty_vector - ik_vector * (base_to_pole_target_empty_vector.dot(ik_vector) / ik_vector.magnitude)
-
-    # Calculate the cosine of the angle between the perpendicular vectors
-    perpendicular_vectors_cosine = base_to_pole_target_empty_perpendicular_vector.dot(y_axis_perpendicular_vector) / (y_axis_perpendicular_vector.magnitude * base_to_pole_target_empty_perpendicular_vector.magnitude)
-
-    # Calculate the angle between the perpendicular vectors in radians
-    if perpendicular_vectors_cosine > 1:
-        perpendicular_vectors_angle_radians = m.acos(1)
-    elif perpendicular_vectors_cosine < -1:
-        perpendicular_vectors_angle_radians = m.acos(-1)
-    else:
-        perpendicular_vectors_angle_radians = m.acos(perpendicular_vectors_cosine)
-
-    # Calculate the cross product of the perpendicular vectors to get the rotation axis
-    perpendicular_vector_cross_product = y_axis_perpendicular_vector.cross(base_to_pole_target_empty_perpendicular_vector)
-
-    # Calculate the dot product of the perpendicular cross product and the ik vector to get the direction of the rotation axis
-    perpendicular_cross_product_ik_vector_dot_product = perpendicular_vector_cross_product.dot(ik_vector)
-
-    # If the dot product is negative, multiply the angle by -1
-    if perpendicular_cross_product_ik_vector_dot_product < 0:
-        perpendicular_vectors_angle_radians *= -1
-
-    # Calculate the rotation matrix to rotate the the axis of the base bone
-    rotation_matrix = mathutils.Matrix.Rotation(perpendicular_vectors_angle_radians, 4, ik_vector)
-
-    # Calculate the expected x and z axis when y axis points towards the pole_target_empty_marker
-    base_bone_expected_x_axis = rotation_matrix @ base_bone.x_axis
-    base_bone_expected_z_axis = rotation_matrix @ base_bone.z_axis
-    base_bone_expected_y_axis = rotation_matrix @ base_bone.y_axis
-
-    # Calculate the coplanar component of the pole_axis_vector on the base bone xz local plane
-    pole_axis_vector_xz_projection = pole_axis_vector - pole_axis_vector.project(base_bone_expected_x_axis.cross(base_bone_expected_z_axis))
-
-    # Calculate the cosine of the angle between the pole_axis_vector_xz_projection and the base_bone_expected_x_axis
-    pole_angle_cosine = pole_axis_vector_xz_projection.dot(base_bone_expected_x_axis) / (base_bone_expected_x_axis.magnitude * pole_axis_vector_xz_projection.magnitude)
-
-    # Calculate the angle in radians between the vectors
-    if pole_angle_cosine > 1:
-        pole_angle_radians = m.acos(1)
-    elif pole_angle_cosine < -1:
-        pole_angle_radians = m.acos(-1)
-    else:
-        pole_angle_radians = m.acos(pole_angle_cosine)
-
-    # Calculate the cross product between the pole_axis_vector_xz_projection and the base_bone_expected_x_axis to get the rotation axis
-    pole_axis_vector_xz_projection_base_bone_expected_x_axis_cross_product = pole_axis_vector_xz_projection.cross(base_bone_expected_x_axis)
-
-    # Calculate the dot product between the cross product and the ik vector to get the direction of the rotation axis
-    cross_product_ik_vector_dot_product = pole_axis_vector_xz_projection_base_bone_expected_x_axis_cross_product.dot(ik_vector)
-
-    # If the dot product is negative, multiply the angle by -1
-    if cross_product_ik_vector_dot_product < 0:
-        pole_angle_radians *= -1
-
-    return pole_angle_radians
 
 #  Function to define a quadratic function for the ik pole bone position calculus transition
 def quadratic_function(x1, x2, x3, y1, y2, y3):
@@ -1089,72 +953,6 @@ def apply_butterworth_filters(global_filter_categories: list=[],
     for object in bpy.data.objects:
         object.select_set(False)
 
-    # NOT IN USE IN THE CURRENT VERSION
-    # Check the position_correction_mode parameter to correct the position of each children after applying the filter to one empty.
-    # Or, first apply the filter to all the selected categories empties and after that execute reduce_bone_length_dispersion once.
-    if 'false' == 'each_children':
-
-        # Iterate through the empties_dict
-        for empty in empties_dict:
-
-            if empties_dict[empty]['category'] in local_filter_categories:
-
-                # Update the empty's position dictionary
-                update_empty_positions(target_empty=empty)
-
-                # Save the unfiltered empty positions
-                unfiltered_positions = empty_positions[empty]
-
-                # Select the empty
-                bpy.data.objects[empty].select_set(True)
-
-                # Save the current area
-                current_area = bpy.context.area.type
-
-                # Change the current area to the graph editor
-                bpy.context.area.type = "GRAPH_EDITOR"
-
-                # Apply the butterworth filter
-                bpy.ops.graph.butterworth_smooth(cutoff_frequency=local_cutoff_frequencies[empties_dict[empty]['category']],
-                                                filter_order=4,
-                                                samples_per_frame=1,
-                                                blend=1.0,
-                                                blend_in_out=1)
-
-                # Adjust the length dispersion of the bone whose tail is the empty. Only if the empty is the tail of a bone
-                if empties_dict[empty]['tail_of_bone'] != '':
-                    reduce_bone_length_dispersion(interval_variable=interval_variable,
-                                                  interval_factor=interval_factor,
-                                                  body_height=body_height,
-                                                  target_bone=empties_dict[empty]['tail_of_bone'])
-
-                # Update again the empty's position dictionary
-                update_empty_positions(target_empty=empty)
-
-                # Iterate through all the empty's position dictionary (i.e frames) and calculate the position delta due to the filtering and reduce bone lenght dispersion
-                # Then translate all the empty children recursively by that delta
-                for frame_index in range (0, len(empty_positions[empty]['x'])):
-
-                    # Check if at least one of the position components changed
-                    if (unfiltered_positions['x'][frame_index] != empty_positions[empty]['x'][frame_index] or
-                        unfiltered_positions['y'][frame_index] != empty_positions[empty]['y'][frame_index] or
-                        unfiltered_positions['z'][frame_index] != empty_positions[empty]['z'][frame_index]):
-                        # Get the unfiltered and filtered positions
-                        unfiltered_position = mathutils.Vector([unfiltered_positions['x'][frame_index], unfiltered_positions['y'][frame_index], unfiltered_positions['z'][frame_index]])
-                        filtered_position  = mathutils.Vector([empty_positions[empty]['x'][frame_index], empty_positions[empty]['y'][frame_index], empty_positions[empty]['z'][frame_index]])
-                        # Get the position delta vector
-                        delta_vector     = filtered_position - unfiltered_position
-
-                        #  Translate the empty's children recursively by the delta vector
-                        for child in empties_dict[empty]['children']:
-                            translate_empty(empties_dict, child, frame_index=frame_index, delta=delta_vector, recursivity=True)
-                        
-                # Restore the area
-                bpy.context.area.type = current_area
-
-                # Unselect the empty
-                bpy.data.objects[empty].select_set(False)
-
     # Apply global filters
     if len(global_filter_categories) > 0:
         
@@ -1690,32 +1488,6 @@ def add_rig(keep_symmetry: bool=False,
             bone.tail[0] += forearm_L_tail_x_offset
         else:
             bone.tail[0] += forearm_L_tail_x_offset
-
-    #############################################################
-    ### DEBUG ###
-    if False:
-        # Add an auxiliary bone to the side of the upperarms and forearms to check their rotation
-        upper_arm_R_Rot             = rig.data.edit_bones.new('uppe_rarm.R.Rot')
-        upper_arm_R_Rot.head        = (upper_arm_R.head[0] - upper_arm_R_length/2, upper_arm_R.head[1], upper_arm_R.head[2])
-        upper_arm_R_Rot.tail        = (upper_arm_R_Rot.head[0], upper_arm_R_Rot.head[1], upper_arm_R_Rot.head[2] + 0.1)
-        upper_arm_R_Rot.parent      = upper_arm_R
-        upper_arm_R_Rot.use_connect = False
-        upper_arm_L_Rot             = rig.data.edit_bones.new('uppe_rarm.L.Rot')
-        upper_arm_L_Rot.head        = (upper_arm_L.head[0] + upper_arm_L_length/2, upper_arm_L.head[1], upper_arm_L.head[2])
-        upper_arm_L_Rot.tail        = (upper_arm_L_Rot.head[0], upper_arm_L_Rot.head[1], upper_arm_L_Rot.head[2] + 0.1)
-        upper_arm_L_Rot.parent      = upper_arm_L
-        upper_arm_L_Rot.use_connect = False
-        forearm_R_Rot               = rig.data.edit_bones.new('uppe_rarm.R.Rot')
-        forearm_R_Rot.head          = (forearm_R.head[0] - forearm_R_length/2, forearm_R.head[1], forearm_R.head[2])
-        forearm_R_Rot.tail          = (forearm_R_Rot.head[0], forearm_R_Rot.head[1], forearm_R_Rot.head[2] + 0.1)
-        forearm_R_Rot.parent        = forearm_R
-        forearm_R_Rot.use_connect   = False
-        forearm_L_Rot               = rig.data.edit_bones.new('uppe_rarm.L.Rot')
-        forearm_L_Rot.head          = (forearm_L.head[0] + forearm_L_length/2, forearm_L.head[1], forearm_L.head[2])
-        forearm_L_Rot.tail          = (forearm_L_Rot.head[0], forearm_L_Rot.head[1], forearm_L_Rot.head[2] + 0.1)
-        forearm_L_Rot.parent        = forearm_L
-        forearm_L_Rot.use_connect   = False
-    #############################################################
 
     # Get average hand length
     avg_hand_length = (virtual_bones['hand.R']['median'] + virtual_bones['hand.L']['median']) / 2
