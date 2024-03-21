@@ -2996,8 +2996,8 @@ def apply_foot_locking(
 
         # Iterate through the base markers
         for base_marker in foot_locking_markers[foot]['base']:
-            if base_marker not in (foot.split('_')[0] + '_foot_index',
-                                   foot.split('_')[0] + '_heel'):
+            if base_marker not in [foot.split('_')[0] + '_' + marker
+                                   for marker in target_base_markers]:
                 continue
 
             # Set the initial variables
