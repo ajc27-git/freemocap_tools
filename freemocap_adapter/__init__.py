@@ -31,19 +31,27 @@ classes = [FMC_ADAPTER_PROPERTIES,
            FMC_ADAPTER_OT_apply_foot_locking,
            FMC_ADAPTER_OT_add_rig,
            FMC_ADAPTER_OT_add_body_mesh,
-           FMC_ADAPTER_OT_export_fbx,        
+           FMC_ADAPTER_OT_export_fbx,
 ]
 
 def register():
+    """
+    A function to register classes and assign a pointer property to
+    bpy.types.Scene.
+    """
     for cls in classes:
         bpy.utils.register_class(cls)
-        
+
     bpy.types.Scene.fmc_adapter_tool = bpy.props.PointerProperty(type = FMC_ADAPTER_PROPERTIES)
 
 def unregister():
+    """
+    Function to unregister classes and delete an attribute
+    from bpy.types.Scene.
+    """
     for cls in classes:
         bpy.utils.unregister_class(cls)
-        
+
     del bpy.types.Scene.fmc_adapter_tool
 
 # Register the Add-on

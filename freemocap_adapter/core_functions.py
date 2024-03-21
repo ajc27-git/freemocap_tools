@@ -1,11 +1,11 @@
 import bpy
+from bpy.types import Operator
 import math as m
 import statistics
 import mathutils
 import numpy as np
 import os
 from pathlib import Path
-from bpy.types import Operator, Panel
 from importlib.machinery import SourceFileLoader
 import addon_utils
 
@@ -3033,7 +3033,7 @@ def apply_foot_locking(
                                             bpy.data.objects[base_marker].animation_data.action.fcurves[1].keyframe_points[start_frame + window_frame].co[1] += delta_vector_adjusted[1]
                                             bpy.data.objects[base_marker].animation_data.action.fcurves[2].keyframe_points[start_frame + window_frame].co[1] += delta_vector_adjusted[2]
                                             changed_frames.append(start_frame + window_frame)
-                                        except:
+                                        except AttributeError as e:
                                             print('error:' + str(e))
 
                                 frame = following_frame
@@ -3087,7 +3087,7 @@ def apply_foot_locking(
                                         bpy.data.objects[base_marker].animation_data.action.fcurves[1].keyframe_points[start_frame + locking_frame].co[1] += delta_vector_adjusted[1]
                                         bpy.data.objects[base_marker].animation_data.action.fcurves[2].keyframe_points[start_frame + locking_frame].co[1] += delta_vector_adjusted[2]
                                         changed_frames.append(start_frame + locking_frame)
-                                    except Exception as e:
+                                    except AttributeError as e:
                                         # Empty does not exist or does not have animation data
                                         print('error:' + str(e))
 
@@ -3178,7 +3178,7 @@ def apply_foot_locking(
                 bpy.data.objects[foot_locking_markers[foot]['ankle'][0]].animation_data.action.fcurves[0].keyframe_points[changed_frame].co[1] += delta_vector_adjusted[0]
                 bpy.data.objects[foot_locking_markers[foot]['ankle'][0]].animation_data.action.fcurves[1].keyframe_points[changed_frame].co[1] += delta_vector_adjusted[1]
                 bpy.data.objects[foot_locking_markers[foot]['ankle'][0]].animation_data.action.fcurves[2].keyframe_points[changed_frame].co[1] += delta_vector_adjusted[2]
-            except Exception as e:
+            except AttributeError as e:
                 # Empty does not exist or does not have animation data
                 print('error:' + str(e))
 

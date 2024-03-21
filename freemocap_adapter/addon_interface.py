@@ -1,15 +1,7 @@
-import bpy
 import time
 import math as m
+import bpy
 from bpy.types import Operator, Panel
-
-scipy_available = True
-try:
-    from scipy.signal import butter, filtfilt
-except ImportError:
-    scipy_available = False
-    print("scipy is not installed. Please install scipy to use this addon.")
-
 from .core_functions import (
     adjust_empties,
     reduce_bone_length_dispersion,
@@ -20,6 +12,14 @@ from .core_functions import (
     apply_butterworth_filters,
     export_fbx
 )
+scipy_available = True
+try:
+    from scipy.signal import butter, filtfilt
+except ImportError:
+    scipy_available = False
+    print("scipy is not installed. Please install scipy to use this addon.")
+
+
 
 # Class with the different properties of the methods
 class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
@@ -39,11 +39,13 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
     vertical_align_angle_offset: bpy.props.FloatProperty(
         name = '',
         default = 0,
-        description = 'Angle offset to adjust the vertical alignement of the z axis (in degrees)'
+        description = 'Angle offset to adjust the vertical alignement of the '
+                      'z axis (in degrees)'
     ) # type: ignore
     ground_align_reference: bpy.props.EnumProperty(
         name = '',
-        description = 'Empty that serves as ground reference to the axes origin',
+        description = 'Empty that serves as ground reference to the axes '
+                      'origin',
         items = [('left_foot_index', 'left_foot_index', ''),
                        ('right_foot_index', 'right_foot_index', ''),
                        ('left_heel', 'left_heel', ''),
@@ -53,19 +55,23 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         name = '',
         default = 0,
         precision = 3,
-        description = 'Additional z offset to the axes origin relative to the imaginary ground level'
+        description = 'Additional z offset to the axes origin relative to '
+                      'the imaginary ground level'
     ) # type: ignore
     correct_fingers_empties: bpy.props.BoolProperty(
         name = '',
         default = False,
-        description = 'Correct the fingers empties. Match hand_wrist (axis empty) position to wrist (sphere empty)'
+        description = 'Correct the fingers empties. Match hand_wrist '
+                      '(axis empty) position to wrist (sphere empty)'
     ) # type: ignore
     add_hand_middle_empty: bpy.props.BoolProperty(
         name = '',
         default = False,
-        description = 'Add an empty in the middle of the hand between index and pinky empties. This empty is used for a better orientation of the hand (experimental)'
+        description = 'Add an empty in the middle of the hand between index '
+                      'and pinky empties. This empty is used for a better '
+                      'orientation of the hand (experimental)'
     ) # type: ignore
-    
+
     # Reduce Bone Length Dispersion Options
     show_reduce_bone_length_dispersion: bpy.props.BoolProperty(
         name = '',
@@ -74,26 +80,48 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
     ) # type: ignore
     interval_variable: bpy.props.EnumProperty(
         name = '',
-        description = 'Variable used to define the new length dispersion interval',
-        items = [ ('capture_median', 'Capture Median', 'Use the bones median length from the capture. Defines the new dispersion interval as [median*(1-interval_factor),median*(1+interval_factor)]'),
-                        ('standard_length', 'Standard length', 'Use the standard lengths based on the total body (rig) height. Defines the new dispersion interval as [length*(1-interval_factor),length*(1+interval_factor)]'),
-                        ('capture_stdev', 'Capture Std Dev', 'Use the bones length standard deviation from the capture. Defines the new dispersion interval as [median-interval_factor*stdev,median+interval_factor*stdev]')]
+        description = 'Variable used to define the new length dispersion '
+                      'interval',
+        items = [
+            ('capture_median',
+             'Capture Median',
+             'Use the bones median length from the capture. Defines the '
+             'new dispersion interval as '
+             '[median*(1-interval_factor),median*(1+interval_factor)]'),
+            ('standard_length',
+             'Standard length',
+             'Use the standard lengths based on the total body (rig) '
+             'height. Defines the new dispersion interval as '
+             '[length*(1-interval_factor),length*(1+interval_factor)]'),
+            ('capture_stdev',
+             'Capture Std Dev',
+             'Use the bones length standard deviation from the capture. '
+             'Defines the new dispersion interval as '
+             '[median-interval_factor*stdev,median+interval_factor*stdev]')]
     ) # type: ignore
     interval_factor: bpy.props.FloatProperty(
         name = '',
         default = 0,
         min = 0,
         precision = 3,
-        description = 'Factor to multiply the variable and form the limits of the dispersion interval like [median-factor*variable,median+factor*variable]. ' +
-                      'If variable is median, the factor will be limited to values inside [0, 1].' + 
-                      'If variable is stdev, the factor will be limited to values inside [0, median/stdev]'
+        description = 'Factor to multiply the variable and form the limits of '
+                      'the dispersion interval like '
+                      '[median-factor*variable,median+factor*variable]. '
+                      'If variable is median, the factor will be limited to '
+                      'values inside [0, 1]. '  
+                      'If variable is stdev, the factor will be limited to '
+                      'values inside [0, median/stdev]'
     ) # type: ignore
     body_height: bpy.props.FloatProperty(
         name = '',
         default = 1.75,
         min = 0,
         precision = 3,
-        description = 'Body height in meters. This value is used when the interval variable is set to standard length. If a rig is added after using Reduce Dispersion with standard length, it will have this value as height and the bones length will be proporions of this height'
+        description = 'Body height in meters. This value is used when the '
+                      'interval variable is set to standard length. If a rig '
+                      'is added after using Reduce Dispersion with standard '
+                      'length, it will have this value as height and the '
+                      'bones length will be proporions of this height'
     ) # type: ignore
     # Add Rig Options
     show_add_rig: bpy.props.BoolProperty(
@@ -111,7 +139,8 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
     keep_symmetry: bpy.props.BoolProperty(
         name = '',
         default = False,
-        description = 'Keep right/left side symmetry (use average right/left side bone length)'
+        description = 'Keep right/left side symmetry (use average right/left '
+                      'side bone length)'
     ) # type: ignore
     add_fingers_constraints: bpy.props.BoolProperty(
         name = '',
@@ -129,19 +158,22 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         min = 0,
         max = 1,
         precision = 2,
-        description = 'Threshold of parallel degree (dot product) between base and target ik vectors. It is used to transition between vectors to determine the pole bone position'
+        description = 'Threshold of parallel degree (dot product) between '
+                      'base and target ik vectors. It is used to transition '
+                      'between vectors to determine the pole bone position'
     ) # type: ignore
     use_limit_rotation: bpy.props.BoolProperty(
         name = '',
         default = False,
-        description = 'Add rotation limits (human skeleton) to the bones constraints (experimental)'
+        description = 'Add rotation limits (human skeleton) to the bones '
+                      'constraints (experimental)'
     ) # type: ignore
     clear_constraints: bpy.props.BoolProperty(
         name = '',
         default = False,
         description = 'Clear added constraints after baking animation'
     ) # type: ignore
-    
+
     # Add Body Mesh Options
     show_add_body_mesh: bpy.props.BoolProperty(
         name = '',
@@ -301,7 +333,8 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         default = 7,
         min = 0,
         precision = 2,
-        description = 'Core empties global Butterworth filter cutoff frequency (Hz)'
+        description = 'Core empties global Butterworth filter cutoff '
+                      'frequency (Hz)'
     ) # type: ignore
     apply_local_filter_core: bpy.props.BoolProperty(
         name = '',
@@ -319,19 +352,22 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         default = 7,
         min = 0,
         precision = 2,
-        description = 'Core empties local Butterworth filter cutoff frequency (Hz)'
+        description = 'Core empties local Butterworth filter cutoff '
+                      'frequency (Hz)'
     ) # type: ignore
     apply_global_filter_arms: bpy.props.BoolProperty(
         name = 'Arms',
         default = False,
-        description = 'Apply global Butterworth filter to arms empties (shoulde and elbow)'
+        description = 'Apply global Butterworth filter to arms empties '
+                      '(shoulde and elbow)'
     ) # type: ignore
     global_filter_arms_frequency: bpy.props.FloatProperty(
         name = '',
         default = 7,
         min = 0,
         precision = 2,
-        description = 'Arms empties global Butterworth filter cutoff frequency (Hz)'
+        description = 'Arms empties global Butterworth filter cutoff '
+                      'frequency (Hz)'
     ) # type: ignore
     apply_local_filter_arms: bpy.props.BoolProperty(
         name = '',
@@ -349,19 +385,22 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         default = 7,
         min = 0,
         precision = 2,
-        description = 'Arms empties local Butterworth filter cutoff frequency (Hz)'
+        description = 'Arms empties local Butterworth filter cutoff '
+                      'frequency (Hz)'
     ) # type: ignore
     apply_global_filter_hands: bpy.props.BoolProperty(
         name = 'Hands',
         default = False,
-        description = 'Apply global Butterworth filter to hands empties (wrist and hand)'
+        description = 'Apply global Butterworth filter to hands empties '
+                      '(wrist and hand)'
     ) # type: ignore
     global_filter_hands_frequency: bpy.props.FloatProperty(
         name = '',
         default = 7,
         min = 0,
         precision = 2,
-        description = 'Hands empties global Butterworth filter cutoff frequency (Hz)'
+        description = 'Hands empties global Butterworth filter cutoff '
+                      'frequency (Hz)'
     ) # type: ignore
     apply_local_filter_hands: bpy.props.BoolProperty(
         name = '',
@@ -379,19 +418,22 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         default = 7,
         min = 0,
         precision = 2,
-        description = 'Hands empties local Butterworth filter cutoff frequency (Hz)'
+        description = 'Hands empties local Butterworth filter cutoff '
+                      'frequency (Hz)'
     ) # type: ignore
     apply_global_filter_fingers: bpy.props.BoolProperty(
         name = 'Fingers',
         default = False,
-        description = 'Apply global Butterworth filter to fingers empties (_ip, _pip, _dip and _tip)'
+        description = 'Apply global Butterworth filter to fingers empties '
+                      '(_ip, _pip, _dip and _tip)'
     ) # type: ignore
     global_filter_fingers_frequency: bpy.props.FloatProperty(
         name = '',
         default = 7,
         min = 0,
         precision = 2,
-        description = 'Fingers empties global Butterworth filter cutoff frequency (Hz)'
+        description = 'Fingers empties global Butterworth filter cutoff '
+                      'frequency (Hz)'
     ) # type: ignore
     apply_local_filter_fingers: bpy.props.BoolProperty(
         name = '',
@@ -409,19 +451,22 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         default = 7,
         min = 0,
         precision = 2,
-        description = 'Fingers empties local Butterworth filter cutoff frequency (Hz)'
+        description = 'Fingers empties local Butterworth filter cutoff '
+                      'frequency (Hz)'
     ) # type: ignore
     apply_global_filter_legs: bpy.props.BoolProperty(
         name = 'Legs',
         default = False,
-        description = 'Apply global Butterworth filter to legs empties (hips and knees)'
+        description = 'Apply global Butterworth filter to legs empties '
+                      '(hips and knees)'
     ) # type: ignore
     global_filter_legs_frequency: bpy.props.FloatProperty(
         name = '',
         default = 7,
         min = 0,
         precision = 2,
-        description = 'Legs empties global Butterworth filter cutoff frequency (Hz)'
+        description = 'Legs empties global Butterworth filter cutoff '
+                      'frequency (Hz)'
     ) # type: ignore
     apply_local_filter_legs: bpy.props.BoolProperty(
         name = '',
@@ -439,19 +484,22 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         default = 7,
         min = 0,
         precision = 2,
-        description = 'Legs empties local Butterworth filter cutoff frequency (Hz)'
+        description = 'Legs empties local Butterworth filter cutoff '
+                      'frequency (Hz)'
     ) # type: ignore
     apply_global_filter_feet: bpy.props.BoolProperty(
         name = 'Feet',
         default = False,
-        description = 'Apply global Butterworth filter to feet empties (ankle, heel and foot_index)'
+        description = 'Apply global Butterworth filter to feet empties '
+                      '(ankle, heel and foot_index)'
     ) # type: ignore
     global_filter_feet_frequency: bpy.props.FloatProperty(
         name = '',
         default = 7,
         min = 0,
         precision = 2,
-        description = 'Feet empties global Butterworth filter cutoff frequency (Hz)'
+        description = 'Feet empties global Butterworth filter cutoff '
+                      'frequency (Hz)'
     ) # type: ignore
     apply_local_filter_feet: bpy.props.BoolProperty(
         name = '',
@@ -469,7 +517,8 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         default = 7,
         min = 0,
         precision = 2,
-        description = 'Feet empties local Butterworth filter cutoff frequency (Hz)'
+        description = 'Feet empties local Butterworth filter cutoff '
+                      'frequency (Hz)'
     ) # type: ignore
 
 # UI Panel Class
@@ -478,52 +527,70 @@ class VIEW3D_PT_freemocap_adapter(Panel):
     bl_region_type = "UI"
     bl_category = "Freemocap Adapter Alt"
     bl_label = "Freemocap Adapter Alt"
-    
+
     def draw(self, context):
         layout = self.layout
         scene = context.scene
         fmc_adapter_tool = scene.fmc_adapter_tool
-        
-        # Create a button to toggle Adjust Empties Options visibility
+
+        # Create a button to toggle Adjust Empties Options
         row = layout.row(align=True)
-        row.prop(fmc_adapter_tool, "show_adjust_empties", text="", icon='TRIA_DOWN' if fmc_adapter_tool.show_adjust_empties else 'TRIA_RIGHT', emboss=False)
+        row.prop(fmc_adapter_tool,
+                 "show_adjust_empties",
+                 text="",
+                 icon='TRIA_DOWN' if
+                    fmc_adapter_tool.show_adjust_empties
+                    else 'TRIA_RIGHT',
+                 emboss=False)
         row.label(text="Adjust Empties")
 
         if fmc_adapter_tool.show_adjust_empties:
 
             # Adjust Empties Options
             box = layout.box()
-            #box.label(text='Adjust Empties Options')
-            
+
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Align Reference')
-            split.split().column().prop(fmc_adapter_tool, 'vertical_align_reference')
-            
+            split.split().column().prop(fmc_adapter_tool,
+                                        'vertical_align_reference')
+
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Vertical Angle Offset')
-            split.split().column().prop(fmc_adapter_tool, 'vertical_align_angle_offset')
-            
+            split.split().column().prop(fmc_adapter_tool,
+                                        'vertical_align_angle_offset')
+
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Ground Reference')
-            split.split().column().prop(fmc_adapter_tool, 'ground_align_reference')
-            
+            split.split().column().prop(fmc_adapter_tool,
+                                        'ground_align_reference')
+
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Vertical Position Offset')
-            split.split().column().prop(fmc_adapter_tool, 'vertical_align_position_offset')
-            
+            split.split().column().prop(fmc_adapter_tool,
+                                        'vertical_align_position_offset')
+
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Correct Fingers Empties')
-            split.split().column().prop(fmc_adapter_tool, 'correct_fingers_empties')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'correct_fingers_empties')
 
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Add hand middle empty')
-            split.split().column().prop(fmc_adapter_tool, 'add_hand_middle_empty')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'add_hand_middle_empty')
 
-            box.operator('fmc_adapter.adjust_empties', text='1. Adjust Empties')
+            box.operator('fmc_adapter.adjust_empties',
+                         text='1. Adjust Empties')
 
-        # Create a button to toggle Reduce Bone Length Dispersion Options visibility
+        # Create a button to toggle Reduce Bone Length Dispersion Options
         row = layout.row(align=True)
-        row.prop(fmc_adapter_tool, "show_reduce_bone_length_dispersion", text="", icon='TRIA_DOWN' if fmc_adapter_tool.show_reduce_bone_length_dispersion else 'TRIA_RIGHT', emboss=False)
+        row.prop(fmc_adapter_tool,
+                 "show_reduce_bone_length_dispersion",
+                 text="",
+                 icon='TRIA_DOWN' if
+                    fmc_adapter_tool.show_reduce_bone_length_dispersion
+                    else 'TRIA_RIGHT',
+                 emboss=False)
         row.label(text="Reduce Bone Length Dispersion")
 
         if fmc_adapter_tool.show_reduce_bone_length_dispersion:
@@ -544,11 +611,18 @@ class VIEW3D_PT_freemocap_adapter(Panel):
             split.column().label(text='Body (Rig) Height [m]')
             split.split().column().prop(fmc_adapter_tool, 'body_height')
 
-            box.operator('fmc_adapter.reduce_bone_length_dispersion', text='2. Reduce Bone Length Dispersion')
+            box.operator('fmc_adapter.reduce_bone_length_dispersion',
+                         text='2. Reduce Bone Length Dispersion')
 
-        # Create a button to toggle Apply Butterwort Filters Options visibility
+        # Create a button to toggle Apply Butterwort Filters Options
         row = layout.row(align=True)
-        row.prop(fmc_adapter_tool, "show_apply_butterworth_filters", text="", icon='TRIA_DOWN' if fmc_adapter_tool.show_apply_butterworth_filters else 'TRIA_RIGHT', emboss=False)
+        row.prop(fmc_adapter_tool,
+                 "show_apply_butterworth_filters",
+                 text="",
+                 icon='TRIA_DOWN' if
+                    fmc_adapter_tool.show_apply_butterworth_filters
+                    else 'TRIA_RIGHT',
+                 emboss=False)
         row.label(text="Apply Butterworth Filters (Blender 4.0+)")
 
         if fmc_adapter_tool.show_apply_butterworth_filters:
@@ -566,108 +640,151 @@ class VIEW3D_PT_freemocap_adapter(Panel):
             split.column().label(text='Core')
             split_params = split.column().split(factor=0.3)
             split1 = split_params.column().split(factor=0.15)
-            split1.column().prop(fmc_adapter_tool, 'apply_global_filter_core')
-            split1.column().prop(fmc_adapter_tool, 'global_filter_core_frequency')
+            split1.column().prop(fmc_adapter_tool,
+                                 'apply_global_filter_core')
+            split1.column().prop(fmc_adapter_tool,
+                                 'global_filter_core_frequency')
             if not scipy_available:
                 split_params.column().label(text='Install scipy module')
             else:
                 split2 = split_params.column().split(factor=0.07)
-                split2.column().prop(fmc_adapter_tool, 'apply_local_filter_core')
+                split2.column().prop(fmc_adapter_tool,
+                                     'apply_local_filter_core')
                 split3 = split2.column().split(factor=0.5)
-                split3.column().prop(fmc_adapter_tool, 'local_filter_core_frequency')
-                split3.column().prop(fmc_adapter_tool, 'local_filter_origin_core')
-            
+                split3.column().prop(fmc_adapter_tool,
+                                     'local_filter_core_frequency')
+                split3.column().prop(fmc_adapter_tool,
+                                     'local_filter_origin_core')
+
             split = box.column().row().split(factor=0.15)
             split.column().label(text='Arms')
             split_params = split.column().split(factor=0.3)
             split1 = split_params.column().split(factor=0.15)
-            split1.column().prop(fmc_adapter_tool, 'apply_global_filter_arms')
-            split1.column().prop(fmc_adapter_tool, 'global_filter_arms_frequency')
+            split1.column().prop(fmc_adapter_tool,
+                                 'apply_global_filter_arms')
+            split1.column().prop(fmc_adapter_tool,
+                                 'global_filter_arms_frequency')
             if not scipy_available:
                 split_params.column().label(text='Install scipy module')
             else:
                 split2 = split_params.column().split(factor=0.07)
-                split2.column().prop(fmc_adapter_tool, 'apply_local_filter_arms')
+                split2.column().prop(fmc_adapter_tool,
+                                     'apply_local_filter_arms')
                 split3 = split2.column().split(factor=0.5)
-                split3.column().prop(fmc_adapter_tool, 'local_filter_arms_frequency')
-                split3.column().prop(fmc_adapter_tool, 'local_filter_origin_arms')
-            
+                split3.column().prop(fmc_adapter_tool,
+                                     'local_filter_arms_frequency')
+                split3.column().prop(fmc_adapter_tool,
+                                     'local_filter_origin_arms')
+
             split = box.column().row().split(factor=0.15)
             split.column().label(text='Hands')
             split_params = split.column().split(factor=0.3)
             split1 = split_params.column().split(factor=0.15)
-            split1.column().prop(fmc_adapter_tool, 'apply_global_filter_hands')
-            split1.column().prop(fmc_adapter_tool, 'global_filter_hands_frequency')
+            split1.column().prop(fmc_adapter_tool,
+                                 'apply_global_filter_hands')
+            split1.column().prop(fmc_adapter_tool,
+                                 'global_filter_hands_frequency')
             if not scipy_available:
                 split_params.column().label(text='Install scipy module')
             else:
                 split2 = split_params.column().split(factor=0.07)
-                split2.column().prop(fmc_adapter_tool, 'apply_local_filter_hands')
+                split2.column().prop(fmc_adapter_tool,
+                                     'apply_local_filter_hands')
                 split3 = split2.column().split(factor=0.5)
-                split3.column().prop(fmc_adapter_tool, 'local_filter_hands_frequency')
-                split3.column().prop(fmc_adapter_tool, 'local_filter_origin_hands')
+                split3.column().prop(fmc_adapter_tool,
+                                     'local_filter_hands_frequency')
+                split3.column().prop(fmc_adapter_tool,
+                                     'local_filter_origin_hands')
 
             split = box.column().row().split(factor=0.15)
             split.column().label(text='Fingers')
             split_params = split.column().split(factor=0.3)
             split1 = split_params.column().split(factor=0.15)
-            split1.column().prop(fmc_adapter_tool, 'apply_global_filter_fingers')
-            split1.column().prop(fmc_adapter_tool, 'global_filter_fingers_frequency')
+            split1.column().prop(fmc_adapter_tool,
+                                 'apply_global_filter_fingers')
+            split1.column().prop(fmc_adapter_tool,
+                                 'global_filter_fingers_frequency')
             if not scipy_available:
                 split_params.column().label(text='Install scipy module')
             else:
                 split2 = split_params.column().split(factor=0.07)
-                split2.column().prop(fmc_adapter_tool, 'apply_local_filter_fingers')
+                split2.column().prop(fmc_adapter_tool,
+                                     'apply_local_filter_fingers')
                 split3 = split2.column().split(factor=0.5)
-                split3.column().prop(fmc_adapter_tool, 'local_filter_fingers_frequency')
-                split3.column().prop(fmc_adapter_tool, 'local_filter_origin_fingers')
+                split3.column().prop(fmc_adapter_tool,
+                                     'local_filter_fingers_frequency')
+                split3.column().prop(fmc_adapter_tool,
+                                     'local_filter_origin_fingers')
 
             split = box.column().row().split(factor=0.15)
             split.column().label(text='Legs')
             split_params = split.column().split(factor=0.3)
             split1 = split_params.column().split(factor=0.15)
-            split1.column().prop(fmc_adapter_tool, 'apply_global_filter_legs')
-            split1.column().prop(fmc_adapter_tool, 'global_filter_legs_frequency')
+            split1.column().prop(fmc_adapter_tool,
+                                 'apply_global_filter_legs')
+            split1.column().prop(fmc_adapter_tool,
+                                 'global_filter_legs_frequency')
             if not scipy_available:
                 split_params.column().label(text='Install scipy module')
             else:
                 split2 = split_params.column().split(factor=0.07)
-                split2.column().prop(fmc_adapter_tool, 'apply_local_filter_legs')
+                split2.column().prop(fmc_adapter_tool,
+                                     'apply_local_filter_legs')
                 split3 = split2.column().split(factor=0.5)
-                split3.column().prop(fmc_adapter_tool, 'local_filter_legs_frequency')
-                split3.column().prop(fmc_adapter_tool, 'local_filter_origin_legs')
+                split3.column().prop(fmc_adapter_tool,
+                                     'local_filter_legs_frequency')
+                split3.column().prop(fmc_adapter_tool,
+                                     'local_filter_origin_legs')
 
             split = box.column().row().split(factor=0.15)
             split.column().label(text='Feet')
             split_params = split.column().split(factor=0.3)
             split1 = split_params.column().split(factor=0.15)
-            split1.column().prop(fmc_adapter_tool, 'apply_global_filter_feet')
-            split1.column().prop(fmc_adapter_tool, 'global_filter_feet_frequency')
+            split1.column().prop(fmc_adapter_tool,
+                                 'apply_global_filter_feet')
+            split1.column().prop(fmc_adapter_tool,
+                                 'global_filter_feet_frequency')
             if not scipy_available:
                 split_params.column().label(text='Install scipy module')
             else:
                 split2 = split_params.column().split(factor=0.07)
-                split2.column().prop(fmc_adapter_tool, 'apply_local_filter_feet')
+                split2.column().prop(fmc_adapter_tool,
+                                     'apply_local_filter_feet')
                 split3 = split2.column().split(factor=0.5)
-                split3.column().prop(fmc_adapter_tool, 'local_filter_feet_frequency')
-                split3.column().prop(fmc_adapter_tool, 'local_filter_origin_feet')
-            
-            box.operator('fmc_adapter.apply_butterworth_filters', text='3. Apply Butterworth Filters')
+                split3.column().prop(fmc_adapter_tool,
+                                     'local_filter_feet_frequency')
+                split3.column().prop(fmc_adapter_tool,
+                                     'local_filter_origin_feet')
 
-        # Create a button to toggle Add Finger Rotation Limits Options visibility
+            box.operator('fmc_adapter.apply_butterworth_filters',
+                         text='3. Apply Butterworth Filters')
+
+        # Create a button to toggle Add Finger Rotation Limits Options
         row = layout.row(align=True)
-        row.prop(fmc_adapter_tool, "show_add_finger_rotation_limits", text="", icon='TRIA_DOWN' if fmc_adapter_tool.show_add_finger_rotation_limits else 'TRIA_RIGHT', emboss=False)
+        row.prop(fmc_adapter_tool,
+                 "show_add_finger_rotation_limits",
+                 text="",
+                 icon='TRIA_DOWN' if
+                    fmc_adapter_tool.show_add_finger_rotation_limits
+                    else 'TRIA_RIGHT',
+                 emboss=False)
         row.label(text="Add Finger Rotation Limits")
 
         if fmc_adapter_tool.show_add_finger_rotation_limits:
 
             # Add Finger Rotation Limits
             box = layout.box()
-            box.operator('fmc_adapter.add_finger_rotation_limits', text='4. Add Finger Rotation Limits')
+            box.operator('fmc_adapter.add_finger_rotation_limits',
+                         text='4. Add Finger Rotation Limits')
 
-        # Create a button to toggle Add Finger Rotation Limits Options visibility
+        # Create a button to toggle Add Finger Rotation Limits Options
         row = layout.row(align=True)
-        row.prop(fmc_adapter_tool, "show_apply_foot_locking", text="", icon='TRIA_DOWN' if fmc_adapter_tool.show_apply_foot_locking else 'TRIA_RIGHT', emboss=False)
+        row.prop(fmc_adapter_tool,
+                 "show_apply_foot_locking",
+                 text="", icon='TRIA_DOWN' if
+                    fmc_adapter_tool.show_apply_foot_locking
+                    else 'TRIA_RIGHT',
+                 emboss=False)
         row.label(text="Apply Foot Locking")
 
         if fmc_adapter_tool.show_apply_foot_locking:
@@ -676,50 +793,67 @@ class VIEW3D_PT_freemocap_adapter(Panel):
             box = layout.box()
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Target Foot')
-            split.split().column().prop(fmc_adapter_tool, 'foot_locking_target_foot')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'foot_locking_target_foot')
 
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Target foot base markers')
-            split.split().column().prop(fmc_adapter_tool, 'foot_locking_target_base_markers')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'foot_locking_target_base_markers')
 
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Z Threshold (m)')
-            split.split().column().prop(fmc_adapter_tool, 'foot_locking_z_threshold')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'foot_locking_z_threshold')
 
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Ground Level (m)')
-            split.split().column().prop(fmc_adapter_tool, 'foot_locking_ground_level')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'foot_locking_ground_level')
 
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Frame Window Minimum Size')
-            split.split().column().prop(fmc_adapter_tool, 'foot_locking_frame_window_min_size')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'foot_locking_frame_window_min_size')
 
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Initial Attenuation Count')
-            split.split().column().prop(fmc_adapter_tool, 'foot_locking_initial_attenuation_count')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'foot_locking_initial_attenuation_count')
 
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Final Attenuation Count')
-            split.split().column().prop(fmc_adapter_tool, 'foot_locking_final_attenuation_count')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'foot_locking_final_attenuation_count')
 
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Lock XY at Ground Level')
-            split.split().column().prop(fmc_adapter_tool, 'foot_locking_lock_xy_at_ground_level')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'foot_locking_lock_xy_at_ground_level')
 
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Knee Hip Compensation Coefficient')
-            split.split().column().prop(fmc_adapter_tool, 'foot_locking_knee_hip_compensation_coefficient')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'foot_locking_knee_hip_compensation_coefficient')
 
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Compensate Upper Body Markers')
-            split.split().column().prop(fmc_adapter_tool, 'foot_locking_compensate_upper_body')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'foot_locking_compensate_upper_body')
 
             box = layout.box()
-            box.operator('fmc_adapter.apply_foot_locking', text='4.5. Apply Foot Locking')
+            box.operator('fmc_adapter.apply_foot_locking',
+                         text='4.5. Apply Foot Locking')
 
-        # Create a button to toggle Rig Options visibility
+        # Create a button to toggle Rig Options
         row = layout.row(align=True)
-        row.prop(fmc_adapter_tool, "show_add_rig", text="", icon='TRIA_DOWN' if fmc_adapter_tool.show_add_rig else 'TRIA_RIGHT', emboss=False)
+        row.prop(fmc_adapter_tool,
+                 "show_add_rig",
+                 text="",
+                 icon='TRIA_DOWN' if
+                    fmc_adapter_tool.show_add_rig
+                    else 'TRIA_RIGHT',
+                 emboss=False)
         row.label(text="Add Rig")
 
         if fmc_adapter_tool.show_add_rig:
@@ -728,50 +862,67 @@ class VIEW3D_PT_freemocap_adapter(Panel):
             box = layout.box()
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Keep right/left symmetry')
-            split.split().column().prop(fmc_adapter_tool, 'keep_symmetry')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'keep_symmetry')
 
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Add finger constraints')
-            split.split().column().prop(fmc_adapter_tool, 'add_fingers_constraints')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'add_fingers_constraints')
 
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Add IK constraints')
-            split.split().column().prop(fmc_adapter_tool, 'add_ik_constraints')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'add_ik_constraints')
 
             split = box.column().row().split(factor=0.6)
             split.column().label(text='IK transition threshold')
-            split.split().column().prop(fmc_adapter_tool, 'ik_transition_threshold')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'ik_transition_threshold')
 
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Add rotation limits')
-            split.split().column().prop(fmc_adapter_tool, 'use_limit_rotation')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'use_limit_rotation')
 
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Clear constraints')
-            split.split().column().prop(fmc_adapter_tool, 'clear_constraints')
-            
+            split.split().column().prop(fmc_adapter_tool,
+                                        'clear_constraints')
+
             box.operator('fmc_adapter.add_rig', text='5. Add Rig')
 
-        # Create a button to toggle Add Body Mesh Options visibility
+        # Create a button to toggle Add Body Mesh Options
         row = layout.row(align=True)
-        row.prop(fmc_adapter_tool, "show_add_body_mesh", text="", icon='TRIA_DOWN' if fmc_adapter_tool.show_add_body_mesh else 'TRIA_RIGHT', emboss=False)
+        row.prop(fmc_adapter_tool,
+                 "show_add_body_mesh",
+                 text="",
+                 icon='TRIA_DOWN' if
+                    fmc_adapter_tool.show_add_body_mesh
+                    else 'TRIA_RIGHT',
+                 emboss=False)
         row.label(text="Add Body Mesh")
 
         if fmc_adapter_tool.show_add_body_mesh:
-        
+
             # Add Body Mesh Options
             box = layout.box()
-            #box.label(text='Add Body Mesh Options')
-            
+
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Body Mesh Mode')
             split.split().column().prop(fmc_adapter_tool, 'body_mesh_mode')
-            
+
             box.operator('fmc_adapter.add_body_mesh', text='6. Add Body Mesh')
 
-        # Create a button to toggle FBX Export Options visibility
+        # Create a button to toggle FBX Export Options
         row = layout.row(align=True)
-        row.prop(fmc_adapter_tool, "show_export_fbx", text="", icon='TRIA_DOWN' if fmc_adapter_tool.show_export_fbx else 'TRIA_RIGHT', emboss=False)
+        row.prop(fmc_adapter_tool,
+                 "show_export_fbx",
+                 text="",
+                 icon='TRIA_DOWN' if
+                    fmc_adapter_tool.show_export_fbx
+                    else 'TRIA_RIGHT',
+                 emboss=False)
         row.label(text="FBX Export")
 
         if fmc_adapter_tool.show_export_fbx:
@@ -780,7 +931,8 @@ class VIEW3D_PT_freemocap_adapter(Panel):
             box = layout.box()
             split = box.column().row().split(factor=0.6)
             split.column().label(text='FBX Export Type')
-            split.split().column().prop(fmc_adapter_tool, 'fbx_type')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'fbx_type')
 
             box.operator('fmc_adapter.export_fbx', text='7. Export FBX')
 
@@ -788,7 +940,7 @@ class VIEW3D_PT_freemocap_adapter(Panel):
 class FMC_ADAPTER_OT_adjust_empties(Operator):
     bl_idname = 'fmc_adapter.adjust_empties'
     bl_label = 'Freemocap Adapter - Adjust Empties'
-    bl_description = "Change the position of the empties_parent empty so it is placed in an imaginary ground plane of the capture between the actor's feet"
+    bl_description = 'Change the position of the empties_parent empty so it is placed in an imaginary ground plane of the capture between the actors feet'
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
@@ -882,10 +1034,10 @@ class FMC_ADAPTER_OT_apply_butterworth_filters(Operator):
             if fmc_adapter_tool.apply_local_filter_feet:
                 local_filter_categories.append('feet')
 
-        if global_filter_categories == [] and local_filter_categories == []:
+        if not global_filter_categories and not local_filter_categories:
             print('No category selected')
             return {'FINISHED'}
-        
+
         # Create the cutoff frequencies dictionary
         global_cutoff_frequencies={}
         if fmc_adapter_tool.apply_global_filter_core:
@@ -975,7 +1127,7 @@ class FMC_ADAPTER_OT_add_finger_rotation_limits(Operator):
 class FMC_ADAPTER_OT_apply_foot_locking(Operator):
     bl_idname = 'fmc_adapter.apply_foot_locking'
     bl_label = 'Freemocap Adapter - Apply Foot Locking'
-    bl_description = 'Apply the foot locking constraint'   
+    bl_description = 'Apply the foot locking constraint'
     bl_options = {'REGISTER', 'UNDO_GROUPED'}
 
     def execute(self, context):
@@ -1112,8 +1264,7 @@ class FMC_ADAPTER_OT_export_fbx(Operator):
 
         # Get end time and print execution time
         end = time.time()
-        print('Finished. Execution time (s): ' + str(m.trunc((end - start)*1000)/1000))
+        print('Finished. Execution time (s): '
+              + str(m.trunc((end - start)*1000)/1000))
 
         return {'FINISHED'}
-
-
