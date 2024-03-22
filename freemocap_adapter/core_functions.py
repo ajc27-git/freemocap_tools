@@ -17,26 +17,28 @@ except ImportError:
     scipy_available = False
     print("scipy is not installed. Please install scipy to use this addon.")
 
-from .data_definitions import (anthropomorphic_dimensions,
-                               virtual_bones,
-                               empties_dict,
-                               ik_pole_bones,
-                               skelly_parts,
-                               foot_locking_markers,
-                               bone_constraints
-)
+from .data_definitions.anthropomorphic_dimensions import (
+    anthropomorphic_dimensions)
+from .data_definitions.virtual_bones import virtual_bones
+from .data_definitions.empties_dict import empties_dict
+from .data_definitions.ik_pole_bones import ik_pole_bones
+from .data_definitions.skelly_parts import skelly_parts
+from .data_definitions.foot_locking_markers import foot_locking_markers
+from .data_definitions.bone_constraints import bone_constraints
+
 if bpy.app.version_string[0] < '4':
-    from .io_scene_fbx_functions_blender3 import (fbx_animations_do_blender3,
-                                                fbx_data_armature_elements_blender3,
-                                                fbx_data_object_elements_blender3,
-                                                fbx_data_bindpose_element_blender3
-    )
+    from .io_scene_fbx_functions_blender3 import (
+        fbx_animations_do_blender3,
+        fbx_data_armature_elements_blender3,
+        fbx_data_object_elements_blender3,
+        fbx_data_bindpose_element_blender3)
+
 if bpy.app.version_string[0] >= '4':
-    from .io_scene_fbx_functions_blender4 import (fbx_animations_do_blender4,
-                                                fbx_data_armature_elements_blender4,
-                                                fbx_data_object_elements_blender4,
-                                                fbx_data_bindpose_element_blender4
-    )
+    from .io_scene_fbx_functions_blender4 import (
+        fbx_animations_do_blender4,
+        fbx_data_armature_elements_blender4,
+        fbx_data_object_elements_blender4,
+        fbx_data_bindpose_element_blender4)
 
 # Global Variables
 # Variable to save if the function Adjust Empties has been already executed

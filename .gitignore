@@ -16,3 +16,11 @@ freemocap_visualizer/__pycache__/functions.cpython-310.pyc
 freemocap_adapter/__pycache__/data_definitions.cpython-310.pyc
 freemocap_adapter/__pycache__/addon_interface.cpython-310.pyc
 freemocap_adapter/__pycache__/core_functions.cpython-310.pyc
+freemocap_adapter/data_definitions/__pycache__/__init__.cpython-310.pyc
+freemocap_adapter/data_definitions/__pycache__/anthropomorphic_dimensions.cpython-310.pyc
+freemocap_adapter/data_definitions/__pycache__/bone_constraints.cpython-310.pyc
+freemocap_adapter/data_definitions/__pycache__/empties_dict.cpython-310.pyc
+freemocap_adapter/data_definitions/__pycache__/foot_locking_markers.cpython-310.pyc
+freemocap_adapter/data_definitions/__pycache__/ik_pole_bones.cpython-310.pyc
+freemocap_adapter/data_definitions/__pycache__/skelly_parts.cpython-310.pyc
+freemocap_adapter/data_definitions/__pycache__/virtual_bones.cpython-310.pyc
