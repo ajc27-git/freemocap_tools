@@ -1,4 +1,8 @@
-# Dictionary with all the Skelly mesh parts
+"""
+Dictionary with all the Skelly mesh parts. It is used when adding the
+Skelly mesh to the rig. Each bone has an individual mesh.
+"""
+
 skelly_parts = {
     'head': {
         'bones' : ['face'], # Bones of the mesh

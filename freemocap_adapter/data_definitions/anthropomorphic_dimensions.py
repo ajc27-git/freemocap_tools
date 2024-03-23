@@ -1,6 +1,8 @@
-# Dictionary with the Anthropomorphic human dimensions by Winter, D.
-# This values will be used the specified actor height when using
-# standard bone lengths
+"""
+Dictionary with the Anthropomorphic human dimensions by Winter, D.
+This values will be used the specified actor height when using
+standard bone lengths
+"""
 anthropomorphic_dimensions = {
     'pelvis.R': {
         'dimension': 0.0955},

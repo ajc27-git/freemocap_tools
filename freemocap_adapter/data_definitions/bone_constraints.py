@@ -1,3 +1,22 @@
+"""
+This module defines bone constraints for a skeletal animation system.
+
+Each bone in the system can have a list of constraints associated with it.
+Constraints dictate how bones should be tracked and manipulated during
+animation.
+
+The available constraint types are:
+- 'COPY_LOCATION': Copies the location of a target bone or point.
+- 'LOCKED_TRACK': Locks a specific axis of the target bone to an axis of the
+  tracked object.
+- 'DAMPED_TRACK': Dampens the tracking of a specific axis of the target bone.
+- 'LIMIT_ROTATION': Limits the rotation of a specific axis of the target bone.
+- 'IK': Inverse Kinematics
+
+This module is used in the animation processing pipeline to handle bone
+behavior during animations.
+"""
+
 bone_constraints = {
     "pelvis": [
         {'type':'COPY_LOCATION','target':'hips_center','use_offset':False},

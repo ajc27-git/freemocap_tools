@@ -1,4 +1,7 @@
-# Dictionary of the pole bones parameters
+"""
+Dictionary of the pole bones parameters to animate when adding the
+rig with IK constraints.
+"""
 ik_pole_bones = {
     'arm_pole_target.R': {
         'base_marker':      'right_shoulder',

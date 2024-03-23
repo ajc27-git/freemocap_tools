@@ -1,5 +1,9 @@
-# Create a dictionary with all the major bones with head and tail empties.
-# Also add variables to store each frame bone lengths, median and stdev.
+"""
+Dictionary with all the major bones with head and tail empties.
+Also has variables to store each frame bone lengths, median and stdev amoong
+others.
+"""
+
 virtual_bones = {
     'pelvis.R': {
         'head' : 'hips_center',

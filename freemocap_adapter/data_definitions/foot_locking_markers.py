@@ -1,3 +1,7 @@
+"""
+Dictionary containing markers for foot locking, including base, ankle,
+bones, and compensation markers for left and right feet.
+"""
 foot_locking_markers = {
     'left_foot': {
         'base': ['left_foot_index', 'left_heel'],
