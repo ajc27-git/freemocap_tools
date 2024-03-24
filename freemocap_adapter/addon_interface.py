@@ -123,11 +123,18 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
                       'length, it will have this value as height and the '
                       'bones length will be proporions of this height'
     ) # type: ignore
+
     # Add Rig Options
     show_add_rig: bpy.props.BoolProperty(
         name = '',
         default = False,
         description = 'Toggle Add Rig Options'
+    ) # type: ignore
+    add_rig_method: bpy.props.EnumProperty(
+        name = '',
+        description = 'Method used to create the rig',
+        items = [('using_rigify', 'Using Rigify', ''),
+                 ('bone_by_bone', 'Bone by Bone', '')]
     ) # type: ignore
     bone_length_method: bpy.props.EnumProperty(
         name = '',
@@ -597,8 +604,7 @@ class VIEW3D_PT_freemocap_adapter(Panel):
 
             # Reduce Bone Length Dispersion Options
             box = layout.box()
-            #box.label(text='Reduce Bone Length Dispersion Options')
-            
+
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Dispersion Interval Variable')
             split.split().column().prop(fmc_adapter_tool, 'interval_variable')
@@ -860,6 +866,12 @@ class VIEW3D_PT_freemocap_adapter(Panel):
 
             # Add Rig Options
             box = layout.box()
+
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Add Rig Method')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'add_rig_method')
+
             split = box.column().row().split(factor=0.6)
             split.column().label(text='Keep right/left symmetry')
             split.split().column().prop(fmc_adapter_tool,
@@ -1190,16 +1202,19 @@ class FMC_ADAPTER_OT_add_rig(Operator):
 
         print('Executing Add Rig...')
 
-        add_rig(keep_symmetry=fmc_adapter_tool.keep_symmetry,
-                add_fingers_constraints=fmc_adapter_tool.add_fingers_constraints,
-                add_ik_constraints=fmc_adapter_tool.add_ik_constraints,
-                ik_transition_threshold=fmc_adapter_tool.ik_transition_threshold,
-                use_limit_rotation=fmc_adapter_tool.use_limit_rotation,
-                clear_constraints=fmc_adapter_tool.clear_constraints)
+        add_rig(
+            add_rig_method=fmc_adapter_tool.add_rig_method,
+            keep_symmetry=fmc_adapter_tool.keep_symmetry,
+            add_fingers_constraints=fmc_adapter_tool.add_fingers_constraints,
+            add_ik_constraints=fmc_adapter_tool.add_ik_constraints,
+            ik_transition_threshold=fmc_adapter_tool.ik_transition_threshold,
+            use_limit_rotation=fmc_adapter_tool.use_limit_rotation,
+            clear_constraints=fmc_adapter_tool.clear_constraints)
 
         # Get end time and print execution time
         end = time.time()
-        print('Finished. Execution time (s): ' + str(m.trunc((end - start)*1000)/1000))
+        print('Finished. Execution time (s): '
+              + str(m.trunc((end - start)*1000)/1000))
 
         return {'FINISHED'}
 
