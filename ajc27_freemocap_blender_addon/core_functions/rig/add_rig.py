@@ -788,13 +788,12 @@ def add_rig(empty_names: List[str],
     return rig
 
 def ensure_rigify():
-    # TODO - This doesn't seem to work? Still need to install `rigify` manually :-/
-    rigify_enabled, _ = addon_utils.check("rigify")
+    _, rigify_enabled = addon_utils.check("rigify")
 
     if not rigify_enabled:
         try:
             print("Rigify not found - enabling Rigify addon...")
-            addon_utils.disable("rigify")
+            # addon_utils.disable("rigify")
             addon_utils.enable("rigify")
         except Exception as e:
             print(f"Error enabling Rigify addon - \n\n{e}")
