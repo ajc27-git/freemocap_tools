@@ -798,6 +798,12 @@ def ensure_rigify():
         except Exception as e:
             print(f"Error enabling Rigify addon - \n\n{e}")
             raise e
+        
+    default, enabled = addon_utils.check("rigify")
+    print(f"Rigify default: {default}, enabled: {enabled}")
+
+    if not enabled:
+        raise Exception("Rigify not enabled")
 
 def get_appended_number(rig_name):
     pattern = r"\.0[0-9]{2}$"
