@@ -793,7 +793,6 @@ def ensure_rigify():
     if not rigify_enabled:
         try:
             print("Rigify not found - enabling Rigify addon...")
-            # addon_utils.disable("rigify")
             addon_utils.enable("rigify", default_set=True, persistent=True, handle_error=print)
         except Exception as e:
             print(f"Error enabling Rigify addon - \n\n{e}")
