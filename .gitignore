@@ -24,3 +24,13 @@ freemocap_adapter/data_definitions/__pycache__/foot_locking_markers.cpython-310.
 freemocap_adapter/data_definitions/__pycache__/ik_pole_bones.cpython-310.pyc
 freemocap_adapter/data_definitions/__pycache__/skelly_parts.cpython-310.pyc
 freemocap_adapter/data_definitions/__pycache__/virtual_bones.cpython-310.pyc
+freemocap_adapter/data_definitions/armatures/__pycache__/__init__.cpython-310.pyc
+freemocap_adapter/data_definitions/armatures/__pycache__/freemocap.cpython-310.pyc
+freemocap_adapter/data_definitions/__pycache__/ik_control_bones.cpython-310.pyc
+freemocap_adapter/data_definitions/armatures/__pycache__/bone_name_map.cpython-310.pyc
+freemocap_adapter/data_definitions/armatures/__pycache__/ue_metahuman_simple.cpython-310.pyc
+freemocap_adapter/data_definitions/poses/__pycache__/__init__.cpython-310.pyc
+freemocap_adapter/data_definitions/poses/__pycache__/freemocap_apose.cpython-310.pyc
+freemocap_adapter/data_definitions/poses/__pycache__/freemocap_metahuman.cpython-310.pyc
+freemocap_adapter/data_definitions/poses/__pycache__/freemocap_tpose.cpython-310.pyc
+freemocap_adapter/data_definitions/poses/__pycache__/ue_metahuman_default.cpython-310.pyc

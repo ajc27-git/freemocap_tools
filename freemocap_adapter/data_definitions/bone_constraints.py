@@ -16,6 +16,7 @@ The available constraint types are:
 This module is used in the animation processing pipeline to handle bone
 behavior during animations.
 """
+import math as m
 
 bone_constraints = {
     "pelvis": [
@@ -54,7 +55,12 @@ bone_constraints = {
         {'type':'LIMIT_ROTATION','use_limit_x':True,'min_x':-135,'max_x':90,'use_limit_y':True,'min_y':-180,'max_y':98,'use_limit_z':True,'min_z':-91,'max_z':97,'owner_space':'LOCAL'}],
     "forearm.R": [
         {'type':'IK','target':'root','subtarget':'hand.IK.R','pole_target':'root','pole_subtarget':'arm_pole_target.R',
-            'pole_angle':-1.570795,'chain_count':2,'lock_ik_x':False,'lock_ik_y':True,'lock_ik_z':True,
+            'pole_angle': {
+                'freemocap_apose': m.radians(-90),
+                'freemocap_tpose': m.radians(-90),
+                'ue_metahuman_default': m.radians(180),
+            },
+            'chain_count':2,'lock_ik_x':False,'lock_ik_y':False,'lock_ik_z':False,
             'use_ik_limit_x':False,'use_ik_limit_y':False,'use_ik_limit_z':False,
             'ik_min_x': -0.174533,'ik_max_x': 2.61799,'ik_min_y': -1.5708,'ik_max_y': 1.74533,'ik_min_z': -0.174533,'ik_max_z': 0.174533},
         {'type':'COPY_ROTATION','target':'root','subtarget':'hand.IK.R','use_x':False,'use_y':True,'use_z':False,'target_space':'LOCAL','owner_space':'LOCAL','influence':0.3},
@@ -63,7 +69,12 @@ bone_constraints = {
         {'type':'LIMIT_ROTATION','use_limit_x':True,'min_x':-90,'max_x':79,'use_limit_y':True,'min_y':0,'max_y':146,'use_limit_z':True,'min_z':0,'max_z':0,'owner_space':'LOCAL'}],
     "forearm.L": [
         {'type':'IK','target':'root','subtarget':'hand.IK.L','pole_target':'root','pole_subtarget':'arm_pole_target.L',
-            'pole_angle':-1.570795,'chain_count':2,'lock_ik_x':False,'lock_ik_y':True,'lock_ik_z':True,
+            'pole_angle': {
+                'freemocap_apose': m.radians(-90),
+                'freemocap_tpose': m.radians(-90),
+                'ue_metahuman_default': 0,
+            },
+            'chain_count':2,'lock_ik_x':False,'lock_ik_y':False,'lock_ik_z':False,
             'use_ik_limit_x':False,'use_ik_limit_y':False,'use_ik_limit_z':False,
             'ik_min_x': -0.174533,'ik_max_x': 2.61799,'ik_min_y': -1.5708,'ik_max_y': 1.74533,'ik_min_z': -0.174533,'ik_max_z': 0.174533},
         {'type':'COPY_ROTATION','target':'root','subtarget':'hand.IK.L','use_x':False,'use_y':True,'use_z':False,'target_space':'LOCAL','owner_space':'LOCAL','influence':0.3},
@@ -96,14 +107,24 @@ bone_constraints = {
         {'type':'LIMIT_ROTATION','use_limit_x':True,'min_x':-155,'max_x':45,'use_limit_y':True,'min_y':-85,'max_y':105,'use_limit_z':True,'min_z':-17,'max_z':88,'owner_space':'LOCAL'}],
     "shin.R": [
         {'type':'IK','target':'root','subtarget':'foot.IK.R','pole_target':'root','pole_subtarget':'leg_pole_target.R',
-            'pole_angle':-1.570795,'chain_count':2,'lock_ik_x':False,'lock_ik_y':True,'lock_ik_z':True,
+            'pole_angle': {
+                'freemocap_apose': m.radians(-90),
+                'freemocap_tpose': m.radians(-90),
+                'ue_metahuman_default': m.radians(1.8),
+            },
+            'chain_count':2,'lock_ik_x':False,'lock_ik_y':False,'lock_ik_z':False,
             'use_ik_limit_x':False,'use_ik_limit_y':False,'use_ik_limit_z':False,
             'ik_min_x': -0.174533,'ik_max_x': 2.61799,'ik_min_y': -0.174533,'ik_max_y': 1.74533,'ik_min_z': -0.174533,'ik_max_z': 0.174533},
         {'type':'DAMPED_TRACK','target':'right_ankle','track_axis':'TRACK_Y'},
         {'type':'LIMIT_ROTATION','use_limit_x':True,'min_x':0,'max_x':150,'use_limit_y':True,'min_y':0,'max_y':0,'use_limit_z':True,'min_z':0,'max_z':0,'owner_space':'LOCAL'}],
     "shin.L": [
         {'type':'IK','target':'root','subtarget':'foot.IK.L','pole_target':'root','pole_subtarget':'leg_pole_target.L',
-            'pole_angle':-1.570795,'chain_count':2,'lock_ik_x':False,'lock_ik_y':True,'lock_ik_z':True,
+            'pole_angle': {
+                'freemocap_apose': m.radians(-90),
+                'freemocap_tpose': m.radians(-90),
+                'ue_metahuman_default': m.radians(178.2),
+            },
+            'chain_count':2,'lock_ik_x':False,'lock_ik_y':False,'lock_ik_z':False,
             'use_ik_limit_x':False,'use_ik_limit_y':False,'use_ik_limit_z':False,
             'ik_min_x': -0.174533,'ik_max_x': 2.61799,'ik_min_y': -0.174533,'ik_max_y': 1.74533,'ik_min_z': -0.174533,'ik_max_z': 0.174533},
         {'type':'DAMPED_TRACK','target':'left_ankle','track_axis':'TRACK_Y'},

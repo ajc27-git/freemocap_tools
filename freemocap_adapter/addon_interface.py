@@ -136,6 +136,20 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         items = [('using_rigify', 'Using Rigify', ''),
                  ('bone_by_bone', 'Bone by Bone', '')]
     ) # type: ignore
+    armature: bpy.props.EnumProperty(
+        name = '',
+        description = 'Armature that will be used to create the rig',
+        items = [('armature_freemocap', 'FreeMoCap', ''),
+                 ('armature_ue_metahuman_simple', 'UE Metahuman Simple', '')]
+    ) # type: ignore
+    pose: bpy.props.EnumProperty(
+        name = '',
+        description = 'Pose that will be used to create the rig',
+        items = [('freemocap_tpose', 'FreeMoCap T-Pose', ''),
+                 ('freemocap_apose', 'FreeMoCap A-Pose', ''),
+                 ('freemocap_metahuman', 'FreeMoCap Metahuman', ''),
+                 ('ue_metahuman_default', 'UE Metahuman Default', '')]
+    ) # type: ignore
     bone_length_method: bpy.props.EnumProperty(
         name = '',
         description = 'Method use to calculate length of major bones',
@@ -161,7 +175,7 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
     ) # type: ignore
     ik_transition_threshold: bpy.props.FloatProperty(
         name = '',
-        default = 0.5,
+        default = 0.9,
         min = 0,
         max = 1,
         precision = 2,
@@ -873,6 +887,16 @@ class VIEW3D_PT_freemocap_adapter(Panel):
                                         'add_rig_method')
 
             split = box.column().row().split(factor=0.6)
+            split.column().label(text='Armature')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'armature')
+            
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Pose')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'pose')
+
+            split = box.column().row().split(factor=0.6)
             split.column().label(text='Keep right/left symmetry')
             split.split().column().prop(fmc_adapter_tool,
                                         'keep_symmetry')
@@ -1204,6 +1228,8 @@ class FMC_ADAPTER_OT_add_rig(Operator):
 
         add_rig(
             add_rig_method=fmc_adapter_tool.add_rig_method,
+            armature_name=fmc_adapter_tool.armature,
+            pose_name=fmc_adapter_tool.pose,
             keep_symmetry=fmc_adapter_tool.keep_symmetry,
             add_fingers_constraints=fmc_adapter_tool.add_fingers_constraints,
             add_ik_constraints=fmc_adapter_tool.add_ik_constraints,
@@ -1249,6 +1275,7 @@ class FMC_ADAPTER_OT_add_body_mesh(Operator):
         
         print('Executing Add Body Mesh...')
         add_mesh_to_rig(body_mesh_mode=fmc_adapter_tool.body_mesh_mode,
+                        armature_name=fmc_adapter_tool.armature,
                         body_height=fmc_adapter_tool.body_height)
 
         # Get end time and print execution time
