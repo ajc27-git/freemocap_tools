@@ -9,9 +9,9 @@ skelly_parts = {
         'bones_origin' : (0, 0, 0), # Origin of the bones
         'bones_end' : (0, 0, 0), # End of the bones
         'bones_length' : 0, # Total length of the bones
-        'mesh_length' : 0.044658516812, # Length of the mesh
+        'mesh_length' : 0.085, # Length of the mesh
         # 'mesh_length' : 0.014658516812, # Big Head Skelly
-        'position_offset' : (0, 0.03, 0.03), # Position offset of the mesh
+        'position_offset' : (0, 0, 0.03), # Position offset of the mesh
         # 'position_offset' : (0, 0.03, 0.23), # Big Head Skelly
         'adjust_rotation' : False, # Adjust rotation of mesh after offset
     },
@@ -138,7 +138,7 @@ skelly_parts = {
         'bones_end'             : (0, 0, 0),
         'bones_length'          : 0,
         'mesh_length'           : 0.085891,
-        'position_offset'       : (-0.02, -0.025, 0),
+        'position_offset'       : (0, -0.025, 0.02),
         'adjust_rotation'       : True,
     },
     'palm.01.L': {
@@ -147,7 +147,7 @@ skelly_parts = {
         'bones_end'             : (0, 0, 0),
         'bones_length'          : 0,
         'mesh_length'           : 0.085891,
-        'position_offset'       : (0.02, -0.025, 0),
+        'position_offset'       : (0, -0.025, 0.02),
         'adjust_rotation'       : True,
     },
     'palm.02.R': {
@@ -156,7 +156,7 @@ skelly_parts = {
         'bones_end'             : (0, 0, 0),
         'bones_length'          : 0,
         'mesh_length'           : 0.085828,
-        'position_offset'       : (-0.02, -0.005, 0),
+        'position_offset'       : (0, -0.005, 0.02),
         'adjust_rotation'       : True,
     },
     'palm.02.L': {
@@ -165,7 +165,7 @@ skelly_parts = {
         'bones_end'             : (0, 0, 0),
         'bones_length'          : 0,
         'mesh_length'           : 0.085828,
-        'position_offset'       : (0.02, -0.005, 0),
+        'position_offset'       : (0, -0.005, 0.02),
         'adjust_rotation'       : True,
     },
     'palm.03.R': {
@@ -174,7 +174,7 @@ skelly_parts = {
         'bones_end'             : (0, 0, 0),
         'bones_length'          : 0,
         'mesh_length'           : 0.082869,
-        'position_offset'       : (-0.02, 0.01, 0),
+        'position_offset'       : (0, 0.01, 0.02),
         'adjust_rotation'       : True,
     },
     'palm.03.L': {
@@ -183,7 +183,7 @@ skelly_parts = {
         'bones_end'             : (0, 0, 0),
         'bones_length'          : 0,
         'mesh_length'           : 0.082869,
-        'position_offset'       : (0.02, 0.01, 0),
+        'position_offset'       : (0, 0.01, 0.02),
         'adjust_rotation'       : True,
     },
     'palm.04.R': {
@@ -192,7 +192,7 @@ skelly_parts = {
         'bones_end'             : (0, 0, 0),
         'bones_length'          : 0,
         'mesh_length'           : 0.070385,
-        'position_offset'       : (-0.02, 0.025, 0),
+        'position_offset'       : (0, 0.025, 0.02),
         'adjust_rotation'       : True,
     },
     'palm.04.L': {
@@ -201,7 +201,7 @@ skelly_parts = {
         'bones_end'             : (0, 0, 0),
         'bones_length'          : 0,
         'mesh_length'           : 0.070385,
-        'position_offset'       : (0.02, 0.025, 0),
+        'position_offset'       : (0, 0.025, 0.02),
         'adjust_rotation'       : True,
     },
     'f_index.01.R': {

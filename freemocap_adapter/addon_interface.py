@@ -1276,7 +1276,8 @@ class FMC_ADAPTER_OT_add_body_mesh(Operator):
         print('Executing Add Body Mesh...')
         add_mesh_to_rig(body_mesh_mode=fmc_adapter_tool.body_mesh_mode,
                         armature_name=fmc_adapter_tool.armature,
-                        body_height=fmc_adapter_tool.body_height)
+                        body_height=fmc_adapter_tool.body_height,
+                        pose_name=fmc_adapter_tool.pose)
 
         # Get end time and print execution time
         end = time.time()

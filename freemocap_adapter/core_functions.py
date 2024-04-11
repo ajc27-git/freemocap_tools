@@ -2091,7 +2091,8 @@ def add_rig(add_rig_method: str='using_rigify',
 ######################################################################
 def add_mesh_to_rig(body_mesh_mode: str="custom",
                     armature_name: str="armature_freemocap",
-                    body_height: float=1.75):
+                    body_height: float=1.75,
+                    pose_name: str="freemocap_tpose"):
 
     if body_mesh_mode == "file":
         
@@ -2215,7 +2216,7 @@ def add_mesh_to_rig(body_mesh_mode: str="custom",
         # Rename the skelly mesh to skelly_mesh
         skelly_mesh.name = 'skelly_mesh'
 
-    elif body_mesh_mode == "skelly_parts":
+    elif body_mesh_mode == "skelly_parts_old":
 
         # Change to object mode
         if bpy.context.selected_objects != []:
@@ -2257,7 +2258,7 @@ def add_mesh_to_rig(body_mesh_mode: str="custom",
         # Define the list that will contain the different Skelly meshes
         skelly_meshes = []
 
-        # Iterate through the skelly parts dictionary and add the corresppondent skelly part
+        # Iterate through the skelly parts dictionary and add the correspondent skelly part
         for part in skelly_parts:
             try:
                 # Import the skelly mesh
@@ -2325,6 +2326,148 @@ def add_mesh_to_rig(body_mesh_mode: str="custom",
 
         # Restore the scene render fps in case it was changed
         bpy.context.scene.render.fps = scene_render_fps
+
+    elif body_mesh_mode == "skelly_parts":
+        
+        # Get references to the armature pose
+        pose = globals()[pose_name]
+
+        # Change to object mode
+        if bpy.context.selected_objects != []:
+            bpy.ops.object.mode_set(mode='OBJECT')
+
+        # Get reference to the rig
+        for capture_object in bpy.data.objects:
+            if capture_object.type == "ARMATURE" and (
+                "_rig" in capture_object.name or
+                capture_object.name == "root"
+                ):
+                rig = capture_object
+
+        # Deselect all objects
+        for object in bpy.data.objects:
+            object.select_set(False)
+
+        #  Set the rig as active object
+        rig.select_set(True)
+        bpy.context.view_layer.objects.active = rig
+
+        # Change to edit mode
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        #  Iterate through the skelly parts dictionary and update the
+        #  default origin, length and normalized direction
+        for part in skelly_parts:
+            skelly_parts[part]['bones_origin'] = mathutils.Vector(rig.data.edit_bones[bone_name_map[armature_name][skelly_parts[part]['bones'][0]]].head)
+            skelly_parts[part]['bones_end'] = mathutils.Vector(rig.data.edit_bones[bone_name_map[armature_name][skelly_parts[part]['bones'][-1]]].tail)
+            skelly_parts[part]['bones_length'] = (skelly_parts[part]['bones_end'] - skelly_parts[part]['bones_origin']).length
+
+        # Change to object mode
+        bpy.ops.object.mode_set(mode='OBJECT')        
+
+        # Get the script filepath
+        script_file = os.path.realpath(__file__)
+        # Get the script folder
+        directory = os.path.dirname(script_file)
+
+        # Define the list that will contain the different Skelly meshes
+        skelly_meshes = []
+
+        # Iterate through the skelly parts dictionary and add the correspondent skelly part
+        for part in skelly_parts:
+            # if part != 'upper_arm.R':
+            #     continue
+            try:
+                # Import the skelly mesh
+                bpy.ops.import_scene.fbx(
+                    filepath=directory
+                    + '/assets/skelly_parts_meshes/Skelly_' + part + '.fbx')
+
+            except:
+                print("\nCould not find Skelly_" + part + " mesh file.")
+                continue
+
+            skelly_meshes.append(bpy.data.objects['Skelly_' + part])
+
+            # Get reference to the imported mesh
+            skelly_part = bpy.data.objects['Skelly_' + part]
+
+            # Get the rotation matrix
+            if part == 'head':
+                rotation_matrix = mathutils.Matrix.Identity(4)
+            else:
+                rotation_matrix = mathutils.Euler(
+                    mathutils.Vector(pose[bone_name_map[armature_name][part]]['rotation']),
+                    'XYZ',
+                ).to_matrix()
+
+            # Move the Skelly part to the equivalent bone's head location
+            skelly_part.location = (skelly_parts[part]['bones_origin']
+                + rotation_matrix @ mathutils.Vector(skelly_parts[part]['position_offset'])
+                # + mathutils.Vector(skelly_parts[part]['position_offset'])
+            )
+
+            # Rotate the part mesh with the rotation matrix
+            skelly_part.rotation_euler = rotation_matrix.to_euler('XYZ')
+
+            # Get the bone length
+            if skelly_parts[part]['adjust_rotation']:
+                bone_length = (skelly_parts[part]['bones_end'] - (skelly_parts[part]['bones_origin'] + (rotation_matrix @ mathutils.Vector(skelly_parts[part]['position_offset'])))).length
+            else:
+                bone_length = skelly_parts[part]['bones_length']
+
+            # Get the mesh length
+            mesh_length = skelly_parts[part]['mesh_length']
+
+            # Resize the Skelly part to match the bone length
+            skelly_part.scale = (bone_length / mesh_length, bone_length / mesh_length, bone_length / mesh_length)
+
+            # Adjust rotation if necessary
+            if skelly_parts[part]['adjust_rotation']:
+                # Save the Skelly part's original location
+                part_location = mathutils.Vector(skelly_part.location)
+
+                # Get the direction vector
+                bone_vector = skelly_parts[part]['bones_end'] - skelly_parts[part]['bones_origin']
+                # Get new bone vector after applying the position offset
+                new_bone_vector = skelly_parts[part]['bones_end'] - part_location
+               
+                # Apply the rotations to the Skelly part
+                bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+
+                # Get the angle between the two vectors
+                rotation_quaternion = bone_vector.rotation_difference(new_bone_vector)
+                # Change the rotation mode
+                skelly_part.rotation_mode = 'QUATERNION'
+                # Rotate the Skelly part
+                skelly_part.rotation_quaternion = rotation_quaternion
+
+            # Apply the transformations to the Skelly part
+            bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+        
+        # Rename the first mesh to skelly_mesh
+        skelly_meshes[0].name = "skelly_mesh"
+
+        # Deselect all
+        bpy.ops.object.select_all(action='DESELECT')
+
+        # Select all body meshes
+        for skelly_mesh in skelly_meshes:
+            skelly_mesh.select_set(True)
+
+        # Set skelly_mesh as active
+        bpy.context.view_layer.objects.active = skelly_meshes[0]
+        
+        # Join the body meshes
+        bpy.ops.object.join()
+
+        # Select the rig
+        rig.select_set(True)
+        # Set rig as active
+        bpy.context.view_layer.objects.active = rig
+        # Parent the mesh and the rig with automatic weights
+        bpy.ops.object.parent_set(type='ARMATURE_AUTO')
+            
 
     elif body_mesh_mode == "can_man":
     
