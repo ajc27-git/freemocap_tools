@@ -19,10 +19,23 @@ except ImportError:
     scipy_available = False
     print("scipy is not installed. Please install scipy to use this addon.")
 
+def update_menu(self, context, menu_name):
+    if menu_name == 'armature':
+        self.pose = get_pose_items(self, context)[0][0]
 
+def get_pose_items(self, context):
+    if self.armature == 'armature_freemocap':
+        items = [('freemocap_tpose', 'FreeMoCap T-Pose', ''),
+                ('freemocap_apose', 'FreeMoCap A-Pose', '')]
+    elif self.armature == 'armature_ue_metahuman_simple':
+        items = [('ue_metahuman_tpose', 'UE Metahuman T-Pose', ''),
+                 ('ue_metahuman_default', 'UE Metahuman Default', '')]
+        
+    return items
 
 # Class with the different properties of the methods
 class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
+
     # Adjust Empties Options
     show_adjust_empties: bpy.props.BoolProperty(
         name = '',
@@ -140,22 +153,20 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
         name = '',
         description = 'Armature that will be used to create the rig',
         items = [('armature_freemocap', 'FreeMoCap', ''),
-                 ('armature_ue_metahuman_simple', 'UE Metahuman Simple', '')]
+                 ('armature_ue_metahuman_simple', 'UE Metahuman Simple', '')],
+        update = lambda a,b: update_menu(a,
+                                         b,
+                                         'armature')
     ) # type: ignore
     pose: bpy.props.EnumProperty(
         name = '',
         description = 'Pose that will be used to create the rig',
-        items = [('freemocap_tpose', 'FreeMoCap T-Pose', ''),
-                 ('freemocap_apose', 'FreeMoCap A-Pose', ''),
-                 ('freemocap_metahuman', 'FreeMoCap Metahuman', ''),
-                 ('ue_metahuman_default', 'UE Metahuman Default', '')]
+        items = get_pose_items,
     ) # type: ignore
     bone_length_method: bpy.props.EnumProperty(
         name = '',
         description = 'Method use to calculate length of major bones',
-        items = [('median_length', 'Median Length', ''),
-                       #('current_frame', 'Current Frame', '')]
-                       ]
+        items = [('median_length', 'Median Length', '')]
     ) # type: ignore
     keep_symmetry: bpy.props.BoolProperty(
         name = '',
@@ -1170,6 +1181,15 @@ class FMC_ADAPTER_OT_apply_foot_locking(Operator):
 
         scene = context.scene
         fmc_adapter_tool = scene.fmc_adapter_tool
+
+        if not scipy_available:
+            self.report(
+                {'ERROR'},
+                'Scipy module not available. Please install scipy in '
+                + 'your Blender python folder. Example command: \n'
+                + 'C:\\Program Files\\Blender Foundation\\Blender 3.6'
+                + '\\3.6\python\\bin .\\python.exe -m pip install scipy')
+            return {'FINISHED'}
 
         # Get start time
         start = time.time()

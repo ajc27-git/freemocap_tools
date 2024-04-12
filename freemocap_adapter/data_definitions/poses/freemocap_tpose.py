@@ -58,11 +58,11 @@ freemocap_tpose = {
     },
     'hand.R': {
         'rotation': (0, m.radians(-90), 0),
-        'roll': 0,
+        'roll': m.radians(-90),
     },
     'hand.L': {
         'rotation': (0, m.radians(90), 0),
-        'roll': 0,
+        'roll': m.radians(90),
     },
     'thumb.carpal.R': {
         'rotation': (0, m.radians(-90), m.radians(45)),

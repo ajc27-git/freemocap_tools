@@ -34,3 +34,4 @@ freemocap_adapter/data_definitions/poses/__pycache__/freemocap_apose.cpython-310
 freemocap_adapter/data_definitions/poses/__pycache__/freemocap_metahuman.cpython-310.pyc
 freemocap_adapter/data_definitions/poses/__pycache__/freemocap_tpose.cpython-310.pyc
 freemocap_adapter/data_definitions/poses/__pycache__/ue_metahuman_default.cpython-310.pyc
+freemocap_adapter/data_definitions/poses/__pycache__/ue_metahuman_tpose.cpython-310.pyc

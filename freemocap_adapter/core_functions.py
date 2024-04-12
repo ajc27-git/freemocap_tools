@@ -35,10 +35,8 @@ from .data_definitions.armatures.bone_name_map import bone_name_map
 
 from .data_definitions.poses.freemocap_tpose import freemocap_tpose
 from .data_definitions.poses.freemocap_apose import freemocap_apose
-from .data_definitions.poses.freemocap_metahuman import freemocap_metahuman
 from .data_definitions.poses.ue_metahuman_default import ue_metahuman_default
-
-
+from .data_definitions.poses.ue_metahuman_tpose import ue_metahuman_tpose
 
 if bpy.app.version_string[0] < '4':
     from .io_scene_fbx_functions_blender3 import (
@@ -490,10 +488,6 @@ def rotate_virtual_bone(empty, origin, rot_matrix: mathutils.Matrix):
         for child in empties_dict[empty]['children']:
             rotate_virtual_bone(child, origin, rot_matrix)
 
-######################################################################
-######################### ADJUST EMPTIES #############################
-######################################################################
-
 def adjust_empties(z_align_ref_empty: str='left_knee',
                    z_align_angle_offset: float=0,
                    ground_ref_empty: str='left_foot_index',
@@ -662,10 +656,6 @@ def adjust_empties(z_align_ref_empty: str='left_knee',
 
     # Change the adjust_empties_executed variable
     adjust_empties_executed = True
-
-######################################################################
-#################### REDUCE BONE LENGTH DISPERSION ###################
-######################################################################
 
 def reduce_bone_length_dispersion(interval_variable: str='capture_median', interval_factor: float=0.01, body_height: float=1.75, target_bone: str=''):
 
@@ -1081,11 +1071,6 @@ def apply_butterworth_filters(global_filter_categories: list=[],
     # Reduce the bone length dispersion
     reduce_bone_length_dispersion(interval_variable=interval_variable, interval_factor=interval_factor, body_height=body_height, target_bone='')
 
-
-######################################################################
-############################# ADD RIG ################################
-######################################################################
-
 def add_rig(add_rig_method: str='using_rigify',
             armature_name: str='armature_freemocap',
             pose_name: str='freemocap_tpose',
@@ -1108,6 +1093,7 @@ def add_rig(add_rig_method: str='using_rigify',
         print('Deleting previous metarigs...')
         for object in bpy.data.objects:
             if object.type == "ARMATURE":
+                # pass
                 bpy.data.objects.remove(object, do_unlink=True)
     except AttributeError:
         print('No existing metarigs to delete')
@@ -2086,9 +2072,6 @@ def add_rig(add_rig_method: str='using_rigify',
     # Deselect all objects
     bpy.ops.object.select_all(action='DESELECT')
     
-######################################################################
-######################## ADD MESH TO ARMATURE ########################
-######################################################################
 def add_mesh_to_rig(body_mesh_mode: str="custom",
                     armature_name: str="armature_freemocap",
                     body_height: float=1.75,
@@ -2826,10 +2809,6 @@ def add_mesh_to_rig(body_mesh_mode: str="custom",
     
     else:
         print("Unknown add mesh mode")
-
-######################################################################
-########################### EXPORT TO FBX ############################
-######################################################################
 
 def export_fbx(self: Operator,
                fbx_type: str='standard'):
