@@ -146,8 +146,8 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
     add_rig_method: bpy.props.EnumProperty(
         name = '',
         description = 'Method used to create the rig',
-        items = [('using_rigify', 'Using Rigify', ''),
-                 ('bone_by_bone', 'Bone by Bone', '')]
+        items = [('bone_by_bone', 'Bone by Bone', ''),
+                 ('using_rigify', 'Using Rigify', '')]
     ) # type: ignore
     armature: bpy.props.EnumProperty(
         name = '',
