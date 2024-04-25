@@ -788,17 +788,20 @@ def add_rig(empty_names: List[str],
     return rig
 
 def ensure_rigify():
-    # TODO - This doesn't seem to work? Still need to install `rigify` manually :-/
-    rigify_enabled, _ = addon_utils.check("rigify")
+    _, rigify_enabled = addon_utils.check("rigify")
 
     if not rigify_enabled:
         try:
             print("Rigify not found - enabling Rigify addon...")
-            addon_utils.disable("rigify")
-            addon_utils.enable("rigify")
+            addon_utils.enable("rigify", default_set=True, persistent=True, handle_error=print)
         except Exception as e:
             print(f"Error enabling Rigify addon - \n\n{e}")
             raise e
+        
+    _, rigify_enabled = addon_utils.check("rigify")
+
+    if not rigify_enabled:
+        raise Exception("Rigify not enabled, please enable it in your blender preferences and then close blender before retrying")
 
 def get_appended_number(rig_name):
     pattern = r"\.0[0-9]{2}$"
