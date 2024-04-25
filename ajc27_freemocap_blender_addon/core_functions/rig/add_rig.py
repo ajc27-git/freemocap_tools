@@ -29,9 +29,7 @@ def add_rig(empty_names: List[str],
             bpy.ops.object.armature_human_metarig_add()
         except Exception as e:
             raise e
-        
-        # Add normal human armature
-        bpy.ops.object.armature_human_metarig_add()
+
         # Rename metarig armature to rig_name
         bpy.data.armatures[0].name = rig_name
         # Get reference to armature

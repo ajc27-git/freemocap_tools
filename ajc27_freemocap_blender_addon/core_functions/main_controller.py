@@ -326,6 +326,10 @@ class MainController:
         self._video_parent_object.hide_set(True)
         self._center_of_mass_parent_object.hide_set(True)
 
+        # remove default cube
+        if "Cube" in bpy.data.objects:
+            bpy.data.objects.remove(bpy.data.objects["Cube"])
+
         # create_scene_objects(scene=bpy.context.scene)
 
 
