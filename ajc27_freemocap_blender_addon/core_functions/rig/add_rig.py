@@ -6,6 +6,10 @@ import bpy
 import mathutils
 import addon_utils
 
+from ajc27_freemocap_blender_addon.system.constants import (
+    FREEMOCAP_ARMATURE,
+    UE_METAHUMAN_SIMPLE_ARMATURE,
+)
 from ajc27_freemocap_blender_addon.data_models.bones.bone_constraints import (
     ALL_BONES_CONSTRAINT_DEFINITIONS,
 )
@@ -17,12 +21,26 @@ from ajc27_freemocap_blender_addon.data_models.bones.ik_pole_bones import ik_pol
 from ajc27_freemocap_blender_addon.data_models.armatures.bone_name_map import (
     bone_name_map,
 )
-
+from ajc27_freemocap_blender_addon.data_models.armatures.freemocap import armature_freemocap
+from ajc27_freemocap_blender_addon.data_models.armatures.ue_metahuman_simple import armature_ue_metahuman_simple
+from ajc27_freemocap_blender_addon.data_models.poses.freemocap_apose import freemocap_apose
+from ajc27_freemocap_blender_addon.data_models.poses.freemocap_tpose import freemocap_tpose
+from ajc27_freemocap_blender_addon.data_models.poses.ue_metahuman_default import ue_metahuman_default
+from ajc27_freemocap_blender_addon.data_models.poses.ue_metahuman_tpose import ue_metahuman_tpose
 
 class AddRigMethods(Enum):
     RIGIFY = "rigify"
     BY_BONE = "by_bone"
 
+class Armature:
+    FREEMOCAP = armature_freemocap
+    UE_METAHUMAN_SIMPLE = armature_ue_metahuman_simple
+
+class Pose:
+    FREEMOCAP_APOSE = freemocap_apose
+    FREEMOCAP_TPOSE = freemocap_tpose
+    UE_METAHUMAN_DEFAULT = ue_metahuman_default
+    UE_METAHUMAN_TPOSE = ue_metahuman_tpose
 
 def add_rig(
     bone_data: Dict[str, Dict[str, float]],
@@ -878,14 +896,16 @@ def add_rig_rigify(
 
 
 def add_rig_by_bone(
-    armature_name: str = "armature_freemocap",  # TODO: do either armature or pose name match with "rig_name"?
-    pose_name: str = "freemocap_tpose",
+    armature: dict = Armature.FREEMOCAP,
+    pose: dict = Pose.FREEMOCAP_TPOSE,
     add_ik_constraints: bool = False,
 ) -> bpy.types.Object:
-    # Get the armature and pose types
-    # TODO: don't want to use globals here, we can pass these in as a parameter if needed
-    armature = globals()[armature_name]
-    pose = globals()[pose_name]
+    if armature == Armature.UE_METAHUMAN_SIMPLE:
+        armature_name = UE_METAHUMAN_SIMPLE_ARMATURE
+    elif armature == Armature.FREEMOCAP:
+        armature_name = FREEMOCAP_ARMATURE
+    else:
+        raise ValueError("Invalid armature name")
 
     # Get rig height as the sum of the major bones length in a standing position. Assume foot declination angle of 23º
     avg_ankle_projection_length = (
@@ -1006,7 +1026,7 @@ def add_rig_by_bone(
             rig_bone.use_connect = armature[bone]["connected"]
 
     # Special armature conditions
-    if armature_name == "armature_ue_metahuman_simple":
+    if armature_name == UE_METAHUMAN_SIMPLE_ARMATURE:
         # Change parents of thigh bones
         rig.data.edit_bones["thigh_r"].use_connect = False
         rig.data.edit_bones["thigh_l"].use_connect = False
