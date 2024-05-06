@@ -2,7 +2,6 @@ import logging
 import math as m
 import re
 from typing import Dict, List
-
 import bpy
 import mathutils
 import addon_utils
@@ -10,10 +9,13 @@ import addon_utils
 from ajc27_freemocap_blender_addon.data_models.bones.bone_constraints import (
     ALL_BONES_CONSTRAINT_DEFINITIONS,
 )
+from ajc27_freemocap_blender_addon.data_models.bones.virtual_bones import virtual_bones
+from ajc27_freemocap_blender_addon.data_models.bones.ik_control_bones import ik_control_bones
+from ajc27_freemocap_blender_addon.data_models.bones.ik_pole_bones import ik_pole_bones
+from ajc27_freemocap_blender_addon.data_models.armatures.bone_name_map import bone_name_map
 
 
 def add_rig(
-    empty_names: List[str],
     bone_data: Dict[str, Dict[str, float]],
     rig_name: str,
     parent_object: bpy.types.Object,
@@ -21,7 +23,7 @@ def add_rig(
     add_fingers_constraints: bool = False,
     use_limit_rotation: bool = False,
 ) -> bpy.types.Object:
-    
+
     # Deselect all objects
     for object in bpy.data.objects:
         object.select_set(False)
@@ -64,9 +66,7 @@ def add_rig(
         constraint_definitions,
     ) in ALL_BONES_CONSTRAINT_DEFINITIONS.items():
         if not isinstance(constraint_definitions, list):
-            raise Exception(
-                f"Constraint definitions for {bone_name} must be a list"
-            )
+            raise Exception(f"Constraint definitions for {bone_name} must be a list")
 
         # If it is a finger bone amd add_fingers_constraints is False continue with the next bone
         if (
@@ -82,7 +82,8 @@ def add_rig(
                         "ring",
                         "pinky",
                     ]
-                    if finger_part in constraint_definitions  # TODO: this was inheriting some leftover definition, make sure this is accurate
+                    if finger_part
+                    in constraint_definitions  # TODO: this was inheriting some leftover definition, make sure this is accurate
                 ]
             )
             > 0
@@ -98,9 +99,7 @@ def add_rig(
             appended_number_string = get_appended_number(parent_object.name)
             if appended_number_string is not None:
                 if "target" in constraint.keys():
-                    constraint["target"] = (
-                        constraint["target"] + appended_number_string
-                    )
+                    constraint["target"] = constraint["target"] + appended_number_string
             # Add new constraint determined by type
             if not use_limit_rotation and constraint["type"] == "LIMIT_ROTATION":
                 continue
@@ -952,6 +951,162 @@ def add_rig_rigify(
     # Apply the actual pose to the rest pose
     bpy.ops.pose.select_all(action="SELECT")
     bpy.ops.pose.armature_apply(selected=False)
+
+    return rig
+
+
+def add_rig_by_bone(
+    armature_name: str = "armature_freemocap", # TODO: do either armature or pose name match with "rig_name"?
+    pose_name: str = "freemocap_tpose",
+    add_ik_constraints: bool = False,
+) -> bpy.types.Object:
+    # Get the armature and pose types
+    # TODO: don't want to use globals here, we can pass these in as a parameter if needed
+    armature = globals()[armature_name]
+    pose = globals()[pose_name]
+
+    # Get rig height as the sum of the major bones length in a standing position. Assume foot declination angle of 23º
+    avg_ankle_projection_length = (
+        m.sin(m.radians(23)) * virtual_bones["foot.R"]["median"]
+        + m.sin(m.radians(23)) * virtual_bones["foot.L"]["median"]
+    ) / 2
+    avg_shin_length = (
+        virtual_bones["shin.R"]["median"] + virtual_bones["shin.L"]["median"]
+    ) / 2
+    avg_thigh_length = (
+        virtual_bones["thigh.R"]["median"] + virtual_bones["thigh.L"]["median"]
+    ) / 2
+
+    # Add the armature
+    bpy.ops.object.armature_add(
+        enter_editmode=False,
+        align="WORLD",
+        location=(0, 0, 0),
+    )
+
+    # Rename the armature
+    bpy.data.armatures[0].name = "root"
+    # Get reference to armature
+    rig = bpy.data.objects["Armature"]
+    # Rename the rig object to pelvis
+    rig.name = "root"
+    # Get reference to the renamed armature
+    rig = bpy.data.objects["root"]
+
+    # Change to edit mode
+    bpy.ops.object.mode_set(mode="EDIT")
+
+    # Remove the default bone
+    rig.data.edit_bones.remove(rig.data.edit_bones["Bone"])
+
+    # Get the inverse bone_map_dict
+    inv_bone_name_map = {
+        value: key for key, value in bone_name_map[armature_name].items()
+    }
+
+    # Iterate over the armature dictionary
+    for bone in armature:
+
+        # Get the reference to the parent of the bone if its not root
+        parent_name = armature[bone]["parent_bone"]
+        if parent_name != "root":
+            parent_bone = rig.data.edit_bones[parent_name]
+
+        # Add the new bone
+        rig_bone = rig.data.edit_bones.new(bone)
+
+        # Set the bone head position
+        if bone in ("pelvis"):
+            rig_bone.head = mathutils.Vector(
+                [
+                    0,
+                    0,
+                    avg_ankle_projection_length + avg_shin_length + avg_thigh_length,
+                ]
+            )
+        else:
+            # Set the bone position relative to its parent
+            if armature[bone]["parent_position"] == "head":
+                rig_bone.head = parent_bone.head
+            elif armature[bone]["parent_position"] == "tail":
+                rig_bone.head = parent_bone.tail
+
+        # Get the bone vector
+        if inv_bone_name_map[bone] not in virtual_bones:
+            bone_vector = mathutils.Vector([0, 0, armature[bone]["default_length"]])
+        else:
+            bone_vector = mathutils.Vector(
+                [0, 0, virtual_bones[inv_bone_name_map[bone]]["median"]]
+            )
+
+        # Get rot_vector
+        # rot_vector = mathutils.Vector(pose[bone]['rotation'])
+        # Get the rotation matrix
+        rotation_matrix = mathutils.Euler(
+            mathutils.Vector(pose[bone]["rotation"]),
+            "XYZ",
+        ).to_matrix()
+
+        # Rotate the bone vector
+        # rotated_bone_vector = rotation_matrix @ bone_vector
+
+        rig_bone.tail = rig_bone.head + rotation_matrix @ bone_vector
+
+        # Set the bone tail using its orientation and length.
+        # Rotate the bone vector in each axis separately
+        # for axis in (0, 1, 2):
+        #     rot_vector = mathutils.Vector([
+        #         pose[bone]['rotation'][0] if axis == 0 else 0,
+        #         pose[bone]['rotation'][1] if axis == 1 else 0,
+        #         pose[bone]['rotation'][2] if axis == 2 else 0
+        #         ])
+
+        #     rotation_matrix = mathutils.Matrix.Rotation(
+        #         rot_vector.length,
+        #         4,
+        #         rot_vector.normalized()
+        #         )
+
+        #     rig_bone.tail = (
+        #         rig_bone.head
+        #         + rotation_matrix @ bone_vector
+        #         )
+
+        #     # Update the bone vector
+        #     bone_vector = rig_bone.tail - rig_bone.head
+
+        # Assign the roll to the bone
+        rig_bone.roll = pose[bone]["roll"]
+
+        # Parent the bone if its parent exists
+        if parent_name != "root":
+            rig_bone.parent = parent_bone
+            rig_bone.use_connect = armature[bone]["connected"]
+
+    # Special armature conditions
+    if armature_name == "armature_ue_metahuman_simple":
+        # Change parents of thigh bones
+        rig.data.edit_bones["thigh_r"].use_connect = False
+        rig.data.edit_bones["thigh_l"].use_connect = False
+        rig.data.edit_bones["thigh_r"].parent = rig.data.edit_bones["pelvis"]
+        rig.data.edit_bones["thigh_l"].parent = rig.data.edit_bones["pelvis"]
+
+    # Add the ik bones if specified
+    if add_ik_constraints:
+        for ik_control in ik_control_bones:
+            ik_bone = rig.data.edit_bones.new(ik_control)
+            ik_bone.head = rig.data.edit_bones[
+                bone_name_map[armature_name][
+                    ik_control_bones[ik_control]["controlled_bone"]
+                ]
+            ].head
+            ik_bone.tail = ik_bone.head + mathutils.Vector(
+                ik_control_bones[ik_control]["tail_relative_position"]
+            )
+        for ik_pole in ik_pole_bones:
+            ik_bone = rig.data.edit_bones.new(ik_pole)
+            ik_bone.head = ik_pole_bones[ik_pole]["head_position"]
+            ik_bone.tail = ik_pole_bones[ik_pole]["tail_position"]
 
     return rig
 

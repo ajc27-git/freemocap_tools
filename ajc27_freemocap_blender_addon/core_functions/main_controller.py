@@ -199,7 +199,6 @@ class MainController:
         try:
             print("Adding rig...")
             self.rig = add_rig(
-                empty_names=self.empty_names,
                 bone_data=self.freemocap_data_handler.metadata["bone_data"],
                 rig_name=self.rig_name,
                 parent_object=self._data_parent_object,
