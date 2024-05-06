@@ -1,4 +1,4 @@
-import logging
+from enum import Enum
 import math as m
 import re
 from typing import Dict, List
@@ -10,15 +10,25 @@ from ajc27_freemocap_blender_addon.data_models.bones.bone_constraints import (
     ALL_BONES_CONSTRAINT_DEFINITIONS,
 )
 from ajc27_freemocap_blender_addon.data_models.bones.virtual_bones import virtual_bones
-from ajc27_freemocap_blender_addon.data_models.bones.ik_control_bones import ik_control_bones
+from ajc27_freemocap_blender_addon.data_models.bones.ik_control_bones import (
+    ik_control_bones,
+)
 from ajc27_freemocap_blender_addon.data_models.bones.ik_pole_bones import ik_pole_bones
-from ajc27_freemocap_blender_addon.data_models.armatures.bone_name_map import bone_name_map
+from ajc27_freemocap_blender_addon.data_models.armatures.bone_name_map import (
+    bone_name_map,
+)
+
+
+class AddRigMethods(Enum):
+    RIGIFY = "rigify"
+    BY_BONE = "by_bone"
 
 
 def add_rig(
     bone_data: Dict[str, Dict[str, float]],
     rig_name: str,
     parent_object: bpy.types.Object,
+    add_rig_method: AddRigMethods = AddRigMethods.RIGIFY,
     keep_symmetry: bool = False,
     add_fingers_constraints: bool = False,
     use_limit_rotation: bool = False,
@@ -28,116 +38,28 @@ def add_rig(
     for object in bpy.data.objects:
         object.select_set(False)
 
-    rig = add_rig_rigify(
-        bone_data=bone_data,
-        rig_name=rig_name,
-        parent_object=parent_object,
-        keep_symmetry=keep_symmetry,
-    )
+    if add_rig_method == AddRigMethods.RIGIFY:
+        rig = add_rig_rigify(
+            bone_data=bone_data,
+            rig_name=rig_name,
+            parent_object=parent_object,
+            keep_symmetry=keep_symmetry,
+        )
+    elif add_rig_method == AddRigMethods.BY_BONE:
+        rig = add_rig_by_bone()
+    else:
+        raise ValueError(f"Invalid add rig method: {add_rig_method}")
 
     # Change mode to object mode
     bpy.ops.object.mode_set(mode="OBJECT")
 
-    ### Add bone constrains ###
-    print("Adding bone constraints...")
-
-    # Change to pose mode
-    bpy.context.view_layer.objects.active = rig
-    bpy.ops.object.mode_set(mode="POSE")
-    #
-    # # Define the hand bones damped track target as the hand middle empty if they were already added
-    # try:
-    #     right_hand_middle_name = bpy.data.objects['right_hand_middle'].name
-    #     # Right Hand Middle Empty exists. Use hand middle as target
-    #     hand_damped_track_target = 'hand_middle'
-    # except:
-    #     # Hand middle empties do not exist. Use hand_index as target
-    #     hand_damped_track_target = 'index'
-
-    # Define the hands LOCKED_TRACK target empty based on the add_fingers_constraints parameter
-    if add_fingers_constraints:
-        hand_locked_track_target = "hand_thumb_cmc"
-    else:
-        hand_locked_track_target = "thumb"
-
-    # Create each constraint
-    for (
-        bone_name,
-        constraint_definitions,
-    ) in ALL_BONES_CONSTRAINT_DEFINITIONS.items():
-        if not isinstance(constraint_definitions, list):
-            raise Exception(f"Constraint definitions for {bone_name} must be a list")
-
-        # If it is a finger bone amd add_fingers_constraints is False continue with the next bone
-        if (
-            not add_fingers_constraints
-            and len(
-                [
-                    finger_part
-                    for finger_part in [
-                        "palm",
-                        "thumb",
-                        "index",
-                        "middle",
-                        "ring",
-                        "pinky",
-                    ]
-                    if finger_part
-                    in constraint_definitions  # TODO: this was inheriting some leftover definition, make sure this is accurate
-                ]
-            )
-            > 0
-        ):
-            continue
-
-        for constraint in constraint_definitions:
-            # if "target" in constraint.keys():
-            #     base_target_name = constraint["target"]
-            #     actual_target_name = get_actual_empty_target_name(empty_names = empty_names,
-            #                                                       base_target_name = base_target_name)
-            #     constraint["target"] = actual_target_name
-            appended_number_string = get_appended_number(parent_object.name)
-            if appended_number_string is not None:
-                if "target" in constraint.keys():
-                    constraint["target"] = constraint["target"] + appended_number_string
-            # Add new constraint determined by type
-            if not use_limit_rotation and constraint["type"] == "LIMIT_ROTATION":
-                continue
-            else:
-                bone_constraint = rig.pose.bones[bone_name].constraints.new(
-                    constraint["type"]
-                )
-
-                # Define aditional parameters based on the type of constraint
-            if constraint["type"] == "LIMIT_ROTATION":
-                bone_constraint.use_limit_x = constraint["use_limit_x"]
-                bone_constraint.min_x = m.radians(constraint["min_x"])
-                bone_constraint.max_x = m.radians(constraint["max_x"])
-                bone_constraint.use_limit_y = constraint["use_limit_y"]
-                bone_constraint.min_y = m.radians(constraint["min_y"])
-                bone_constraint.max_y = m.radians(constraint["max_y"])
-                bone_constraint.use_limit_z = constraint["use_limit_z"]
-                bone_constraint.min_z = m.radians(constraint["min_z"])
-                bone_constraint.max_z = m.radians(constraint["max_z"])
-                bone_constraint.owner_space = constraint["owner_space"]
-                pass
-            elif constraint["type"] == "COPY_LOCATION":
-                bone_constraint.target = bpy.data.objects[constraint["target"]]
-            elif constraint["type"] == "LOCKED_TRACK":
-                bone_constraint.target = bpy.data.objects[constraint["target"]]
-                bone_constraint.track_axis = constraint["track_axis"]
-                bone_constraint.lock_axis = constraint["lock_axis"]
-                bone_constraint.influence = constraint["influence"]
-            elif constraint["type"] == "DAMPED_TRACK":
-                bone_constraint.target = bpy.data.objects[constraint["target"]]
-                bone_constraint.track_axis = constraint["track_axis"]
-            elif constraint["type"] == "IK":
-                bone_constraint.target = bpy.data.objects[constraint["target"]]
-                bone_constraint.pole_target = bpy.data.objects[
-                    constraint["pole_target"]
-                ]
-                bone_constraint.chain_count = constraint["chain_count"]
-                bone_constraint.pole_angle = constraint["pole_angle"]
+    # TODO: make sure this still adds constraints properly
+    add_constraints(
+        rig=rig,
+        add_fingers_constraints=add_fingers_constraints,
+        parent_object=parent_object,
+        use_limit_rotation=use_limit_rotation,
+    )
 
     ### Bake animation to the rig ###
     # Get the empties ending frame
@@ -956,7 +878,7 @@ def add_rig_rigify(
 
 
 def add_rig_by_bone(
-    armature_name: str = "armature_freemocap", # TODO: do either armature or pose name match with "rig_name"?
+    armature_name: str = "armature_freemocap",  # TODO: do either armature or pose name match with "rig_name"?
     pose_name: str = "freemocap_tpose",
     add_ik_constraints: bool = False,
 ) -> bpy.types.Object:
@@ -1109,6 +1031,113 @@ def add_rig_by_bone(
             ik_bone.tail = ik_pole_bones[ik_pole]["tail_position"]
 
     return rig
+
+
+def add_constraints(
+    rig: bpy.types.Object,
+    add_fingers_constraints: bool,
+    parent_object: bpy.types.Object,
+    use_limit_rotation: bool = False,
+) -> None:
+    print("Adding bone constraints...")
+
+    # Change to pose mode
+    bpy.context.view_layer.objects.active = rig
+    bpy.ops.object.mode_set(mode="POSE")
+    #
+    # # Define the hand bones damped track target as the hand middle empty if they were already added
+    # try:
+    #     right_hand_middle_name = bpy.data.objects['right_hand_middle'].name
+    #     # Right Hand Middle Empty exists. Use hand middle as target
+    #     hand_damped_track_target = 'hand_middle'
+    # except:
+    #     # Hand middle empties do not exist. Use hand_index as target
+    #     hand_damped_track_target = 'index'
+
+    # Define the hands LOCKED_TRACK target empty based on the add_fingers_constraints parameter
+    if add_fingers_constraints:
+        hand_locked_track_target = "hand_thumb_cmc"
+    else:
+        hand_locked_track_target = "thumb"
+
+    # Create each constraint
+    for (
+        bone_name,
+        constraint_definitions,
+    ) in ALL_BONES_CONSTRAINT_DEFINITIONS.items():
+        if not isinstance(constraint_definitions, list):
+            raise Exception(f"Constraint definitions for {bone_name} must be a list")
+
+        # If it is a finger bone amd add_fingers_constraints is False continue with the next bone
+        if (
+            not add_fingers_constraints
+            and len(
+                [
+                    finger_part
+                    for finger_part in [
+                        "palm",
+                        "thumb",
+                        "index",
+                        "middle",
+                        "ring",
+                        "pinky",
+                    ]
+                    if finger_part
+                    in constraint_definitions  # TODO: this was inheriting some leftover definition, make sure this is accurate
+                ]
+            )
+            > 0
+        ):
+            continue
+
+        for constraint in constraint_definitions:
+            # if "target" in constraint.keys():
+            #     base_target_name = constraint["target"]
+            #     actual_target_name = get_actual_empty_target_name(empty_names = empty_names,
+            #                                                       base_target_name = base_target_name)
+            #     constraint["target"] = actual_target_name
+            appended_number_string = get_appended_number(parent_object.name)
+            if appended_number_string is not None:
+                if "target" in constraint.keys():
+                    constraint["target"] = constraint["target"] + appended_number_string
+            # Add new constraint determined by type
+            if not use_limit_rotation and constraint["type"] == "LIMIT_ROTATION":
+                continue
+            else:
+                bone_constraint = rig.pose.bones[bone_name].constraints.new(
+                    constraint["type"]
+                )
+
+                # Define aditional parameters based on the type of constraint
+            if constraint["type"] == "LIMIT_ROTATION":
+                bone_constraint.use_limit_x = constraint["use_limit_x"]
+                bone_constraint.min_x = m.radians(constraint["min_x"])
+                bone_constraint.max_x = m.radians(constraint["max_x"])
+                bone_constraint.use_limit_y = constraint["use_limit_y"]
+                bone_constraint.min_y = m.radians(constraint["min_y"])
+                bone_constraint.max_y = m.radians(constraint["max_y"])
+                bone_constraint.use_limit_z = constraint["use_limit_z"]
+                bone_constraint.min_z = m.radians(constraint["min_z"])
+                bone_constraint.max_z = m.radians(constraint["max_z"])
+                bone_constraint.owner_space = constraint["owner_space"]
+                pass
+            elif constraint["type"] == "COPY_LOCATION":
+                bone_constraint.target = bpy.data.objects[constraint["target"]]
+            elif constraint["type"] == "LOCKED_TRACK":
+                bone_constraint.target = bpy.data.objects[constraint["target"]]
+                bone_constraint.track_axis = constraint["track_axis"]
+                bone_constraint.lock_axis = constraint["lock_axis"]
+                bone_constraint.influence = constraint["influence"]
+            elif constraint["type"] == "DAMPED_TRACK":
+                bone_constraint.target = bpy.data.objects[constraint["target"]]
+                bone_constraint.track_axis = constraint["track_axis"]
+            elif constraint["type"] == "IK":
+                bone_constraint.target = bpy.data.objects[constraint["target"]]
+                bone_constraint.pole_target = bpy.data.objects[
+                    constraint["pole_target"]
+                ]
+                bone_constraint.chain_count = constraint["chain_count"]
+                bone_constraint.pole_angle = constraint["pole_angle"]
 
 
 def ensure_rigify():
