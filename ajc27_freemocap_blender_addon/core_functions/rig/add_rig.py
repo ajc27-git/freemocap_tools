@@ -46,7 +46,7 @@ def add_rig(
     bone_data: Dict[str, Dict[str, float]],
     rig_name: str,
     parent_object: bpy.types.Object,
-    add_rig_method: AddRigMethods = AddRigMethods.RIGIFY,
+    add_rig_method: AddRigMethods = AddRigMethods.BY_BONE,
     keep_symmetry: bool = False,
     add_fingers_constraints: bool = False,
     use_limit_rotation: bool = False,
@@ -1060,7 +1060,7 @@ def add_constraints(
     use_limit_rotation: bool = False,
 ) -> None:
     print("Adding bone constraints...")
-
+    # TODO: getting key error in this function with Failed to add rig: 'bpy_prop_collection[key]: key "pelvis.R" not found'
     # Change to pose mode
     bpy.context.view_layer.objects.active = rig
     bpy.ops.object.mode_set(mode="POSE")

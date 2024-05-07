@@ -5,7 +5,7 @@ from typing import List
 import numpy as np
 from ajc27_freemocap_blender_addon.core_functions.load_videos.load_videos import load_videos
 from ajc27_freemocap_blender_addon.core_functions.meshes.attach_mesh_to_rig import attach_mesh_to_rig
-from ajc27_freemocap_blender_addon.core_functions.rig.add_rig import add_rig
+from ajc27_freemocap_blender_addon.core_functions.rig.add_rig import add_rig, AddRigMethods
 from ajc27_freemocap_blender_addon.freemocap_data_handler.utilities.get_or_create_freemocap_data_handler import (
     get_or_create_freemocap_data_handler,
 )
