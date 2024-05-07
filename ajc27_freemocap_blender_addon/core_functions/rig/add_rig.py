@@ -900,6 +900,7 @@ def add_rig_by_bone(
     pose: dict = Pose.FREEMOCAP_TPOSE,
     add_ik_constraints: bool = False,
 ) -> bpy.types.Object:
+    print("Adding rig to scene bone by bone...")
     if armature == Armature.UE_METAHUMAN_SIMPLE:
         armature_name = UE_METAHUMAN_SIMPLE_ARMATURE
     elif armature == Armature.FREEMOCAP:

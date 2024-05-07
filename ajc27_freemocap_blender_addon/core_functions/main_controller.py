@@ -202,6 +202,7 @@ class MainController:
                 bone_data=self.freemocap_data_handler.metadata["bone_data"],
                 rig_name=self.rig_name,
                 parent_object=self._data_parent_object,
+                add_rig_method=AddRigMethods.BY_BONE,
                 keep_symmetry=self.config.add_rig.keep_symmetry,
                 add_fingers_constraints=self.config.add_rig.add_fingers_constraints,
                 use_limit_rotation=self.config.add_rig.use_limit_rotation,
