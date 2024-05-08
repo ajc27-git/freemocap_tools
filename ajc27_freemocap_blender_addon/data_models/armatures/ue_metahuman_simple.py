@@ -43,7 +43,7 @@ armature_ue_metahuman_simple = {
         'parent_bone' : 'neck_01',
         'connected' : True,
         'parent_position' : 'tail',
-        'default_length' : 0,
+        'default_length' : 0.1,
     },
     'clavicle_r': {
         'parent_bone' : 'spine_04',

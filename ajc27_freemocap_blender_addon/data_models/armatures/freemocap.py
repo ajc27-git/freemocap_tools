@@ -43,7 +43,7 @@ armature_freemocap = {
         'parent_bone' : 'neck',
         'connected' : True,
         'parent_position' : 'tail',
-        'default_length' : 0,
+        'default_length' : 0.1,
     },
     'shoulder.R': {
         'parent_bone' : 'spine.001',

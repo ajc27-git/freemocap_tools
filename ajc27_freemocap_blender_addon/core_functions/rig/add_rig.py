@@ -46,7 +46,7 @@ def add_rig(
     bone_data: Dict[str, Dict[str, float]],
     rig_name: str,
     parent_object: bpy.types.Object,
-    add_rig_method: AddRigMethods = AddRigMethods.RIGIFY,
+    add_rig_method: AddRigMethods = AddRigMethods.BY_BONE,
     keep_symmetry: bool = False,
     add_fingers_constraints: bool = False,
     use_limit_rotation: bool = False,
@@ -64,7 +64,12 @@ def add_rig(
             keep_symmetry=keep_symmetry,
         )
     elif add_rig_method == AddRigMethods.BY_BONE:
-        rig = add_rig_by_bone()
+        rig = add_rig_by_bone(
+            bone_data=bone_data,
+            armature=Armature.FREEMOCAP,
+            pose=Pose.FREEMOCAP_TPOSE,
+            add_ik_constraints=False,
+        )
     else:
         raise ValueError(f"Invalid add rig method: {add_rig_method}")
 
@@ -896,6 +901,7 @@ def add_rig_rigify(
 
 
 def add_rig_by_bone(
+    bone_data: Dict[str, Dict[str, float]],
     armature: dict = Armature.FREEMOCAP,
     pose: dict = Pose.FREEMOCAP_TPOSE,
     add_ik_constraints: bool = False,
@@ -909,14 +915,14 @@ def add_rig_by_bone(
 
     # Get rig height as the sum of the major bones length in a standing position. Assume foot declination angle of 23º
     avg_ankle_projection_length = (
-        m.sin(m.radians(23)) * virtual_bones["foot.R"]["median"]
-        + m.sin(m.radians(23)) * virtual_bones["foot.L"]["median"]
+        m.sin(m.radians(23)) * bone_data["foot.R"]["median"]
+        + m.sin(m.radians(23)) * bone_data["foot.L"]["median"]
     ) / 2
     avg_shin_length = (
-        virtual_bones["shin.R"]["median"] + virtual_bones["shin.L"]["median"]
+        bone_data["shin.R"]["median"] + bone_data["shin.L"]["median"]
     ) / 2
     avg_thigh_length = (
-        virtual_bones["thigh.R"]["median"] + virtual_bones["thigh.L"]["median"]
+        bone_data["thigh.R"]["median"] + bone_data["thigh.L"]["median"]
     ) / 2
 
     # Add the armature
@@ -974,15 +980,15 @@ def add_rig_by_bone(
                 rig_bone.head = parent_bone.tail
 
         # Get the bone vector
-        if inv_bone_name_map[bone] not in virtual_bones:
-            bone_vector = mathutils.Vector([0, 0, armature[bone]["default_length"]])
+        if inv_bone_name_map[bone] not in bone_data:
+            bone_vector = mathutils.Vector(
+                [0, 0, armature[bone]["default_length"]]
+            )
         else:
             bone_vector = mathutils.Vector(
-                [0, 0, virtual_bones[inv_bone_name_map[bone]]["median"]]
+                [0, 0, bone_data[inv_bone_name_map[bone]]["median"]]
             )
 
-        # Get rot_vector
-        # rot_vector = mathutils.Vector(pose[bone]['rotation'])
         # Get the rotation matrix
         rotation_matrix = mathutils.Euler(
             mathutils.Vector(pose[bone]["rotation"]),
@@ -990,32 +996,7 @@ def add_rig_by_bone(
         ).to_matrix()
 
         # Rotate the bone vector
-        # rotated_bone_vector = rotation_matrix @ bone_vector
-
         rig_bone.tail = rig_bone.head + rotation_matrix @ bone_vector
-
-        # Set the bone tail using its orientation and length.
-        # Rotate the bone vector in each axis separately
-        # for axis in (0, 1, 2):
-        #     rot_vector = mathutils.Vector([
-        #         pose[bone]['rotation'][0] if axis == 0 else 0,
-        #         pose[bone]['rotation'][1] if axis == 1 else 0,
-        #         pose[bone]['rotation'][2] if axis == 2 else 0
-        #         ])
-
-        #     rotation_matrix = mathutils.Matrix.Rotation(
-        #         rot_vector.length,
-        #         4,
-        #         rot_vector.normalized()
-        #         )
-
-        #     rig_bone.tail = (
-        #         rig_bone.head
-        #         + rotation_matrix @ bone_vector
-        #         )
-
-        #     # Update the bone vector
-        #     bone_vector = rig_bone.tail - rig_bone.head
 
         # Assign the roll to the bone
         rig_bone.roll = pose[bone]["roll"]
