@@ -906,6 +906,7 @@ def add_rig_by_bone(
     pose: dict = Pose.FREEMOCAP_TPOSE,
     add_ik_constraints: bool = False,
 ) -> bpy.types.Object:
+    print("Adding rig to scene bone by bone...")
     if armature == Armature.UE_METAHUMAN_SIMPLE:
         armature_name = UE_METAHUMAN_SIMPLE_ARMATURE
     elif armature == Armature.FREEMOCAP:
@@ -1041,7 +1042,7 @@ def add_constraints(
     use_limit_rotation: bool = False,
 ) -> None:
     print("Adding bone constraints...")
-
+    # TODO: getting key error in this function with Failed to add rig: 'bpy_prop_collection[key]: key "pelvis.R" not found'
     # Change to pose mode
     bpy.context.view_layer.objects.active = rig
     bpy.ops.object.mode_set(mode="POSE")
