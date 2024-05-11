@@ -1067,6 +1067,10 @@ def add_constraints(
         bone_name,
         constraint_definitions,
     ) in ALL_BONES_CONSTRAINT_DEFINITIONS.items():
+        # If pose bone does not exist, skip it
+        if bone_name not in rig.pose.bones:
+            continue
+        
         if not isinstance(constraint_definitions, list):
             raise Exception(f"Constraint definitions for {bone_name} must be a list")
 
