@@ -107,7 +107,10 @@ def log_bone_statistics(bones: Dict[str, Dict[str, Any]], type: str):
         # Get the statistic values
         median_string = str(round(bone['median'] * 100, 7))
         stdev_string = str(round(bone['stdev'] * 100, 7))
-        cv_string = str(round(bone['stdev'] / bone['median'] * 100, 4))
+        try:
+            cv_string = str(round(bone['stdev'] / bone['median'] * 100, 4))
+        except ZeroDivisionError:
+            cv_string = 'N/A'
         log_string += f"{name:<15} {median_string:>12} {stdev_string:>12} {cv_string:>12}\n"
 
     print(log_string)
