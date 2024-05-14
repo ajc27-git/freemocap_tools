@@ -81,6 +81,7 @@ def add_rig(
         rig=rig,
         add_fingers_constraints=add_fingers_constraints,
         parent_object=parent_object,
+        armature=Armature.FREEMOCAP,
         use_limit_rotation=use_limit_rotation,
     )
 
@@ -1039,8 +1040,16 @@ def add_constraints(
     rig: bpy.types.Object,
     add_fingers_constraints: bool,
     parent_object: bpy.types.Object,
+    armature: dict = Armature.FREEMOCAP,
     use_limit_rotation: bool = False,
 ) -> None:
+    if armature == Armature.UE_METAHUMAN_SIMPLE:
+        armature_name = UE_METAHUMAN_SIMPLE_ARMATURE
+    elif armature == Armature.FREEMOCAP:
+        armature_name = FREEMOCAP_ARMATURE
+    else:
+        raise ValueError("Invalid armature name")
+
     print("Adding bone constraints...")
     # TODO: getting key error in this function with Failed to add rig: 'bpy_prop_collection[key]: key "pelvis.R" not found'
     # Change to pose mode
@@ -1110,9 +1119,13 @@ def add_constraints(
             if not use_limit_rotation and constraint["type"] == "LIMIT_ROTATION":
                 continue
             else:
-                bone_constraint = rig.pose.bones[bone_name].constraints.new(
-                    constraint["type"]
-                )
+                try:
+                    bone_constraint = rig.pose.bones[bone_name_map[armature_name][bone_name]].constraints.new(
+                        constraint["type"]
+                    )
+                except:
+                    print(f"Failed to add rig: {bone_name} constraint {constraint['type']}")
+                    continue
 
                 # Define aditional parameters based on the type of constraint
             if constraint["type"] == "LIMIT_ROTATION":
