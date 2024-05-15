@@ -233,6 +233,9 @@ class MainController:
     def attach_rigid_body_mesh_to_rig(self):
         if self.rig is None:
             raise ValueError("Rig is None!")
+        
+        if self.empties is None:
+            raise ValueError("Empties have not been created yet!")
 
         try:
             print("Adding rigid_body_bone_meshes...")
@@ -256,7 +259,6 @@ class MainController:
             attach_skelly_mesh_to_rig(
                 rig=self.rig,
                 body_dimensions=body_dimensions,
-                empties=self.empties
             )
         except Exception as e:
             print(f"Failed to attach mesh to rig: {e}")

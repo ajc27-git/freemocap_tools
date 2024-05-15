@@ -47,7 +47,6 @@ class Pose:
 def attach_skelly_mesh_to_rig(
     rig: bpy.types.Object,
     body_dimensions: Dict[str, float],
-    empties: Dict[str, bpy.types.Object],
     add_rig_method: AddSkellyMeshMethods = AddSkellyMeshMethods.BY_BONE_MESH,
 ) -> None:
     # Change to object mode
@@ -56,20 +55,16 @@ def attach_skelly_mesh_to_rig(
 
     if add_rig_method == AddSkellyMeshMethods.BY_BONE_MESH:
         attach_skelly_by_bone_mesh(
-            rig,
-            empties,
+            rig=rig,
         )
     elif add_rig_method == AddSkellyMeshMethods.COMPLETE_MESH:
         attach_skelly_complete_mesh(
-            rig,
-            body_dimensions,
-            empties
+            rig=rig,
+            body_dimensions=body_dimensions,
         )    
 
 def attach_skelly_by_bone_mesh(
     rig: bpy.types.Object,
-    empties: Dict[str, bpy.types.Object],
-    skelly_bones_path: str = SKELLY_BONES_PATH,
     armature: dict = Armature.FREEMOCAP,
     pose: dict = Pose.FREEMOCAP_TPOSE,
 ) -> None:
@@ -206,7 +201,6 @@ def attach_skelly_by_bone_mesh(
 def attach_skelly_complete_mesh(
     rig: bpy.types.Object,
     body_dimensions: Dict[str, float],
-    empties: Dict[str, bpy.types.Object],
     skelly_mesh_path: str = SKELLY_MESH_PATH
 ) -> None:
     
