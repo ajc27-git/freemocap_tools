@@ -2,27 +2,19 @@ from enum import Enum
 import traceback
 from pathlib import Path
 from typing import Dict
+import bpy
 from mathutils import Vector, Matrix, Euler
 
-import bpy
-from ajc27_freemocap_blender_addon import PACKAGE_ROOT_PATH
 
+from ajc27_freemocap_blender_addon import PACKAGE_ROOT_PATH
 from ajc27_freemocap_blender_addon.system.constants import (
     FREEMOCAP_ARMATURE,
     UE_METAHUMAN_SIMPLE_ARMATURE,
 )
-
+from ajc27_freemocap_blender_addon.data_models.data_references import Armature, Pose
 from ajc27_freemocap_blender_addon.data_models.armatures.bone_name_map import (
     bone_name_map,
 )
-
-from ajc27_freemocap_blender_addon.data_models.armatures.freemocap import armature_freemocap
-from ajc27_freemocap_blender_addon.data_models.armatures.ue_metahuman_simple import armature_ue_metahuman_simple
-from ajc27_freemocap_blender_addon.data_models.poses.freemocap_apose import freemocap_apose
-from ajc27_freemocap_blender_addon.data_models.poses.freemocap_tpose import freemocap_tpose
-from ajc27_freemocap_blender_addon.data_models.poses.ue_metahuman_default import ue_metahuman_default
-from ajc27_freemocap_blender_addon.data_models.poses.ue_metahuman_tpose import ue_metahuman_tpose
-
 from ajc27_freemocap_blender_addon.data_models.meshes.skelly_bones import (
     SKELLY_BONES
 )
@@ -34,34 +26,26 @@ class AddSkellyMeshMethods(Enum):
     BY_BONE_MESH = "by_bone_mesh"
     COMPLETE_MESH = "complete_mesh"
 
-class Armature:
-    FREEMOCAP = armature_freemocap
-    UE_METAHUMAN_SIMPLE = armature_ue_metahuman_simple
-
-class Pose:
-    FREEMOCAP_APOSE = freemocap_apose
-    FREEMOCAP_TPOSE = freemocap_tpose
-    UE_METAHUMAN_DEFAULT = ue_metahuman_default
-    UE_METAHUMAN_TPOSE = ue_metahuman_tpose
-
 def attach_skelly_mesh_to_rig(
     rig: bpy.types.Object,
     body_dimensions: Dict[str, float],
-    add_rig_method: AddSkellyMeshMethods = AddSkellyMeshMethods.BY_BONE_MESH,
+    add_mesh_method: AddSkellyMeshMethods = AddSkellyMeshMethods.BY_BONE_MESH,
 ) -> None:
     # Change to object mode
     if bpy.context.selected_objects != []:
         bpy.ops.object.mode_set(mode='OBJECT')
 
-    if add_rig_method == AddSkellyMeshMethods.BY_BONE_MESH:
+    if add_mesh_method == AddSkellyMeshMethods.BY_BONE_MESH:
         attach_skelly_by_bone_mesh(
             rig=rig,
         )
-    elif add_rig_method == AddSkellyMeshMethods.COMPLETE_MESH:
+    elif add_mesh_method == AddSkellyMeshMethods.COMPLETE_MESH:
         attach_skelly_complete_mesh(
             rig=rig,
             body_dimensions=body_dimensions,
-        )    
+        )
+    else:
+        raise ValueError("Invalid add_mesh_method")    
 
 def attach_skelly_by_bone_mesh(
     rig: bpy.types.Object,

@@ -13,7 +13,6 @@ from ajc27_freemocap_blender_addon.system.constants import (
 from ajc27_freemocap_blender_addon.data_models.bones.bone_constraints import (
     ALL_BONES_CONSTRAINT_DEFINITIONS,
 )
-from ajc27_freemocap_blender_addon.data_models.bones.virtual_bones import virtual_bones
 from ajc27_freemocap_blender_addon.data_models.bones.ik_control_bones import (
     ik_control_bones,
 )
@@ -21,26 +20,12 @@ from ajc27_freemocap_blender_addon.data_models.bones.ik_pole_bones import ik_pol
 from ajc27_freemocap_blender_addon.data_models.armatures.bone_name_map import (
     bone_name_map,
 )
-from ajc27_freemocap_blender_addon.data_models.armatures.freemocap import armature_freemocap
-from ajc27_freemocap_blender_addon.data_models.armatures.ue_metahuman_simple import armature_ue_metahuman_simple
-from ajc27_freemocap_blender_addon.data_models.poses.freemocap_apose import freemocap_apose
-from ajc27_freemocap_blender_addon.data_models.poses.freemocap_tpose import freemocap_tpose
-from ajc27_freemocap_blender_addon.data_models.poses.ue_metahuman_default import ue_metahuman_default
-from ajc27_freemocap_blender_addon.data_models.poses.ue_metahuman_tpose import ue_metahuman_tpose
+from ajc27_freemocap_blender_addon.data_models.data_references import Armature, Pose
+
 
 class AddRigMethods(Enum):
     RIGIFY = "rigify"
     BY_BONE = "by_bone"
-
-class Armature:
-    FREEMOCAP = armature_freemocap
-    UE_METAHUMAN_SIMPLE = armature_ue_metahuman_simple
-
-class Pose:
-    FREEMOCAP_APOSE = freemocap_apose
-    FREEMOCAP_TPOSE = freemocap_tpose
-    UE_METAHUMAN_DEFAULT = ue_metahuman_default
-    UE_METAHUMAN_TPOSE = ue_metahuman_tpose
 
 def add_rig(
     bone_data: Dict[str, Dict[str, float]],
