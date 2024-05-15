@@ -714,13 +714,16 @@ def add_rig(empty_names: List[str],
 
         # Create each constraint
         for bone_name, constraint_definitions in ALL_BONES_CONSTRAINT_DEFINITIONS.items():
+            if bone_name not in rig.pose.bones:
+                continue
+
             if not isinstance(constraint_definitions, list):
                 raise Exception(f'Constraint definitions for {bone_name} must be a list')
             
             # If it is a finger bone amd add_fingers_constraints is False continue with the next bone
             if not add_fingers_constraints and len(
                     [finger_part for finger_part in ['palm', 'thumb', 'index', 'middle', 'ring', 'pinky'] if
-                     finger_part in bone_constraint_definition]) > 0:
+                     finger_part in constraint_definitions]) > 0:
                 continue
 
             for constraint in constraint_definitions:
