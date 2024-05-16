@@ -1009,16 +1009,16 @@ def add_rig_by_bone(
             ik_bone = rig.data.edit_bones.new(ik_control)
             ik_bone.head = rig.data.edit_bones[
                 bone_name_map[armature_name][
-                    ik_control_bones[ik_control]["controlled_bone"]
+                    ik_control_bones[ik_control].controlled_bone
                 ]
             ].head
             ik_bone.tail = ik_bone.head + mathutils.Vector(
-                ik_control_bones[ik_control]["tail_relative_position"]
+                ik_control_bones[ik_control].tail_relative_position
             )
         for ik_pole in ik_pole_bones:
             ik_bone = rig.data.edit_bones.new(ik_pole)
-            ik_bone.head = ik_pole_bones[ik_pole]["head_position"]
-            ik_bone.tail = ik_pole_bones[ik_pole]["tail_position"]
+            ik_bone.head = ik_pole_bones[ik_pole].head_position
+            ik_bone.tail = ik_pole_bones[ik_pole].tail_position
 
     return rig
 
