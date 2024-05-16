@@ -5,11 +5,11 @@ from ajc27_freemocap_blender_addon.data_models.poses.freemocap_tpose import free
 from ajc27_freemocap_blender_addon.data_models.poses.ue_metahuman_default import ue_metahuman_default
 from ajc27_freemocap_blender_addon.data_models.poses.ue_metahuman_tpose import ue_metahuman_tpose
 
-class Armature:
+class ArmatureType:
     FREEMOCAP = armature_freemocap
     UE_METAHUMAN_SIMPLE = armature_ue_metahuman_simple
 
-class Pose:
+class PoseType:
     FREEMOCAP_APOSE = freemocap_apose
     FREEMOCAP_TPOSE = freemocap_tpose
     UE_METAHUMAN_DEFAULT = ue_metahuman_default

@@ -2,6 +2,7 @@ from enum import Enum
 import traceback
 from pathlib import Path
 from typing import Dict
+from ajc27_freemocap_blender_addon.data_models.poses.pose_element import PoseElement
 import bpy
 from mathutils import Vector, Matrix, Euler
 
@@ -11,7 +12,7 @@ from ajc27_freemocap_blender_addon.system.constants import (
     FREEMOCAP_ARMATURE,
     UE_METAHUMAN_SIMPLE_ARMATURE,
 )
-from ajc27_freemocap_blender_addon.data_models.data_references import Armature, Pose
+from ajc27_freemocap_blender_addon.data_models.data_references import ArmatureType, PoseType
 from ajc27_freemocap_blender_addon.data_models.armatures.bone_name_map import (
     bone_name_map,
 )
@@ -49,13 +50,13 @@ def attach_skelly_mesh_to_rig(
 
 def attach_skelly_by_bone_mesh(
     rig: bpy.types.Object,
-    armature: dict = Armature.FREEMOCAP,
-    pose: dict = Pose.FREEMOCAP_TPOSE,
+    armature: dict = ArmatureType.FREEMOCAP,
+    pose: Dict[str, PoseElement] = PoseType.FREEMOCAP_TPOSE,
 ) -> None:
     
-    if armature == Armature.UE_METAHUMAN_SIMPLE:
+    if armature == ArmatureType.UE_METAHUMAN_SIMPLE:
         armature_name = UE_METAHUMAN_SIMPLE_ARMATURE
-    elif armature == Armature.FREEMOCAP:
+    elif armature == ArmatureType.FREEMOCAP:
         armature_name = FREEMOCAP_ARMATURE
     else:
         raise ValueError("Invalid armature name")
@@ -109,7 +110,7 @@ def attach_skelly_by_bone_mesh(
             rotation_matrix = Matrix.Identity(4)
         else:
             rotation_matrix = Euler(
-                Vector(pose[bone_name_map[armature_name][mesh]]['rotation']),
+                Vector(pose[bone_name_map[armature_name][mesh]].rotation),
                 'XYZ',
             ).to_matrix()
 

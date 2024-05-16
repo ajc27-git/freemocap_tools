@@ -2,6 +2,7 @@ from enum import Enum
 import math as m
 import re
 from typing import Dict, List
+from ajc27_freemocap_blender_addon.data_models.poses.pose_element import PoseElement
 import bpy
 import mathutils
 import addon_utils
@@ -20,7 +21,7 @@ from ajc27_freemocap_blender_addon.data_models.bones.ik_pole_bones import ik_pol
 from ajc27_freemocap_blender_addon.data_models.armatures.bone_name_map import (
     bone_name_map,
 )
-from ajc27_freemocap_blender_addon.data_models.data_references import Armature, Pose
+from ajc27_freemocap_blender_addon.data_models.data_references import ArmatureType, PoseType
 
 
 class AddRigMethods(Enum):
@@ -51,8 +52,8 @@ def add_rig(
     elif add_rig_method == AddRigMethods.BY_BONE:
         rig = add_rig_by_bone(
             bone_data=bone_data,
-            armature=Armature.FREEMOCAP,
-            pose=Pose.FREEMOCAP_TPOSE,
+            armature=ArmatureType.FREEMOCAP,
+            pose=PoseType.FREEMOCAP_TPOSE,
             add_ik_constraints=False,
         )
     else:
@@ -66,7 +67,7 @@ def add_rig(
         rig=rig,
         add_fingers_constraints=add_fingers_constraints,
         parent_object=parent_object,
-        armature=Armature.FREEMOCAP,
+        armature=ArmatureType.FREEMOCAP,
         use_limit_rotation=use_limit_rotation,
     )
 
@@ -888,14 +889,14 @@ def add_rig_rigify(
 
 def add_rig_by_bone(
     bone_data: Dict[str, Dict[str, float]],
-    armature: dict = Armature.FREEMOCAP,
-    pose: dict = Pose.FREEMOCAP_TPOSE,
+    armature: dict = ArmatureType.FREEMOCAP,
+    pose: Dict[str, PoseElement] = PoseType.FREEMOCAP_TPOSE,
     add_ik_constraints: bool = False,
 ) -> bpy.types.Object:
     print("Adding rig to scene bone by bone...")
-    if armature == Armature.UE_METAHUMAN_SIMPLE:
+    if armature == ArmatureType.UE_METAHUMAN_SIMPLE:
         armature_name = UE_METAHUMAN_SIMPLE_ARMATURE
-    elif armature == Armature.FREEMOCAP:
+    elif armature == ArmatureType.FREEMOCAP:
         armature_name = FREEMOCAP_ARMATURE
     else:
         raise ValueError("Invalid armature name")
@@ -978,7 +979,7 @@ def add_rig_by_bone(
 
         # Get the rotation matrix
         rotation_matrix = mathutils.Euler(
-            mathutils.Vector(pose[bone]["rotation"]),
+            mathutils.Vector(pose[bone].rotation),
             "XYZ",
         ).to_matrix()
 
@@ -986,7 +987,7 @@ def add_rig_by_bone(
         rig_bone.tail = rig_bone.head + rotation_matrix @ bone_vector
 
         # Assign the roll to the bone
-        rig_bone.roll = pose[bone]["roll"]
+        rig_bone.roll = pose[bone].roll
 
         # Parent the bone if its parent exists
         if parent_name != "root":
@@ -1025,12 +1026,12 @@ def add_constraints(
     rig: bpy.types.Object,
     add_fingers_constraints: bool,
     parent_object: bpy.types.Object,
-    armature: dict = Armature.FREEMOCAP,
+    armature: dict = ArmatureType.FREEMOCAP,
     use_limit_rotation: bool = False,
 ) -> None:
-    if armature == Armature.UE_METAHUMAN_SIMPLE:
+    if armature == ArmatureType.UE_METAHUMAN_SIMPLE:
         armature_name = UE_METAHUMAN_SIMPLE_ARMATURE
-    elif armature == Armature.FREEMOCAP:
+    elif armature == ArmatureType.FREEMOCAP:
         armature_name = FREEMOCAP_ARMATURE
     else:
         raise ValueError("Invalid armature name")
