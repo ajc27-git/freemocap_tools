@@ -2,7 +2,7 @@ from copy import deepcopy
 from typing import Dict, Any
 
 import numpy as np
-from ajc27_freemocap_blender_addon.data_models.bones.bone_definitions import BONE_DEFINITIONS
+from ajc27_freemocap_blender_addon.data_models.bones.bone_definitions import BONE_DEFINITIONS, BoneDefinition
 from ajc27_freemocap_blender_addon.data_models.mediapipe_names.mediapipe_heirarchy import MEDIAPIPE_HIERARCHY
 
 from .calculate_body_dimensions import calculate_body_dimensions
@@ -11,7 +11,7 @@ from ...handler import FreemocapDataHandler
 
 
 def enforce_rigid_bones(handler: FreemocapDataHandler,
-                        bones: Dict[str, Dict[str, Any]] = BONE_DEFINITIONS) -> FreemocapDataHandler:
+                        bones: Dict[str, BoneDefinition] = BONE_DEFINITIONS) -> FreemocapDataHandler:
     print('Enforcing rigid bones - altering bone lengths to ensure they are the same length on each frame...')
     original_trajectories = handler.trajectories
     updated_trajectories = deepcopy(original_trajectories)
@@ -28,12 +28,12 @@ def enforce_rigid_bones(handler: FreemocapDataHandler,
     for name, bone in bones.items():
         print(f"Enforcing rigid length for bone: {name}...")
 
-        desired_length = bone['median']
+        desired_length = bone.median
 
-        head_name = bone['head']
-        tail_name = bone['tail']
+        head_name = bone.head
+        tail_name = bone.tail
 
-        for frame_number, raw_length in enumerate(bone['lengths']):
+        for frame_number, raw_length in enumerate(bone.lengths):
             if np.isnan(raw_length) or raw_length == 0:
                 continue
 
@@ -99,16 +99,16 @@ def translate_trajectory_and_its_children(name: str,
     return updated_trajectories
 
 
-def log_bone_statistics(bones: Dict[str, Dict[str, Any]], type: str):
+def log_bone_statistics(bones: Dict[str, BoneDefinition], type: str):
     log_string = f'\n\n[{type}] Bone Length Statistics:\n'
     header_string = f"{'BONE':<15} {'MEDIAN (cm)':>12} {'STDEV (cm)':>12} {'CV (%)':>12}"
     log_string += header_string + '\n'
     for name, bone in bones.items():
         # Get the statistic values
-        median_string = str(round(bone['median'] * 100, 7))
-        stdev_string = str(round(bone['stdev'] * 100, 7))
+        median_string = str(round(bone.median * 100, 7))
+        stdev_string = str(round(bone.stdev * 100, 7))
         try:
-            cv_string = str(round(bone['stdev'] / bone['median'] * 100, 4))
+            cv_string = str(round(bone.stdev / bone.median * 100, 4))
         except ZeroDivisionError:
             cv_string = 'N/A'
         log_string += f"{name:<15} {median_string:>12} {stdev_string:>12} {cv_string:>12}\n"
