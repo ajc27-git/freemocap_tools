@@ -76,9 +76,9 @@ def attach_skelly_by_bone_mesh(
     #  Iterate through the skelly bones dictionary and update the
     #  default origin, length and normalized direction
     for mesh in SKELLY_BONES:
-        SKELLY_BONES[mesh]['bones_origin'] = Vector(rig.data.edit_bones[bone_name_map[armature_name][SKELLY_BONES[mesh]['bones'][0]]].head)
-        SKELLY_BONES[mesh]['bones_end'] = Vector(rig.data.edit_bones[bone_name_map[armature_name][SKELLY_BONES[mesh]['bones'][-1]]].tail)
-        SKELLY_BONES[mesh]['bones_length'] = (SKELLY_BONES[mesh]['bones_end'] - SKELLY_BONES[mesh]['bones_origin']).length
+        SKELLY_BONES[mesh].bones_origin = Vector(rig.data.edit_bones[bone_name_map[armature_name][SKELLY_BONES[mesh].bones[0]]].head)
+        SKELLY_BONES[mesh].bones_end = Vector(rig.data.edit_bones[bone_name_map[armature_name][SKELLY_BONES[mesh].bones[-1]]].tail)
+        SKELLY_BONES[mesh].bones_length = (SKELLY_BONES[mesh].bones_end - SKELLY_BONES[mesh].bones_origin).length
 
     # Change to object mode
     bpy.ops.object.mode_set(mode='OBJECT')
@@ -116,37 +116,37 @@ def attach_skelly_by_bone_mesh(
             ).to_matrix()
 
         # Move the Skelly part to the equivalent bone's head location
-        skelly_mesh.location = (SKELLY_BONES[mesh]['bones_origin']
-            + rotation_matrix @ Vector(SKELLY_BONES[mesh]['position_offset'])
+        skelly_mesh.location = (SKELLY_BONES[mesh].bones_origin
+            + rotation_matrix @ Vector(SKELLY_BONES[mesh].position_offset)
         )
 
         # Rotate the part mesh with the rotation matrix
         skelly_mesh.rotation_euler = rotation_matrix.to_euler('XYZ')
 
         # Get the bone length
-        if SKELLY_BONES[mesh]['adjust_rotation']:
-            bone_length = (SKELLY_BONES[mesh]['bones_end'] - (SKELLY_BONES[mesh]['bones_origin'] + (rotation_matrix @ Vector(SKELLY_BONES[mesh]['position_offset'])))).length
+        if SKELLY_BONES[mesh].adjust_rotation:
+            bone_length = (SKELLY_BONES[mesh].bones_end - (SKELLY_BONES[mesh].bones_origin + (rotation_matrix @ Vector(SKELLY_BONES[mesh].position_offset)))).length
         elif mesh == 'head':
             # bone_length = rig.data.edit_bones[bone_name_map[armature_name][SKELLY_BONES[mesh]['bones'][0]]].length
-            bone_length = SKELLY_BONES['spine']['bones_length'] / 3.123 # Head length to spine length ratio
+            bone_length = SKELLY_BONES['spine'].bones_length / 3.123 # Head length to spine length ratio
         else:
-            bone_length = SKELLY_BONES[mesh]['bones_length']
+            bone_length = SKELLY_BONES[mesh].bones_length
 
         # Get the mesh length
-        mesh_length = SKELLY_BONES[mesh]['mesh_length']
+        mesh_length = SKELLY_BONES[mesh].mesh_length
 
         # Resize the Skelly part to match the bone length
         skelly_mesh.scale = (bone_length / mesh_length, bone_length / mesh_length, bone_length / mesh_length)
 
         # Adjust rotation if necessary
-        if SKELLY_BONES[mesh]['adjust_rotation']:
+        if SKELLY_BONES[mesh].adjust_rotation:
             # Save the Skelly part's original location
             part_location = Vector(skelly_mesh.location)
 
             # Get the direction vector
-            bone_vector = SKELLY_BONES[mesh]['bones_end'] - SKELLY_BONES[mesh]['bones_origin']
+            bone_vector = SKELLY_BONES[mesh].bones_end - SKELLY_BONES[mesh].bones_origin
             # Get new bone vector after applying the position offset
-            new_bone_vector = SKELLY_BONES[mesh]['bones_end'] - part_location
+            new_bone_vector = SKELLY_BONES[mesh].bones_end - part_location
             
             # Apply the rotations to the Skelly part
             bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
