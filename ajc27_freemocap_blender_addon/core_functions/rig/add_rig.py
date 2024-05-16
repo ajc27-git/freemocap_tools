@@ -2,6 +2,7 @@ from enum import Enum
 import math as m
 import re
 from typing import Dict, List
+from ajc27_freemocap_blender_addon.data_models.armatures.armature_bone_info import ArmatureBoneInfo
 from ajc27_freemocap_blender_addon.data_models.poses.pose_element import PoseElement
 import bpy
 import mathutils
@@ -889,7 +890,7 @@ def add_rig_rigify(
 
 def add_rig_by_bone(
     bone_data: Dict[str, Dict[str, float]],
-    armature: dict = ArmatureType.FREEMOCAP,
+    armature: Dict[str, ArmatureBoneInfo] = ArmatureType.FREEMOCAP,
     pose: Dict[str, PoseElement] = PoseType.FREEMOCAP_TPOSE,
     add_ik_constraints: bool = False,
 ) -> bpy.types.Object:
@@ -944,7 +945,7 @@ def add_rig_by_bone(
     for bone in armature:
 
         # Get the reference to the parent of the bone if its not root
-        parent_name = armature[bone]["parent_bone"]
+        parent_name = armature[bone].parent_bone
         if parent_name != "root":
             parent_bone = rig.data.edit_bones[parent_name]
 
@@ -962,15 +963,15 @@ def add_rig_by_bone(
             )
         else:
             # Set the bone position relative to its parent
-            if armature[bone]["parent_position"] == "head":
+            if armature[bone].parent_position == "head":
                 rig_bone.head = parent_bone.head
-            elif armature[bone]["parent_position"] == "tail":
+            elif armature[bone].parent_position == "tail":
                 rig_bone.head = parent_bone.tail
 
         # Get the bone vector
         if inv_bone_name_map[bone] not in bone_data:
             bone_vector = mathutils.Vector(
-                [0, 0, armature[bone]["default_length"]]
+                [0, 0, armature[bone].default_length]
             )
         else:
             bone_vector = mathutils.Vector(
@@ -992,7 +993,7 @@ def add_rig_by_bone(
         # Parent the bone if its parent exists
         if parent_name != "root":
             rig_bone.parent = parent_bone
-            rig_bone.use_connect = armature[bone]["connected"]
+            rig_bone.use_connect = armature[bone].connected
 
     # Special armature conditions
     if armature_name == UE_METAHUMAN_SIMPLE_ARMATURE:
@@ -1026,7 +1027,7 @@ def add_constraints(
     rig: bpy.types.Object,
     add_fingers_constraints: bool,
     parent_object: bpy.types.Object,
-    armature: dict = ArmatureType.FREEMOCAP,
+    armature: Dict[str, ArmatureBoneInfo] = ArmatureType.FREEMOCAP,
     use_limit_rotation: bool = False,
 ) -> None:
     if armature == ArmatureType.UE_METAHUMAN_SIMPLE:

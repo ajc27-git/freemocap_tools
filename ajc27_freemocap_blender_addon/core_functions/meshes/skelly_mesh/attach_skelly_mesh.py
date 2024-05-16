@@ -2,6 +2,7 @@ from enum import Enum
 import traceback
 from pathlib import Path
 from typing import Dict
+from ajc27_freemocap_blender_addon.data_models.armatures.armature_bone_info import ArmatureBoneInfo
 from ajc27_freemocap_blender_addon.data_models.poses.pose_element import PoseElement
 import bpy
 from mathutils import Vector, Matrix, Euler
@@ -50,7 +51,7 @@ def attach_skelly_mesh_to_rig(
 
 def attach_skelly_by_bone_mesh(
     rig: bpy.types.Object,
-    armature: dict = ArmatureType.FREEMOCAP,
+    armature: Dict[str, ArmatureBoneInfo] = ArmatureType.FREEMOCAP,
     pose: Dict[str, PoseElement] = PoseType.FREEMOCAP_TPOSE,
 ) -> None:
     
