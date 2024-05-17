@@ -1,3 +1,4 @@
+from dataclasses import asdict, is_dataclass
 import json
 import pickle
 from pathlib import Path
@@ -135,6 +136,8 @@ class FreemocapDataSaver:
                         metadata[key][sub_key] = str(sub_value)
                     else:
                         pass
+            elif is_dataclass(value):
+                metadata[key] = asdict(value)
             else:
                 pass
 
