@@ -122,6 +122,9 @@ class FreemocapDataSaver:
         metadata_path = Path(path) / "metadata.json"
         metadata = self.handler.metadata
 
+        if metadata is None:
+            metadata = {}
+
         # convert numpy arrays to lists, Paths to strings, etc
         for key, value in metadata.items():
             if isinstance(value, np.ndarray):
@@ -134,9 +137,13 @@ class FreemocapDataSaver:
                         metadata[key][sub_key] = sub_value.tolist()
                     elif isinstance(sub_value, Path):
                         metadata[key][sub_key] = str(sub_value)
+                    elif is_dataclass(sub_value):
+                        metadata[key][sub_key] = asdict(sub_value)
                     else:
                         pass
             elif is_dataclass(value):
+                print(key)
+                print(asdict(value))
                 metadata[key] = asdict(value)
             else:
                 pass

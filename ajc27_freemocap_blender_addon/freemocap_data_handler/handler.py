@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import List, Union, Dict, Any
+from typing import List, Optional, Union, Dict, Any
 
 import numpy as np
 from ajc27_freemocap_blender_addon.core_functions.empties.creation.create_virtual_trajectories import \
@@ -32,7 +32,7 @@ class FreemocapDataHandler:
         return cls(freemocap_data=freemocap_data)
 
     @property
-    def metadata(self) -> Dict[Any, Any]:
+    def metadata(self) -> Optional[Dict[Any, Any]]:
         return self.freemocap_data.metadata
 
     @property
@@ -423,7 +423,7 @@ class FreemocapDataHandler:
 
     def mark_processing_stage(self,
                               name: str,
-                              metadata: dict = None,
+                              metadata: Optional[dict] = None,
                               overwrite: bool = True):
         """
         Mark the current state of the data as a processing stage (e.g. "raw", "reoriented", etc.)
