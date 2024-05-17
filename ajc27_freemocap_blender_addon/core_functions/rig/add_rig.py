@@ -11,6 +11,10 @@ import addon_utils
 from ajc27_freemocap_blender_addon.system.constants import (
     FREEMOCAP_ARMATURE,
     UE_METAHUMAN_SIMPLE_ARMATURE,
+    FREEMOCAP_TPOSE,
+    FREEMOCAP_APOSE,
+    UE_METAHUMAN_DEFAULT,
+    UE_METAHUMAN_TPOSE,
 )
 from ajc27_freemocap_blender_addon.data_models.bones.bone_constraints import (
     ALL_BONES_CONSTRAINT_DEFINITIONS,
@@ -69,6 +73,7 @@ def add_rig(
         add_fingers_constraints=add_fingers_constraints,
         parent_object=parent_object,
         armature=ArmatureType.FREEMOCAP,
+        pose=PoseType.FREEMOCAP_TPOSE,
         use_limit_rotation=use_limit_rotation,
     )
 
@@ -1028,6 +1033,7 @@ def add_constraints(
     add_fingers_constraints: bool,
     parent_object: bpy.types.Object,
     armature: Dict[str, ArmatureBoneInfo] = ArmatureType.FREEMOCAP,
+    pose: Dict[str, PoseElement] = PoseType.FREEMOCAP_TPOSE,
     use_limit_rotation: bool = False,
 ) -> None:
     if armature == ArmatureType.UE_METAHUMAN_SIMPLE:
@@ -1036,6 +1042,17 @@ def add_constraints(
         armature_name = FREEMOCAP_ARMATURE
     else:
         raise ValueError("Invalid armature name")
+    
+    if pose == PoseType.FREEMOCAP_TPOSE:
+        pose_name = FREEMOCAP_TPOSE
+    elif pose == PoseType.FREEMOCAP_APOSE:
+        pose_name = FREEMOCAP_APOSE
+    elif pose == PoseType.UE_METAHUMAN_DEFAULT:
+        pose_name = UE_METAHUMAN_DEFAULT
+    elif pose == PoseType.UE_METAHUMAN_TPOSE:
+        pose_name = UE_METAHUMAN_TPOSE
+    else:
+        raise ValueError("Invalid pose name")
 
     print("Adding bone constraints...")
     # TODO: getting key error in this function with Failed to add rig: 'bpy_prop_collection[key]: key "pelvis.R" not found'
@@ -1051,12 +1068,6 @@ def add_constraints(
     # except:
     #     # Hand middle empties do not exist. Use hand_index as target
     #     hand_damped_track_target = 'index'
-
-    # Define the hands LOCKED_TRACK target empty based on the add_fingers_constraints parameter
-    if add_fingers_constraints:
-        hand_locked_track_target = "hand_thumb_cmc"
-    else:
-        hand_locked_track_target = "thumb"
 
     # Create each constraint
     for (
@@ -1131,8 +1142,8 @@ def add_constraints(
                 bone_constraint.target = bpy.data.objects[constraint["target"]]
             elif constraint["type"] == "LOCKED_TRACK":
                 bone_constraint.target = bpy.data.objects[constraint["target"]]
-                bone_constraint.track_axis = constraint["track_axis"]
-                bone_constraint.lock_axis = constraint["lock_axis"]
+                bone_constraint.track_axis = constraint["track_axis"][pose_name]
+                bone_constraint.lock_axis = constraint["lock_axis"][pose_name]
                 bone_constraint.influence = constraint["influence"]
             elif constraint["type"] == "DAMPED_TRACK":
                 bone_constraint.target = bpy.data.objects[constraint["target"]]
