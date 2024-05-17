@@ -15,7 +15,7 @@ class FreemocapDataSaver:
     def __init__(self, handler: "FreemocapDataHandler"):
         self.handler = handler
 
-    def save(self, recording_path: str):
+    def save(self, recording_path: Union[str, Path]):
         recording_path = Path(recording_path)
         try:
             save_path = Path(recording_path) / "saved_data"
@@ -70,10 +70,10 @@ class FreemocapDataSaver:
             print(
                 f"Saved {component_name}_frame_name_xyz to {csv_path / f'{component_name}_frame_name_xyz.csv'}")
 
-        np.savetxt(str(save_path / "all_trajectories.csv"),
+        np.savetxt(str(Path(save_path) / "all_trajectories.csv"),
                    self.handler.all_frame_name_xyz.reshape(self.handler.all_frame_name_xyz.shape[0], -1), delimiter=",",
                    fmt='%s', header=all_csv_header)
-        print(f"Saved all_frame_name_xyz to {save_path / 'all_trajectories.csv'}")
+        print(f"Saved all_frame_name_xyz to {Path(save_path) / 'all_trajectories.csv'}")
 
     def _save_npy(self, save_path: Union[str, Path]):
         npy_path = Path(save_path) / "npy"
