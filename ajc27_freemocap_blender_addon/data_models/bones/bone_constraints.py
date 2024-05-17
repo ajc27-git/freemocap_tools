@@ -6,7 +6,6 @@ ALL_BONES_CONSTRAINT_DEFINITIONS = {
          'target': 'right_hip',
          'track_axis': 'TRACK_NEGATIVE_X',
          'lock_axis': 'LOCK_Z',
-
          'influence': 1.0}
     ],
     "pelvis.R": [
