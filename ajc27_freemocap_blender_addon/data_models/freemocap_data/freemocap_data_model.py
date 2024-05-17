@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, Optional, Union, Literal
 
 import numpy as np
@@ -19,7 +19,7 @@ class FreemocapData:
     hands: Dict[str, FreemocapComponentData]
     face: FreemocapComponentData
     metadata: Optional[Dict[Any, Any]]
-    other: Dict[str, FreemocapComponentData] = {}
+    other: Dict[str, FreemocapComponentData] = field(default_factory=dict)
 
     @classmethod
     def from_data(cls,
