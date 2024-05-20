@@ -1,7 +1,7 @@
 from enum import Enum
 import math as m
 import re
-from typing import Dict, List
+from typing import Dict, List, Optional
 from ajc27_freemocap_blender_addon.data_models.armatures.armature_bone_info import ArmatureBoneInfo
 from ajc27_freemocap_blender_addon.data_models.poses.pose_element import PoseElement
 import bpy
@@ -18,6 +18,12 @@ from ajc27_freemocap_blender_addon.system.constants import (
 )
 from ajc27_freemocap_blender_addon.data_models.bones.bone_constraints import (
     ALL_BONES_CONSTRAINT_DEFINITIONS,
+    ConstraintType,
+    CopyLocationConstraint,
+    DampedTrackConstraint,
+    IKConstraint,
+    LimitRotationConstraint,
+    LockedTrackConstraint,
 )
 from ajc27_freemocap_blender_addon.data_models.bones.ik_control_bones import (
     ik_control_bones,
@@ -1096,7 +1102,7 @@ def add_constraints(
                         "pinky",
                     ]
                     if finger_part
-                    in constraint_definitions  # TODO: this was inheriting some leftover definition, make sure this is accurate
+                    in constraint_definitions
                 ]
             )
             > 0
@@ -1111,53 +1117,52 @@ def add_constraints(
             #     constraint["target"] = actual_target_name
             appended_number_string = get_appended_number(parent_object.name)
             if appended_number_string is not None:
-                if "target" in constraint.keys():
-                    constraint["target"] = constraint["target"] + appended_number_string
+                if hasattr(constraint, "target"):
+                    constraint.target = constraint.target + appended_number_string
             # Add new constraint determined by type
-            if not use_limit_rotation and constraint["type"] == "LIMIT_ROTATION":
+            if not use_limit_rotation and constraint.type == ConstraintType.LIMIT_ROTATION:
                 continue
             else:
                 try:
                     bone_constraint = rig.pose.bones[bone_name_map[armature_name][bone_name]].constraints.new(
-                        constraint["type"]
+                        constraint.type
                     )
                 except:
-                    print(f"Failed to add rig: {bone_name} constraint {constraint['type']}")
+                    print(f"Failed to add rig: {bone_name} constraint {constraint.type}")
                     continue
 
                 # Define aditional parameters based on the type of constraint
-            if constraint["type"] == "LIMIT_ROTATION":
-                bone_constraint.use_limit_x = constraint["use_limit_x"]
-                bone_constraint.min_x = m.radians(constraint["min_x"])
-                bone_constraint.max_x = m.radians(constraint["max_x"])
-                bone_constraint.use_limit_y = constraint["use_limit_y"]
-                bone_constraint.min_y = m.radians(constraint["min_y"])
-                bone_constraint.max_y = m.radians(constraint["max_y"])
-                bone_constraint.use_limit_z = constraint["use_limit_z"]
-                bone_constraint.min_z = m.radians(constraint["min_z"])
-                bone_constraint.max_z = m.radians(constraint["max_z"])
-                bone_constraint.owner_space = constraint["owner_space"]
-                pass
-            elif constraint["type"] == "COPY_LOCATION":
-                bone_constraint.target = bpy.data.objects[constraint["target"]]
-            elif constraint["type"] == "LOCKED_TRACK":
-                bone_constraint.target = bpy.data.objects[constraint["target"]]
-                bone_constraint.track_axis = constraint["track_axis"][pose_name]
-                bone_constraint.lock_axis = constraint["lock_axis"][pose_name]
-                bone_constraint.influence = constraint["influence"]
-            elif constraint["type"] == "DAMPED_TRACK":
-                bone_constraint.target = bpy.data.objects[constraint["target"]]
-                bone_constraint.track_axis = constraint["track_axis"]
-            elif constraint["type"] == "IK":
-                bone_constraint.target = bpy.data.objects[constraint["target"]]
+            if isinstance(constraint, LimitRotationConstraint):
+                bone_constraint.use_limit_x = constraint.use_limit_x
+                bone_constraint.min_x = m.radians(constraint.min_x)
+                bone_constraint.max_x = m.radians(constraint.max_x)
+                bone_constraint.use_limit_y = constraint.use_limit_y
+                bone_constraint.min_y = m.radians(constraint.min_y)
+                bone_constraint.max_y = m.radians(constraint.max_y)
+                bone_constraint.use_limit_z = constraint.use_limit_z
+                bone_constraint.min_z = m.radians(constraint.min_z)
+                bone_constraint.max_z = m.radians(constraint.max_z)
+                bone_constraint.owner_space = constraint.owner_space
+            elif isinstance(constraint, CopyLocationConstraint):
+                bone_constraint.target = bpy.data.objects[constraint.target]
+            elif isinstance(constraint, LockedTrackConstraint):
+                bone_constraint.target = bpy.data.objects[constraint.target]
+                bone_constraint.track_axis = constraint.track_axis[pose_name]
+                bone_constraint.lock_axis = constraint.lock_axis[pose_name]
+                bone_constraint.influence = constraint.influence
+            elif isinstance(constraint, DampedTrackConstraint):
+                bone_constraint.target = bpy.data.objects[constraint.target]
+                bone_constraint.track_axis = constraint.track_axis
+            elif isinstance(constraint, IKConstraint):
+                bone_constraint.target = bpy.data.objects[constraint.target]
                 bone_constraint.pole_target = bpy.data.objects[
-                    constraint["pole_target"]
+                    constraint.pole_target
                 ]
-                bone_constraint.chain_count = constraint["chain_count"]
-                bone_constraint.pole_angle = constraint["pole_angle"]
+                bone_constraint.chain_count = constraint.chain_count
+                bone_constraint.pole_angle = constraint.pole_angle
 
 
-def ensure_rigify():
+def ensure_rigify() -> None:
     _, rigify_enabled = addon_utils.check("rigify")
 
     if not rigify_enabled:
@@ -1178,7 +1183,7 @@ def ensure_rigify():
         )
 
 
-def get_appended_number(rig_name):
+def get_appended_number(rig_name: str) -> Optional[str]:
     pattern = r"\.0[0-9]{2}$"
     match = re.search(pattern, rig_name)
     return match.group() if match else None
