@@ -1125,7 +1125,7 @@ def add_constraints(
             else:
                 try:
                     bone_constraint = rig.pose.bones[bone_name_map[armature_name][bone_name]].constraints.new(
-                        constraint.type
+                        constraint.type.value
                     )
                 except:
                     print(f"Failed to add rig: {bone_name} constraint {constraint.type}")
