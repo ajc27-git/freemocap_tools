@@ -1142,17 +1142,17 @@ def add_constraints(
                 bone_constraint.use_limit_z = constraint.use_limit_z
                 bone_constraint.min_z = m.radians(constraint.min_z)
                 bone_constraint.max_z = m.radians(constraint.max_z)
-                bone_constraint.owner_space = constraint.owner_space
+                bone_constraint.owner_space = constraint.owner_space.value
             elif isinstance(constraint, CopyLocationConstraint):
                 bone_constraint.target = bpy.data.objects[constraint.target]
             elif isinstance(constraint, LockedTrackConstraint):
                 bone_constraint.target = bpy.data.objects[constraint.target]
-                bone_constraint.track_axis = constraint.track_axis[pose_name]
-                bone_constraint.lock_axis = constraint.lock_axis[pose_name]
+                bone_constraint.track_axis = constraint.track_axis[pose_name].value
+                bone_constraint.lock_axis = constraint.lock_axis[pose_name].value
                 bone_constraint.influence = constraint.influence
             elif isinstance(constraint, DampedTrackConstraint):
                 bone_constraint.target = bpy.data.objects[constraint.target]
-                bone_constraint.track_axis = constraint.track_axis
+                bone_constraint.track_axis = constraint.track_axis.value
             elif isinstance(constraint, IKConstraint):
                 bone_constraint.target = bpy.data.objects[constraint.target]
                 bone_constraint.pole_target = bpy.data.objects[

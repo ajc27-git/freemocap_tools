@@ -56,7 +56,7 @@ class LockedTrackConstraint(Constraint):
 class DampedTrackConstraint(Constraint):
     type: ConstraintType = field(default=ConstraintType.DAMPED_TRACK, init=False)
     target: str
-    track_axis: Union[TrackAxis, Dict[str, TrackAxis]]
+    track_axis: TrackAxis
 
 
 @dataclass
