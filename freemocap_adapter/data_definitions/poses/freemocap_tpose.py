@@ -5,7 +5,7 @@ import math as m
 
 freemocap_tpose = {
     'pelvis': {
-        'rotation': (m.radians(-90), 0, 0),
+        'rotation': (0, 0, 0),
         'roll': 0,
     },
     'pelvis.R': {

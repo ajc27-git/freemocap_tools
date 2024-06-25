@@ -37,6 +37,7 @@ from .data_definitions.poses.freemocap_tpose import freemocap_tpose
 from .data_definitions.poses.freemocap_apose import freemocap_apose
 from .data_definitions.poses.ue_metahuman_default import ue_metahuman_default
 from .data_definitions.poses.ue_metahuman_tpose import ue_metahuman_tpose
+from .data_definitions.poses.ue_metahuman_realtime import ue_metahuman_realtime
 
 if bpy.app.version_string[0] < '4':
     from .io_scene_fbx_functions_blender3 import (
@@ -1994,8 +1995,8 @@ def add_rig(add_rig_method: str='using_rigify',
                 bone_cons.use_offset    = cons['use_offset']
             elif cons['type'] == 'LOCKED_TRACK':
                 bone_cons.target        = bpy.data.objects[cons['target']]
-                bone_cons.track_axis    = cons['track_axis']
-                bone_cons.lock_axis     = cons['lock_axis']
+                bone_cons.track_axis    = cons['track_axis'][pose_name]
+                bone_cons.lock_axis     = cons['lock_axis'][pose_name]
                 bone_cons.influence     = cons['influence']
             elif cons['type'] == 'DAMPED_TRACK':
                 bone_cons.target        = bpy.data.objects[cons['target']]

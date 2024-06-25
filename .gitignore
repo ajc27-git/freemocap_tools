@@ -35,3 +35,7 @@ freemocap_adapter/data_definitions/poses/__pycache__/freemocap_metahuman.cpython
 freemocap_adapter/data_definitions/poses/__pycache__/freemocap_tpose.cpython-310.pyc
 freemocap_adapter/data_definitions/poses/__pycache__/ue_metahuman_default.cpython-310.pyc
 freemocap_adapter/data_definitions/poses/__pycache__/ue_metahuman_tpose.cpython-310.pyc
+freemocap_adapter/data_definitions/poses/__pycache__/ue_metahuman_realtime.cpython-310.pyc
+freemocap_live_viewer/__pycache__/__init__.cpython-310.pyc
+freemocap_live_viewer/data_definitions/__pycache__/bones_rotation_adjustments.cpython-310.pyc
+freemocap_live_viewer/data_definitions/__pycache__/__init__.cpython-310.pyc

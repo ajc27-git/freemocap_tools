@@ -382,7 +382,7 @@ def create_geometry_nodes(meshes: dict, type: str)->None:
         # Get the mesh object
         mesh = meshes['base_of_support']
 
-        # Select the angle mesh
+        # Select the mesh
         mesh.select_set(True)
         bpy.context.view_layer.objects.active = mesh
 
@@ -703,4 +703,3 @@ def add_base_of_support(z_threshold: float,
     animate_base_of_support(points_of_contact, base_of_support, z_threshold=z_threshold)
 
     return
-
