@@ -1,7 +1,7 @@
 bl_info = {
     'name'          : 'Freemocap Adapter Alt',
     'author'        : 'ajc27',
-    'version'       : (1, 5, 0),
+    'version'       : (1, 6, 0),
     'blender'       : (3, 0, 0),
     'location'      : '3D Viewport > Sidebar > Freemocap Adapter Alt',
     'description'   : 'Add-on to adapt the Freemocap Blender output',
@@ -20,6 +20,7 @@ from .addon_interface import (FMC_ADAPTER_PROPERTIES,
                               FMC_ADAPTER_OT_add_rig,
                               FMC_ADAPTER_OT_add_body_mesh,
                               FMC_ADAPTER_OT_export_fbx,
+                              FMC_ADAPTER_OT_retarget_animation,
 )
 
 classes = [FMC_ADAPTER_PROPERTIES,
@@ -32,6 +33,7 @@ classes = [FMC_ADAPTER_PROPERTIES,
            FMC_ADAPTER_OT_add_rig,
            FMC_ADAPTER_OT_add_body_mesh,
            FMC_ADAPTER_OT_export_fbx,
+           FMC_ADAPTER_OT_retarget_animation,
 ]
 
 def register():

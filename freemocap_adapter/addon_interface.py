@@ -10,7 +10,8 @@ from .core_functions import (
     add_finger_rotation_limits,
     apply_foot_locking,
     apply_butterworth_filters,
-    export_fbx
+    export_fbx,
+    retarget_animation,
 )
 scipy_available = True
 try:
@@ -32,6 +33,15 @@ def get_pose_items(self, context):
                  ('ue_metahuman_default', 'UE Metahuman Default', '')]
         
     return items
+
+def get_available_armatures(self, context):
+    available_rigs = []
+
+    for object in bpy.data.objects:
+        if object.type == 'ARMATURE':
+            available_rigs.append((object.name, object.name, ''))
+
+    return available_rigs
 
 # Class with the different properties of the methods
 class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
@@ -553,6 +563,33 @@ class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
                       'frequency (Hz)'
     ) # type: ignore
 
+    # Retarget rig options
+    show_retarget_animation: bpy.props.BoolProperty(
+        name = '',
+        default = False,
+        description = 'Toggle Retarget Animation Options'
+    ) # type: ignore
+    retarget_source_armature: bpy.props.EnumProperty(
+        name = '',
+        description = 'Source armature which constraints will be copied from',
+        items = get_available_armatures,
+    ) # type: ignore
+    retarget_target_armature: bpy.props.EnumProperty(
+        name = '',
+        description = 'Target armature which constraints will be copied to',
+        items = get_available_armatures,
+    ) # type: ignore
+    retarget_bake_animation: bpy.props.BoolProperty(
+        name = '',
+        default = True,
+        description = 'Bake Animation'
+    ) # type: ignore
+    retarget_clear_constraints: bpy.props.BoolProperty(
+        name = '',
+        default = True,
+        description = 'Clear Constraints'
+    ) # type: ignore
+
 # UI Panel Class
 class VIEW3D_PT_freemocap_adapter(Panel):
     bl_space_type = "VIEW_3D"
@@ -983,6 +1020,45 @@ class VIEW3D_PT_freemocap_adapter(Panel):
 
             box.operator('fmc_adapter.export_fbx', text='7. Export FBX')
 
+        # Create a button to toggle Retarget Animation Options
+        row = layout.row(align=True)
+        row.prop(fmc_adapter_tool,
+                 "show_retarget_animation",
+                 text="",
+                 icon='TRIA_DOWN' if
+                    fmc_adapter_tool.show_retarget_animation
+                    else 'TRIA_RIGHT',
+                 emboss=False)
+        row.label(text="Retarget Animation")
+
+        if fmc_adapter_tool.show_retarget_animation:
+
+            # Retarget Animation Options
+            box = layout.box()
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Source FreeMoCap Armature')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'retarget_source_armature')
+            
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Target Armature')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'retarget_target_armature')
+            
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Bake Animation')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'retarget_bake_animation')
+            
+            split = box.column().row().split(factor=0.6)
+            split.column().label(text='Clear Constraints')
+            split.split().column().prop(fmc_adapter_tool,
+                                        'retarget_clear_constraints')
+
+            box.operator('fmc_adapter.retarget_animation', text='8. Retarget Animation')
+
+        
+
 # Operator classes that executes the methods
 class FMC_ADAPTER_OT_adjust_empties(Operator):
     bl_idname = 'fmc_adapter.adjust_empties'
@@ -1324,6 +1400,35 @@ class FMC_ADAPTER_OT_export_fbx(Operator):
         # Execute export fbx function
         export_fbx(self,
                    fbx_type=fmc_adapter_tool.fbx_type)
+
+        # Get end time and print execution time
+        end = time.time()
+        print('Finished. Execution time (s): '
+              + str(m.trunc((end - start)*1000)/1000))
+
+        return {'FINISHED'}
+    
+class FMC_ADAPTER_OT_retarget_animation(Operator):
+    bl_idname = 'fmc_adapter.retarget_animation'
+    bl_label = 'Freemocap Adapter - Retarget Animation'
+    bl_description = 'Retargets the source armature constraints to the target armature'
+    bl_options = {'REGISTER', 'UNDO_GROUPED'}
+
+    def execute(self, context):
+        scene = context.scene
+        fmc_adapter_tool = scene.fmc_adapter_tool
+
+        # Get start time
+        start = time.time()
+
+        print('Executing Retarget Rig...')
+
+        retarget_animation(
+            fmc_adapter_tool.retarget_source_armature,
+            fmc_adapter_tool.retarget_target_armature,
+            fmc_adapter_tool.retarget_bake_animation,
+            fmc_adapter_tool.retarget_clear_constraints
+        )
 
         # Get end time and print execution time
         end = time.time()

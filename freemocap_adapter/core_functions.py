@@ -3328,4 +3328,117 @@ def apply_foot_locking(
 
     # Restore the current frame
     scene.frame_current = current_frame
-        
+
+def retarget_animation(
+    source_armature: str,
+    target_armature: str,
+    bake_animation: bool,
+    clear_constraints: bool,
+)->None:
+    print('Retargeting ' + source_armature + ' to ' + target_armature)
+
+    # Get the scene context
+    scene = bpy.context.scene
+
+    # Get a list with the target armature pose bones
+    target_armature_pose_bones = [bone.name for bone in bpy.data.objects[target_armature].pose.bones]
+
+    max_bone_count = 0
+    target_map_armature = ''
+
+    # Loop through the bone_name_map and check which armature has the most bones
+    # of the target armature.
+    for armature in bone_name_map:
+        count = sum(bone in bone_name_map[armature].values() for bone in target_armature_pose_bones)
+        if count > max_bone_count:
+            max_bone_count = count
+            target_map_armature = armature
+        print('armature: ' + armature + ' count: ' + str(count))
+
+    # Get the inverse bone_map_dict
+    inv_bone_name_map = {value: key for key, value in bone_name_map[target_map_armature].items()}
+
+    # Create a dictionary to store the target bone rolls
+    target_bone_rolls = {}
+
+    # Deselect all objects
+    for object in bpy.data.objects:
+        object.select_set(False)
+
+    # Select the target armature
+    bpy.data.objects[target_armature].select_set(True)
+
+    # Change to edit mode
+    bpy.ops.object.mode_set(mode='EDIT')
+
+    # Loop through the target armature edit bones and save the bone roll
+    for bone in bpy.data.objects[target_armature].data.edit_bones:
+        target_bone_rolls[bone.name] = bone.roll
+
+    # Change to object mode
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    # Loop through the target armature pose bones and add bone constraints
+    # based on the inv_bone_name_map
+    for bone in bpy.data.objects[target_armature].pose.bones:
+        if bone.name in inv_bone_name_map:
+            if inv_bone_name_map[bone.name] == 'pelvis':
+                bone_constraint = bone.constraints.new('COPY_LOCATION')
+                bone_constraint.target = bpy.data.objects[source_armature]
+                bone_constraint.subtarget = 'pelvis'
+                bone_constraint.use_offset = True
+                bone_constraint.target_space = 'LOCAL'
+
+                bone_constraint = bone.constraints.new('COPY_ROTATION')
+                bone_constraint.target = bpy.data.objects[source_armature]
+                bone_constraint.subtarget = 'pelvis'
+                bone_constraint.mix_mode = 'ADD'
+            else:
+                bone_constraint = bone.constraints.new('COPY_ROTATION')
+                bone_constraint.target = bpy.data.objects[source_armature]
+                bone_constraint.subtarget = inv_bone_name_map[bone.name]
+                bone_constraint.mix_mode = 'REPLACE'
+
+    # Change the roll of the source armature bones to match the roll of the target armature bones
+    # Deselect all objects
+    for object in bpy.data.objects:
+        object.select_set(False)
+    # Select the source armature
+    bpy.data.objects[source_armature].select_set(True)
+    # Change to edit mode
+    bpy.ops.object.mode_set(mode='EDIT')
+
+    # Change source armature bones
+    for bone in inv_bone_name_map:
+        if bone != 'null' and bone in target_bone_rolls:
+            bpy.data.objects[source_armature].data.edit_bones[inv_bone_name_map[bone]].roll = target_bone_rolls[bone]
+
+    # Change to object mode
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    # Adjust source armature hand constraints in target armature special cases
+    if 'mixamo' in target_map_armature:
+        bpy.data.objects[source_armature].pose.bones['hand.R'].constraints['Locked Track'].track_axis = 'TRACK_X'
+        bpy.data.objects[source_armature].pose.bones['hand.L'].constraints['Locked Track'].track_axis = 'TRACK_NEGATIVE_X'
+
+    # Deselect all objects
+    for object in bpy.data.objects:
+        object.select_set(False)
+    # Select the target armature
+    bpy.data.objects[target_armature].select_set(True)
+    # Change to pose mode
+    bpy.ops.object.mode_set(mode='POSE')
+
+    # Bake the animation on the target armature
+    if bake_animation:
+        bpy.ops.nla.bake(
+            frame_start=scene.frame_start,
+            frame_end=scene.frame_end,
+            only_selected=False,
+            visual_keying=True,
+            clear_constraints=clear_constraints,
+            bake_types={'POSE'}
+        )
+
+    # Change to object mode
+    bpy.ops.object.mode_set(mode='OBJECT')
