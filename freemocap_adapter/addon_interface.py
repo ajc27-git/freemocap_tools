@@ -2,6 +2,10 @@ import time
 import math as m
 import bpy
 from bpy.types import Operator, Panel
+from .data_definitions.interface.properties.adjust_empties_properties import AdjustEmptiesProperties
+from .data_definitions.interface.panels.adjust_empties_interface import (
+    draw_adjust_empties_panel,
+)
 from .core_functions import (
     adjust_empties,
     reduce_bone_length_dispersion,
@@ -45,6 +49,8 @@ def get_available_armatures(self, context):
 
 # Class with the different properties of the methods
 class FMC_ADAPTER_PROPERTIES(bpy.types.PropertyGroup):
+
+    adjust_empties_properties: bpy.props.PointerProperty(type=AdjustEmptiesProperties) # type: ignore
 
     # Adjust Empties Options
     show_adjust_empties: bpy.props.BoolProperty(
@@ -602,54 +608,66 @@ class VIEW3D_PT_freemocap_adapter(Panel):
         scene = context.scene
         fmc_adapter_tool = scene.fmc_adapter_tool
 
-        # Create a button to toggle Adjust Empties Options
-        row = layout.row(align=True)
-        row.prop(fmc_adapter_tool,
-                 "show_adjust_empties",
-                 text="",
-                 icon='TRIA_DOWN' if
-                    fmc_adapter_tool.show_adjust_empties
-                    else 'TRIA_RIGHT',
-                 emboss=False)
-        row.label(text="Adjust Empties")
+        # # Create a button to toggle Adjust Empties Options
+        # row = layout.row(align=True)
+        # row.prop(fmc_adapter_tool.adjust_empties_properties,
+        #          "show_adjust_empties",
+        #          text="",
+        #          icon='TRIA_DOWN' if
+        #             fmc_adapter_tool.adjust_empties_properties.show_adjust_empties
+        #             else 'TRIA_RIGHT',
+        #          emboss=False)
+        # row.label(text="Adjust Empties")
 
-        if fmc_adapter_tool.show_adjust_empties:
+        # if fmc_adapter_tool.adjust_empties_properties.show_adjust_empties:
+        draw_adjust_empties_panel(context, layout)
+
+        
 
             # Adjust Empties Options
-            box = layout.box()
+            # box = layout.box()
 
-            split = box.column().row().split(factor=0.6)
-            split.column().label(text='Align Reference')
-            split.split().column().prop(fmc_adapter_tool,
-                                        'vertical_align_reference')
+            # if fmc_adapter_tool.adjust_empties_properties.show_adjust_empties:
+            #     layout.operator('fmc_adapter.adjust_empties', text='1. Adjust Empties')
 
-            split = box.column().row().split(factor=0.6)
-            split.column().label(text='Vertical Angle Offset')
-            split.split().column().prop(fmc_adapter_tool,
-                                        'vertical_align_angle_offset')
+            # layout.template_ID(VIEW3D_PT_adjust_empties_interface.__name__, "")
 
-            split = box.column().row().split(factor=0.6)
-            split.column().label(text='Ground Reference')
-            split.split().column().prop(fmc_adapter_tool,
-                                        'ground_align_reference')
+            
 
-            split = box.column().row().split(factor=0.6)
-            split.column().label(text='Vertical Position Offset')
-            split.split().column().prop(fmc_adapter_tool,
-                                        'vertical_align_position_offset')
+            # split = box.column().row().split(factor=0.6)
+            # split.column().label(text='Align Reference')
+            # split.split().column().prop(fmc_adapter_tool.adjust_empties_properties,
+            #                             'vertical_align_reference')
 
-            split = box.column().row().split(factor=0.6)
-            split.column().label(text='Correct Fingers Empties')
-            split.split().column().prop(fmc_adapter_tool,
-                                        'correct_fingers_empties')
+            # split = box.column().row().split(factor=0.6)
+            # split.column().label(text='Vertical Angle Offset')
+            # split.split().column().prop(fmc_adapter_tool.adjust_empties_properties,
+            #                             'vertical_align_angle_offset')
 
-            split = box.column().row().split(factor=0.6)
-            split.column().label(text='Add hand middle empty')
-            split.split().column().prop(fmc_adapter_tool,
-                                        'add_hand_middle_empty')
+            # split = box.column().row().split(factor=0.6)
+            # split.column().label(text='Ground Reference')
+            # split.split().column().prop(fmc_adapter_tool.adjust_empties_properties,
+            #                             'ground_align_reference')
 
-            box.operator('fmc_adapter.adjust_empties',
-                         text='1. Adjust Empties')
+            # split = box.column().row().split(factor=0.6)
+            # split.column().label(text='Vertical Position Offset')
+            # split.split().column().prop(fmc_adapter_tool.adjust_empties_properties,
+            #                             'vertical_align_position_offset')
+
+            # split = box.column().row().split(factor=0.6)
+            # split.column().label(text='Correct Fingers Empties')
+            # split.split().column().prop(fmc_adapter_tool.adjust_empties_properties,
+            #                             'correct_fingers_empties')
+
+            # split = box.column().row().split(factor=0.6)
+            # split.column().label(text='Add hand middle empty')
+            # split.split().column().prop(fmc_adapter_tool.adjust_empties_properties,
+            #                             'add_hand_middle_empty')
+
+            # box.operator('fmc_adapter.adjust_empties',
+            #              text='1. Adjust Empties')
+
+        # layout.template(VIEW3D_PT_adjust_empties_interface.__name__, "")
 
         # Create a button to toggle Reduce Bone Length Dispersion Options
         row = layout.row(align=True)
@@ -1074,13 +1092,14 @@ class FMC_ADAPTER_OT_adjust_empties(Operator):
         start = time.time()
         print('Executing Adjust Empties...')
 
-        adjust_empties(z_align_ref_empty=fmc_adapter_tool.vertical_align_reference,
-                       z_align_angle_offset=fmc_adapter_tool.vertical_align_angle_offset,
-                       ground_ref_empty=fmc_adapter_tool.ground_align_reference,
-                       z_translation_offset=fmc_adapter_tool.vertical_align_position_offset,
-                       correct_fingers_empties=fmc_adapter_tool.correct_fingers_empties,
-                       add_hand_middle_empty=fmc_adapter_tool.add_hand_middle_empty
-                       )
+        adjust_empties(
+            z_align_ref_empty=fmc_adapter_tool.adjust_empties_properties.vertical_align_reference,
+            z_align_angle_offset=fmc_adapter_tool.adjust_empties_properties.vertical_align_angle_offset,
+            ground_ref_empty=fmc_adapter_tool.adjust_empties_properties.ground_align_reference,
+            z_translation_offset=fmc_adapter_tool.adjust_empties_properties.vertical_align_position_offset,
+            correct_fingers_empties=fmc_adapter_tool.adjust_empties_properties.correct_fingers_empties,
+            add_hand_middle_empty=fmc_adapter_tool.adjust_empties_properties.add_hand_middle_empty
+        )
         
         # Get end time and print execution time
         end = time.time()

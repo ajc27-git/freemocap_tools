@@ -3355,6 +3355,9 @@ def retarget_animation(
             target_map_armature = armature
         print('armature: ' + armature + ' count: ' + str(count))
 
+    # Print the name of the selected target armature
+    print('Selected target armature: ' + target_map_armature)
+
     # Get the inverse bone_map_dict
     inv_bone_name_map = {value: key for key, value in bone_name_map[target_map_armature].items()}
 

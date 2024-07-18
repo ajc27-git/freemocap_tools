@@ -10,6 +10,8 @@ bl_info = {
 
 import bpy
 
+from .data_definitions.interface.properties.adjust_empties_properties import AdjustEmptiesProperties
+
 from .addon_interface import (FMC_ADAPTER_PROPERTIES,
                               VIEW3D_PT_freemocap_adapter,
                               FMC_ADAPTER_OT_adjust_empties,
@@ -23,7 +25,8 @@ from .addon_interface import (FMC_ADAPTER_PROPERTIES,
                               FMC_ADAPTER_OT_retarget_animation,
 )
 
-classes = [FMC_ADAPTER_PROPERTIES,
+classes = [AdjustEmptiesProperties,
+           FMC_ADAPTER_PROPERTIES,
            VIEW3D_PT_freemocap_adapter,
            FMC_ADAPTER_OT_adjust_empties,
            FMC_ADAPTER_OT_reduce_bone_length_dispersion,
