@@ -17,4 +17,9 @@ class PropertyTypes:
                 precision=kwargs.get('precision', 3),
                 description=kwargs.get('description', '')
             )
+    Int = lambda **kwargs: bpy.props.IntProperty(
+                name=kwargs.get('name', ''),
+                default=kwargs.get('default', 0),
+                description=kwargs.get('description', '')
+            )
     
