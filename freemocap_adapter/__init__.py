@@ -1,7 +1,7 @@
 bl_info = {
     'name'          : 'Freemocap Adapter Alt',
     'author'        : 'ajc27',
-    'version'       : (1, 6, 0),
+    'version'       : (1, 6, 1),
     'blender'       : (3, 0, 0),
     'location'      : '3D Viewport > Sidebar > Freemocap Adapter Alt',
     'description'   : 'Add-on to adapt the Freemocap Blender output',

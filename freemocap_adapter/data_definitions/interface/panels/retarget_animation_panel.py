@@ -25,28 +25,35 @@ def draw_retarget_animation_panel(context, layout):
         split.column().label(text='Source FreeMoCap Armature')
         split.split().column().prop(
             fmc_adapter_tool.retarget_animation_properties,
-            'retarget_source_armature'
+            'source_armature'
         )
         
         split = box.column().row().split(factor=0.6)
         split.column().label(text='Target Armature')
         split.split().column().prop(
             fmc_adapter_tool.retarget_animation_properties,
-            'retarget_target_armature'
+            'target_armature'
         )
+
+        # split = box.column().row().split(factor=0.6)
+        # split.column().label(text='Target Armature Type')
+        # split.split().column().prop(
+        #     fmc_adapter_tool.retarget_animation_properties,
+        #     'target_armature_type'
+        # )
         
         split = box.column().row().split(factor=0.6)
         split.column().label(text='Bake Animation')
         split.split().column().prop(
             fmc_adapter_tool.retarget_animation_properties,
-            'retarget_bake_animation'
+            'bake_animation'
         )
         
         split = box.column().row().split(factor=0.6)
         split.column().label(text='Clear Constraints')
         split.split().column().prop(
             fmc_adapter_tool.retarget_animation_properties,
-            'retarget_clear_constraints'
+            'clear_constraints'
         )
 
         box.operator(

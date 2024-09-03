@@ -3365,8 +3365,8 @@ def retarget_animation(
     target_bone_rolls = {}
 
     # Deselect all objects
-    for object in bpy.data.objects:
-        object.select_set(False)
+    for scene_object in bpy.data.objects:
+        scene_object.select_set(False)
 
     # Select the target armature
     bpy.data.objects[target_armature].select_set(True)
@@ -3404,8 +3404,8 @@ def retarget_animation(
 
     # Change the roll of the source armature bones to match the roll of the target armature bones
     # Deselect all objects
-    for object in bpy.data.objects:
-        object.select_set(False)
+    for scene_object in bpy.data.objects:
+        scene_object.select_set(False)
     # Select the source armature
     bpy.data.objects[source_armature].select_set(True)
     # Change to edit mode
@@ -3425,8 +3425,8 @@ def retarget_animation(
         bpy.data.objects[source_armature].pose.bones['hand.L'].constraints['Locked Track'].track_axis = 'TRACK_NEGATIVE_X'
 
     # Deselect all objects
-    for object in bpy.data.objects:
-        object.select_set(False)
+    for scene_object in bpy.data.objects:
+        scene_object.select_set(False)
     # Select the target armature
     bpy.data.objects[target_armature].select_set(True)
     # Change to pose mode

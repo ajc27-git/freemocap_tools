@@ -15,19 +15,25 @@ class RetargetAnimationProperties(bpy.types.PropertyGroup):
     show_retarget_animation: PropertyTypes.Bool(
         description = 'Toggle Retarget Animation Options'
     ) # type: ignore
-    retarget_source_armature: PropertyTypes.Enum(
+    source_armature: PropertyTypes.Enum(
         description = 'Source armature which constraints will be copied from',
         items = get_available_armatures,
     ) # type: ignore
-    retarget_target_armature: PropertyTypes.Enum(
+    target_armature: PropertyTypes.Enum(
         description = 'Target armature which constraints will be copied to',
         items = get_available_armatures,
     ) # type: ignore
-    retarget_bake_animation: PropertyTypes.Bool(
+    target_armature_type: PropertyTypes.Enum(
+        description = 'Target armature type',
+        items = [('mixamo', 'Mixamo', ''),
+                 ('daz', 'DAZ', ''),
+                 ('autodetect', 'Auto Detect', '')],
+    ) # type: ignore
+    bake_animation: PropertyTypes.Bool(
         default = True,
         description = 'Bake Animation'
     ) # type: ignore
-    retarget_clear_constraints: PropertyTypes.Bool(
+    clear_constraints: PropertyTypes.Bool(
         default = True,
         description = 'Clear Constraints'
     ) # type: ignore
