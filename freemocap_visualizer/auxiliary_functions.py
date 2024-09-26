@@ -2,18 +2,18 @@ import bpy
 import mathutils
 
 # Function to hide (or unhide) Blender objects
-def hide_objects(object: bpy.types.Object,
+def hide_objects(data_object: bpy.types.Object,
                  hide: bool = True,
                  hide_children_not_parent: bool = False,)->None:
 
     if hide_children_not_parent:
-        for child_object in object.children:
+        for child_object in data_object.children:
             # Hide child object
             child_object.hide_set(hide)
             # Execute the function recursively
             hide_objects(child_object, hide, hide_children_not_parent)
     else:
-        object.hide_set(hide)
+        data_object.hide_set(hide)
 
 # Function to draw a vector for debbuging purposes
 def draw_vector(origin, angle, name):

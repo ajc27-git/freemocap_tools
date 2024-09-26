@@ -1,7 +1,7 @@
 bl_info = {
     'name'          : 'Freemocap Visualizer',
     'author'        : 'ajc27',
-    'version'       : (1, 0, 0),
+    'version'       : (1, 1, 0),
     'blender'       : (3, 0, 0),
     'location'      : '3D Viewport > Sidebar > Freemocap Visualizer',
     'description'   : 'Add-on to help visualize the Freemocap Blender output',

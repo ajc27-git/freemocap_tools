@@ -1,4 +1,3 @@
-import bmesh
 import bpy
 import re
 import mathutils
@@ -26,25 +25,37 @@ from .auxiliary_functions import hide_objects
 # It uses the parent_pattern to operate on the correct elements
 def toggle_element_visibility(self,
                               context,
-                              property: str,
+                              panel_property: str,
                               parent_pattern: str,
                               toggle_children_not_parent: bool,)->None:
 
-    for object in bpy.data.objects:
-        if re.search(parent_pattern, object.name):
-            hide_objects(object, not bool(self[property]), toggle_children_not_parent)
+    for data_object in bpy.data.objects:
+        if re.search(parent_pattern, data_object.name):
+            hide_objects(data_object,
+                         not bool(self[panel_property]),
+                         toggle_children_not_parent)
 
 # Function to toggle the visibility of the motion paths
 def toggle_motion_path(self,
                        context,
-                       property: str,
-                       object: str)->None:
-    
+                       panel_property: str,
+                       data_object: str,
+                       show_line: bool = True,
+                       line_thickness: int = 6,
+                       use_custom_color: bool = False,
+                       line_color: tuple = (0.5, 1.0, 0.8),
+                       frames_before: int = 10,
+                       frames_after: int = 10,
+                       frame_step: int = 1,
+                       show_frame_numbers: bool = False,
+                       show_keyframes: bool = False,
+                       show_keyframe_number: bool = False)->None:
+
     # Deselect all objects
     bpy.ops.object.select_all(action='DESELECT')
 
     # Get reference to the object
-    obj = bpy.data.objects[object]
+    obj = bpy.data.objects[data_object]
 
     # Select the object
     obj.select_set(True)
@@ -52,8 +63,21 @@ def toggle_motion_path(self,
     # Set the object as active object
     bpy.context.view_layer.objects.active = obj
 
-    if bool(self[property]):
+    if bool(self[panel_property]):
+        # Calculate paths
         bpy.ops.object.paths_calculate(display_type='CURRENT_FRAME', range='SCENE')
+        # Set motion path properties for the specific object
+        if obj.motion_path:
+            obj.motion_path.lines = show_line
+            obj.motion_path.line_thickness = line_thickness
+            obj.motion_path.use_custom_color = use_custom_color
+            obj.motion_path.color = line_color
+            obj.animation_visualization.motion_path.frame_before = frames_before
+            obj.animation_visualization.motion_path.frame_after = frames_after
+            obj.animation_visualization.motion_path.frame_step = frame_step
+            obj.animation_visualization.motion_path.show_frame_numbers = show_frame_numbers
+            obj.animation_visualization.motion_path.show_keyframe_highlight = show_keyframes
+            obj.animation_visualization.motion_path.show_keyframe_numbers = show_keyframe_number
     else:
         bpy.ops.object.paths_clear(only_selected=True)
 
@@ -78,10 +102,10 @@ def add_com_vertical_projection(neutral_color: tuple,
     COM_mesh = bpy.data.objects["COM_Vertical_Projection"]
 
     # Parent the sphere mesh to the capture origin empty
-    for object in bpy.data.objects:
-        if re.search(r'_origin\Z', object.name):
+    for data_object in bpy.data.objects:
+        if re.search(r'_origin\Z', data_object.name):
             # Set the object as the COM vertical projection parent
-            COM_mesh.parent = object
+            COM_mesh.parent = data_object
             break
 
     # Create the mesh materials

@@ -1,8 +1,31 @@
 import bpy
 from bpy.types import Operator, Panel
-from bpy.props import EnumProperty
 
-from .functions import toggle_element_visibility, add_com_vertical_projection, add_joint_angles, add_base_of_support, toggle_motion_path
+from .functions import (
+    toggle_element_visibility,
+    add_com_vertical_projection,
+    add_joint_angles,
+    add_base_of_support,
+    toggle_motion_path
+)
+
+def update_motion_path(self, context, data_object: str):
+    toggle_motion_path(
+        self,
+        context,
+        panel_property='motion_path_' + data_object,
+        data_object=data_object,
+        show_line=self.motion_path_show_line,
+        line_thickness=self.motion_path_line_thickness,
+        use_custom_color=self.motion_path_use_custom_color,
+        line_color=self.motion_path_line_color,
+        frames_before=self.motion_path_frames_before,
+        frames_after=self.motion_path_frames_after,
+        frame_step=self.motion_path_frame_step,
+        show_frame_numbers=self.motion_path_show_frame_numbers,
+        show_keyframes=self.motion_path_show_keyframes,
+        show_keyframe_number=self.motion_path_show_keyframe_number
+    )
 
 # Class with the different properties of the interface
 class FMC_VISUALIZER_PROPERTIES(bpy.types.PropertyGroup):
@@ -12,14 +35,14 @@ class FMC_VISUALIZER_PROPERTIES(bpy.types.PropertyGroup):
         default = False,
     ) # type: ignore
 
-    show_rig: bpy.props.BoolProperty(
-        name = 'Rig',
-        description = 'Show Rig',
+    show_armature: bpy.props.BoolProperty(
+        name = 'Armature',
+        description = 'Show Armature',
         default = True,
         update = lambda a,b: toggle_element_visibility(a,
                                                        b,
-                                                       property='show_rig',
-                                                       parent_pattern=r'_rig\Z',
+                                                       panel_property='show_armature',
+                                                       parent_pattern=r'_rig\Z|root\Z',
                                                        toggle_children_not_parent=False),
     ) # type: ignore
 
@@ -28,7 +51,7 @@ class FMC_VISUALIZER_PROPERTIES(bpy.types.PropertyGroup):
         default = True,
         update = lambda a,b: toggle_element_visibility(a,
                                                        b,
-                                                       property='show_body_mesh',
+                                                       panel_property='show_body_mesh',
                                                        parent_pattern=r'skelly_mesh',
                                                        toggle_children_not_parent=False),
     ) # type: ignore
@@ -38,7 +61,7 @@ class FMC_VISUALIZER_PROPERTIES(bpy.types.PropertyGroup):
         default = True,
         update = lambda a,b: toggle_element_visibility(a,
                                                        b,
-                                                       property='show_markers',
+                                                       panel_property='show_markers',
                                                        parent_pattern=r'empties_parent',
                                                        toggle_children_not_parent=True),
     ) # type: ignore
@@ -48,7 +71,7 @@ class FMC_VISUALIZER_PROPERTIES(bpy.types.PropertyGroup):
         default = True,
         update = lambda a,b: toggle_element_visibility(a,
                                                        b,
-                                                       property='show_rigid_body',
+                                                       panel_property='show_rigid_body',
                                                        parent_pattern=r'rigid_body_meshes_parent',
                                                        toggle_children_not_parent=True),
     ) # type: ignore
@@ -58,7 +81,7 @@ class FMC_VISUALIZER_PROPERTIES(bpy.types.PropertyGroup):
         default = True,
         update = lambda a,b: toggle_element_visibility(a,
                                                        b,
-                                                       property='show_center_of_mass',
+                                                       panel_property='show_center_of_mass',
                                                        parent_pattern=r'center_of_mass_data_parent',
                                                        toggle_children_not_parent=True),
     ) # type: ignore
@@ -68,7 +91,7 @@ class FMC_VISUALIZER_PROPERTIES(bpy.types.PropertyGroup):
         default = True,
         update = lambda a,b: toggle_element_visibility(a,
                                                        b,
-                                                       property='show_videos',
+                                                       panel_property='show_videos',
                                                        parent_pattern=r'videos_parent',
                                                        toggle_children_not_parent=True),
     ) # type: ignore
@@ -78,7 +101,7 @@ class FMC_VISUALIZER_PROPERTIES(bpy.types.PropertyGroup):
         default = False,
         update = lambda a,b: toggle_element_visibility(a,
                                                        b,
-                                                       property='show_com_vertical_projection',
+                                                       panel_property='show_com_vertical_projection',
                                                        parent_pattern=r'COM_Vertical_Projection',
                                                        toggle_children_not_parent=False),
     ) # type: ignore
@@ -88,7 +111,7 @@ class FMC_VISUALIZER_PROPERTIES(bpy.types.PropertyGroup):
         default = False,
         update = lambda a,b: toggle_element_visibility(a,
                                                        b,
-                                                       property='show_joint_angles',
+                                                       panel_property='show_joint_angles',
                                                        parent_pattern=r'joint_angles_parent',
                                                        toggle_children_not_parent=True),
     ) # type: ignore
@@ -98,7 +121,7 @@ class FMC_VISUALIZER_PROPERTIES(bpy.types.PropertyGroup):
         default = False,
         update = lambda a,b: toggle_element_visibility(a,
                                                        b,
-                                                       property='show_base_of_support',
+                                                       panel_property='show_base_of_support',
                                                        parent_pattern=r'base_of_support',
                                                        toggle_children_not_parent=False),
     ) # type: ignore
@@ -108,148 +131,190 @@ class FMC_VISUALIZER_PROPERTIES(bpy.types.PropertyGroup):
         default = False,
     ) # type: ignore
 
+    motion_path_show_line: bpy.props.BoolProperty(
+        name = 'Show Line',
+        default = True,
+    ) # type: ignore
+
+    motion_path_line_thickness: bpy.props.IntProperty(
+        name = '',
+        min = 1,
+        max = 6,
+        default = 6,
+    ) # type: ignore
+
+    motion_path_use_custom_color: bpy.props.BoolProperty(
+        name = 'Use Custom Color',
+        default = False,
+    ) # type: ignore
+
+    motion_path_line_color: bpy.props.FloatVectorProperty(
+        name = '',
+        subtype = 'COLOR',
+        min = 0.0,
+        max = 1.0,
+        default = (0.5, 0.5, 0.5),
+    ) # type: ignore
+
+    motion_path_frames_before: bpy.props.IntProperty(
+        name = '',
+        min = 1,
+        default = 10,
+    ) # type: ignore
+
+    motion_path_frames_after: bpy.props.IntProperty(
+        name = '',
+        min = 1,
+        default = 10,
+    ) # type: ignore
+
+    motion_path_frame_step: bpy.props.IntProperty(
+        name = '',
+        min = 1,
+        default = 1,
+    ) # type: ignore
+
+    motion_path_show_frame_numbers: bpy.props.BoolProperty(
+        name = 'Show Frame Numbers',
+        default = False,
+    ) # type: ignore
+
+    motion_path_show_keyframes: bpy.props.BoolProperty(
+        name = 'Show Keyframes',
+        default = False,
+    ) # type: ignore
+
+    motion_path_show_keyframe_number: bpy.props.BoolProperty(
+        name = 'Show Keyframe Number',
+        default = False,
+    ) # type: ignore
+
     motion_path_center_of_mass: bpy.props.BoolProperty(
         name = 'Center of Mass',
         default = False,
-        update = lambda a,b: toggle_motion_path(a,
+        update = lambda a,b: update_motion_path(a,
                                                 b,
-                                                property='motion_path_center_of_mass',
-                                                object='center_of_mass'),
+                                                data_object='center_of_mass'),
     ) # type: ignore
 
     motion_path_head_center: bpy.props.BoolProperty(
         name = 'Head Center',
         default = False,
-        update = lambda a,b: toggle_motion_path(a,
+        update = lambda a,b: update_motion_path(a,
                                                 b,
-                                                property='motion_path_head_center',
-                                                object='head_center'),
+                                                data_object='head_center'),
     ) # type: ignore
 
     motion_path_neck_center: bpy.props.BoolProperty(
         name = 'Neck Center',
         default = False,
-        update = lambda a,b: toggle_motion_path(a,
+        update = lambda a,b: update_motion_path(a,
                                                 b,
-                                                property='motion_path_neck_center',
-                                                object='neck_center'),
+                                                data_object='neck_center'),
     ) # type: ignore
 
     motion_path_hips_center: bpy.props.BoolProperty(
         name = 'Hips Center',
         default = False,
-        update = lambda a,b: toggle_motion_path(a,
+        update = lambda a,b: update_motion_path(a,
                                                 b,
-                                                property='motion_path_hips_center',
-                                                object='hips_center'),
+                                                data_object='hips_center'),
     ) # type: ignore
         
     motion_path_right_shoulder: bpy.props.BoolProperty(
         name = 'Right Shoulder',
         default = False,
-        update = lambda a,b: toggle_motion_path(a,
+        update = lambda a,b: update_motion_path(a,
                                                 b,
-                                                property='motion_path_right_shoulder',
-                                                object='right_shoulder'),
+                                                data_object='right_shoulder'),
     ) # type: ignore
 
     motion_path_left_shoulder: bpy.props.BoolProperty(
         name = 'Left Shoulder',
         default = False,
-        update = lambda a,b: toggle_motion_path(a,
+        update = lambda a,b: update_motion_path(a,
                                                 b,
-                                                property='motion_path_left_shoulder',
-                                                object='left_shoulder'),
+                                                data_object='left_shoulder'),
     ) # type: ignore
 
     motion_path_right_elbow: bpy.props.BoolProperty(
         name = 'Right Elbow',
         default = False,
-        update = lambda a,b: toggle_motion_path(a,
+        update = lambda a,b: update_motion_path(a,
                                                 b,
-                                                property='motion_path_right_elbow',
-                                                object='right_elbow'),
+                                                data_object='right_elbow'),
     ) # type: ignore
         
     motion_path_left_elbow: bpy.props.BoolProperty(
         name = 'Left Elbow',
         default = False,
-        update = lambda a,b: toggle_motion_path(a,
+        update = lambda a,b: update_motion_path(a,
                                                 b,
-                                                property='motion_path_left_elbow',
-                                                object='left_elbow'),
+                                                data_object='left_elbow'),
     ) # type: ignore
 
     motion_path_right_wrist: bpy.props.BoolProperty(
         name = 'Right Wrist',
         default = False,
-        update = lambda a,b: toggle_motion_path(a,
+        update = lambda a,b: update_motion_path(a,
                                                 b,
-                                                property='motion_path_right_wrist',
-                                                object='right_wrist'),
+                                                data_object='right_wrist'),
     ) # type: ignore
 
     motion_path_left_wrist: bpy.props.BoolProperty(
         name = 'Left Wrist',
         default = False,
-        update = lambda a,b: toggle_motion_path(a,
+        update = lambda a,b: update_motion_path(a,
                                                 b,
-                                                property='motion_path_left_wrist',
-                                                object='left_wrist'),
+                                                data_object='left_wrist'),
     ) # type: ignore
 
     motion_path_right_hip: bpy.props.BoolProperty(
         name = 'Right Hip',
         default = False,
-        update = lambda a,b: toggle_motion_path(a,
+        update = lambda a,b: update_motion_path(a,
                                                 b,
-                                                property='motion_path_right_hip',
-                                                object='right_hip'),
+                                                data_object='right_hip'),
     ) # type: ignore
 
     motion_path_left_hip: bpy.props.BoolProperty(
         name = 'Left Hip',
         default = False,
-        update = lambda a,b: toggle_motion_path(a,
+        update = lambda a,b: update_motion_path(a,
                                                 b,
-                                                property='motion_path_left_hip',
-                                                object='left_hip'),
+                                                data_object='left_hip'),
     ) # type: ignore
 
     motion_path_right_knee: bpy.props.BoolProperty(
         name = 'Right Knee',
         default = False,
-        update = lambda a,b: toggle_motion_path(a,
+        update = lambda a,b: update_motion_path(a,
                                                 b,
-                                                property='motion_path_right_knee',
-                                                object='right_knee'),
+                                                data_object='right_knee'),
     ) # type: ignore
 
     motion_path_left_knee: bpy.props.BoolProperty(
         name = 'Left Knee',
         default = False,
-        update = lambda a,b: toggle_motion_path(a,
+        update = lambda a,b: update_motion_path(a,
                                                 b,
-                                                property='motion_path_left_knee',
-                                                object='left_knee'),
+                                                data_object='left_knee'),
     ) # type: ignore
     
     motion_path_right_ankle: bpy.props.BoolProperty(
         name = 'Right Ankle',
         default = False,
-        update = lambda a,b: toggle_motion_path(a,
+        update = lambda a,b: update_motion_path(a,
                                                 b,
-                                                property='motion_path_right_ankle',
-                                                object='right_ankle'),
+                                                data_object='right_ankle'),
     ) # type: ignore
 
     motion_path_left_ankle: bpy.props.BoolProperty(
         name = 'Left Ankle',
         default = False,
-        update = lambda a,b: toggle_motion_path(a,
+        update = lambda a,b: update_motion_path(a,
                                                 b,
-                                                property='motion_path_left_ankle',
-                                                object='left_ankle'),
+                                                data_object='left_ankle'),
     ) # type: ignore
 
     show_com_vertical_projection_options: bpy.props.BoolProperty(
@@ -349,7 +414,7 @@ class VIEW3D_PT_freemocap_visualizer(Panel):
             box = layout.box()
             
             split = box.column().row().split(factor=0.5)
-            split.column().prop(fmc_visualizer_tool, 'show_rig')
+            split.column().prop(fmc_visualizer_tool, 'show_armature')
             split.column().prop(fmc_visualizer_tool, 'show_body_mesh')
 
             split = box.column().row().split(factor=0.5)
@@ -373,6 +438,37 @@ class VIEW3D_PT_freemocap_visualizer(Panel):
         row.label(text="Motion Paths")
 
         if fmc_visualizer_tool.show_motion_paths_options:
+
+            box = layout.box()
+            split = box.column().row().split(factor=0.5)
+            split.column().prop(fmc_visualizer_tool, 'motion_path_show_line')
+            split_2 = split.column().split(factor=0.5)
+            split_2.column().label(text="Thickness")
+            split_2.column().prop(fmc_visualizer_tool, 'motion_path_line_thickness')
+
+            split = box.column().row().split(factor=0.5)
+            split.column().prop(fmc_visualizer_tool, 'motion_path_use_custom_color')
+            split_2 = split.column().split(factor=0.5)
+            split_2.column().label(text="Color")
+            split_2.column().prop(fmc_visualizer_tool, 'motion_path_line_color')
+
+            split = box.column().row().split(factor=0.5)
+            split_2 = split.column().split(factor=0.5)
+            split_2.column().label(text="Frames Before")
+            split_2.column().prop(fmc_visualizer_tool, 'motion_path_frames_before')
+            split_3 = split.column().split(factor=0.5)
+            split_3.column().label(text="Frames After")
+            split_3.column().prop(fmc_visualizer_tool, 'motion_path_frames_after')
+
+            split = box.column().row().split(factor=0.5)
+            split_2 = split.column().split(factor=0.5)
+            split_2.column().label(text="Frame Step")
+            split_2.column().prop(fmc_visualizer_tool, 'motion_path_frame_step')
+            split.column().prop(fmc_visualizer_tool, 'motion_path_show_frame_numbers')
+
+            split = box.column().row().split(factor=0.5)
+            split.column().prop(fmc_visualizer_tool, 'motion_path_show_keyframes')
+            split.column().prop(fmc_visualizer_tool, 'motion_path_show_keyframe_number')
 
             box = layout.box()
 
@@ -441,7 +537,7 @@ class VIEW3D_PT_freemocap_visualizer(Panel):
             box = layout.box()
 
             split = box.column().row().split(factor=0.5)
-            split.column().label(text="Angles Color:")
+            split.column().label(text="Angle Color:")
             split.column().prop(fmc_visualizer_tool, 'joint_angles_color')
 
             split = box.column().row().split(factor=0.5)
