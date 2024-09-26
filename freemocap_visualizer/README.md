@@ -14,7 +14,9 @@ To install the scipy and shapely packages run this commands inside your Blender 
 `python -m pip install shapely`
 
 For example:
+
 `C:\Program Files\Blender Foundation\Blender 3.6\3.6\python\bin> .\python.exe -m pip install scipy`.
+
 `C:\Program Files\Blender Foundation\Blender 3.6\3.6\python\bin> .\python.exe -m pip install shapely`.
 
 # Installation
