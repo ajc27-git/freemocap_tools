@@ -214,13 +214,13 @@ def add_com_vertical_projection(neutral_color: tuple,
 
 # Function to add angle meshes, set a copy location constraint to a joint
 def add_angle_meshes(points: dict,
-                     type: str)->dict:
+                     mesh_type: str)->dict:
 
     angle_meshes = {}
 
     for point in points:
 
-        if type == 'angle':
+        if mesh_type == 'angle':
             # Add a circle mesh to the scene
             bpy.ops.mesh.primitive_circle_add(enter_editmode=False,
                                             align='WORLD',
@@ -240,7 +240,7 @@ def add_angle_meshes(points: dict,
             # Append the angle mesh to the angle meshes dictionary
             angle_meshes[point] = bpy.data.objects["angle_" + point]
 
-        elif type == 'text':
+        elif mesh_type == 'text':
 
             # Add a text mesh to the scene
             bpy.ops.object.text_add(enter_editmode=False,
@@ -283,18 +283,18 @@ def parent_meshes(parent: str,
     # Parent the joint_angles_parent object to the capture origin empty
     bpy.ops.object.select_all(action='DESELECT')
     bpy.data.objects[parent].select_set(True)
-    for object in bpy.data.objects:
-        if re.search(r'_origin\Z', object.name):
-            bpy.context.view_layer.objects.active = object
+    for data_object in bpy.data.objects:
+        if re.search(r'_origin\Z', data_object.name):
+            bpy.context.view_layer.objects.active = data_object
             bpy.ops.object.parent_set(type='OBJECT', keep_transform=False)
 
     # Hide the joint_angles_parent object
     bpy.data.objects[parent].hide_set(True)
 
 # Function to create geometry nodes
-def create_geometry_nodes(meshes: dict, type: str)->None:
+def create_geometry_nodes(meshes: dict, mesh_type: str)->None:
 
-    if type in ['angle', 'text']:
+    if mesh_type in ['angle', 'text']:
 
         for mesh_key in meshes:
 
@@ -322,7 +322,7 @@ def create_geometry_nodes(meshes: dict, type: str)->None:
             output_node = node_tree.nodes["Group Output"]
 
             # Add nodes depending on the type of mesh
-            if type == 'angle':
+            if mesh_type == 'angle':
 
                 # Add a new Arc Node
                 arc_node = node_tree.nodes.new(type='GeometryNodeCurveArc')
@@ -356,7 +356,7 @@ def create_geometry_nodes(meshes: dict, type: str)->None:
                 arc_node.inputs[4].default_value = 0.07
                 arc_node.inputs[8].default_value = True
 
-            elif type == 'text':
+            elif mesh_type == 'text':
 
                 # Add a new Value To String Function Node
                 value_to_string_function_node = node_tree.nodes.new(type='FunctionNodeValueToString')
@@ -398,7 +398,7 @@ def create_geometry_nodes(meshes: dict, type: str)->None:
                 value_to_string_function_node.inputs[0].default_value = 0
                 string_to_curves_node.inputs[1].default_value = 0.1
 
-    elif type == 'base_of_support':
+    elif mesh_type == 'base_of_support':
 
         # Deselect all objects
         bpy.ops.object.select_all(action='DESELECT')
@@ -479,7 +479,7 @@ def create_geometry_nodes(meshes: dict, type: str)->None:
             node_tree.links.new(switch_node.outputs["Output"], join_geometry_node.inputs["Geometry"])
 
             # Set the default values (radius and center)
-            mesh_circle_node.inputs[1].default_value = 0.05
+            mesh_circle_node.inputs[1].default_value = meshes['point_of_contact_radius'] / 100
             
 # Function to animate the angle meshes rotation, arc nodes sweep angle and text mesh
 def animate_angle_meshes(joints_angle_points: dict,
@@ -695,6 +695,7 @@ def add_joint_angles(angles_color: tuple,
 
 # Function to add the base of support
 def add_base_of_support(z_threshold: float,
+                        point_of_contact_radius: float,
                         color: tuple)->None:
 
     # Create the material
@@ -704,7 +705,7 @@ def add_base_of_support(z_threshold: float,
     # Add a plane mesh
     bpy.ops.mesh.primitive_plane_add(enter_editmode=False,
                                     align='WORLD',
-                                    location=(0, 0, 0),
+                                    location=(0, 0, 0.01),
                                     scale=(1, 1, 1))
 
     # Change the name of the plane mesh
@@ -714,14 +715,20 @@ def add_base_of_support(z_threshold: float,
     base_of_support = bpy.data.objects["base_of_support"]
 
     # Parent the sphere mesh to the capture origin empty
-    for object in bpy.data.objects:
-        if re.search(r'_origin\Z', object.name):
+    for data_object in bpy.data.objects:
+        if re.search(r'_origin\Z', data_object.name):
             # Set the object as the COM vertical projection parent
-            base_of_support.parent = object
+            base_of_support.parent = data_object
             break
 
     # Create Geometry Nodes for the base of support
-    create_geometry_nodes({'base_of_support': base_of_support}, 'base_of_support')
+    create_geometry_nodes(
+        {
+            'base_of_support': base_of_support,
+            'point_of_contact_radius': point_of_contact_radius,
+        },
+        'base_of_support'
+    )
 
     # Animate the base of support
     animate_base_of_support(points_of_contact, base_of_support, z_threshold=z_threshold)

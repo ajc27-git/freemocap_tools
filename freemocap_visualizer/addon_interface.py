@@ -153,7 +153,7 @@ class FMC_VISUALIZER_PROPERTIES(bpy.types.PropertyGroup):
         subtype = 'COLOR',
         min = 0.0,
         max = 1.0,
-        default = (0.5, 0.5, 0.5),
+        default = (1.0, 1.0, 1.0),
     ) # type: ignore
 
     motion_path_frames_before: bpy.props.IntProperty(
@@ -382,6 +382,12 @@ class FMC_VISUALIZER_PROPERTIES(bpy.types.PropertyGroup):
         default = 0.1
     ) # type: ignore
 
+    base_of_support_point_radius: bpy.props.FloatProperty(
+        name = '',
+        min = 1.0,
+        default = 7.0
+    ) # type: ignore
+
     base_of_support_color: bpy.props.FloatVectorProperty(
         name = '',
         subtype = "COLOR",
@@ -560,6 +566,10 @@ class VIEW3D_PT_freemocap_visualizer(Panel):
             split.column().prop(fmc_visualizer_tool, 'base_of_support_z_threshold')
 
             split = box.column().row().split(factor=0.5)
+            split.column().label(text="Point of Contact Radius (cm):")
+            split.column().prop(fmc_visualizer_tool, 'base_of_support_point_radius')
+
+            split = box.column().row().split(factor=0.5)
             split.column().label(text="Base of Support Color:")
             split.column().prop(fmc_visualizer_tool, 'base_of_support_color')
 
@@ -633,6 +643,7 @@ class FMC_VISUALIZER_ADD_BASE_OF_SUPPORT(Operator):
 
         # Add Base of Support
         add_base_of_support(z_threshold=fmc_visualizer_tool.base_of_support_z_threshold,
+                            point_of_contact_radius=fmc_visualizer_tool.base_of_support_point_radius,
                             color=fmc_visualizer_tool.base_of_support_color)
 
         # Set the show Base of Support property to True
