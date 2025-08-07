@@ -347,7 +347,7 @@ class FMC_ADAPTER_OT_apply_foot_locking(Operator):
         if fmc_adapter_tool.apply_foot_locking_properties.target_foot == 'both_feet':
             target_foot_list = ['left_foot', 'right_foot']
         else:
-            target_foot_list = [fmc_adapter_tool.foot_locking_target_foot]
+            target_foot_list = [fmc_adapter_tool.apply_foot_locking_properties.target_foot]
 
         # Prepare the target base markers
         if fmc_adapter_tool.apply_foot_locking_properties.target_base_markers == 'foot_index_and_heel':
